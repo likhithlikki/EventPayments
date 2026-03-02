@@ -1,273 +1,155 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Event Contribution</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Event Contribution</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #f2f2f2;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      margin: 40px auto;
-      width: 320px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-
-    input {
-      width: 90%;
-      padding: 8px;
-      margin: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      padding: 10px 15px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-  </style>
-
-  <style>
-.navbar {
-  background:#1e1e2f;
-  padding:15px;
-  text-align:center;
-}
-.navbar a {
-  color:white;
-  text-decoration:none;
-  margin:0 20px;
-  font-weight:bold;
-}
-.navbar a:hover {
-  color:#4CAF50;
-}
+<style>
+body{font-family:Arial;text-align:center;background:#f2f2f2;}
+.card{background:white;padding:20px;margin:40px auto;width:340px;border-radius:12px;}
+input{width:90%;padding:8px;margin:6px;border-radius:6px;border:1px solid #ccc;}
+button{padding:10px 15px;background:#007bff;color:white;border:none;border-radius:6px;cursor:pointer;margin-top:8px;}
+button:disabled{background:gray;}
+.error{color:red;font-size:13px;}
+.navbar{background:#1e1e2f;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 20px;text-decoration:none;font-weight:bold;}
 </style>
-
-<div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <a href="admin.html">Admin Login</a>
-</div>
-  
 </head>
 
 <body>
 
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="admin.html">Admin Login</a>
+</div>
+
 <div class="card" id="formPage">
-  <h2>Event Contribution</h2>
+<h2>Event Contribution</h2>
 
-  <input id="name" placeholder="Name" required>
-  <input id="village" placeholder="Village" required>
-  <input id="phone" placeholder="Phone Number" required>
-  <input id="amount" type="number" placeholder="Amount" required>
+<input id="name" placeholder="Name">
+<div class="error" id="nameError"></div>
 
-  <button onclick="goToPayment()">Proceed</button>
+<input id="village" placeholder="Village">
+
+<input id="phone" placeholder="Phone Number">
+<div class="error" id="phoneError"></div>
+
+<input id="amount" type="number" placeholder="Amount">
+<div class="error" id="amountError"></div>
+
+<button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
 </div>
 
 <div class="card" id="paymentPage" style="display:none;">
-  <h3>Scan & Pay</h3>
-  <div id="qrcode"></div><br>
-
-  <button onclick="openUPI()">Open UPI App</button><br><br>
-
-  <input id="utr" placeholder="Enter UTR Number" required>
-  <button onclick="finishPayment()">Finish</button>
+<h3>Scan & Pay</h3>
+<div id="qrcode"></div><br>
+<button onclick="openUPI()">Open UPI App</button><br><br>
+<input id="utr" placeholder="Enter UTR">
+<button onclick="finishPayment()">Finish</button>
 </div>
 
 <script>
 
-let userData = {};
-let upiLink = "";
+const scriptURL="https://script.google.com/macros/s/AKfycbzDkmYhbDWkLI01iAaz76YJ5ubDhdLFFqkmQzxdpyNkXH4Nm7NdEYWooNSALYJCA4MP/exec";
 
-// Generate Unique Reference ID
-function generateRefID() {
-  return "REF" + Date.now();
-}
+const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
+const amountInput=document.getElementById("amount");
+const proceedBtn=document.getElementById("proceedBtn");
 
-function goToPayment() {
-
-  userData = {
-    refid: generateRefID(),
-    name: document.getElementById("name").value,
-    village: document.getElementById("village").value,
-    phone: document.getElementById("phone").value,
-    amount: document.getElementById("amount").value
-  };
-
-  const upiID = "9014844036@superyes";   // 🔴 CHANGE THIS
-
-  upiLink = `upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
-
-  document.getElementById("formPage").style.display = "none";
-  document.getElementById("paymentPage").style.display = "block";
-
-  document.getElementById("qrcode").innerHTML = "";
-  new QRCode(document.getElementById("qrcode"), upiLink);
-}
-
-function openUPI() {
-  window.location.href = upiLink;
-}
-
-function finishPayment() {
-
-  userData.utr = document.getElementById("utr").value;
-
-  const data = new URLSearchParams();
-  data.append("refid", userData.refid);
-  data.append("name", userData.name);
-  data.append("village", userData.village);
-  data.append("phone", userData.phone);
-  data.append("amount", userData.amount);
-  data.append("utr", userData.utr);
-
-  fetch("https://script.google.com/macros/s/AKfycbzDkmYhbDWkLI01iAaz76YJ5ubDhdLFFqkmQzxdpyNkXH4Nm7NdEYWooNSALYJCA4MP/exec", {
-    method: "POST",
-    body: data
-  })
-  .then(response => response.text())
-  .then(result => {
-      alert("Saved Successfully");
-      generatePDF();
-  })
-  .catch(error => {
-      alert("Error saving data");
-  });
-}
-// Generate PDF Receipt
-async function generatePDF() {
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.text("Payment Receipt", 20, 20);
-  doc.text("Reference: " + userData.refid, 20, 30);
-  doc.text("Name: " + userData.name, 20, 40);
-  doc.text("Village: " + userData.village, 20, 50);
-  doc.text("Phone: " + userData.phone, 20, 60);
-  doc.text("Amount: ₹" + userData.amount, 20, 70);
-  doc.text("UTR: " + userData.utr, 20, 80);
-  doc.text("Date: " + new Date().toLocaleString(), 20, 90);
-
-  doc.save("Receipt.pdf");
-}
-
-  function doPost(e) {
-
-  const sheet = SpreadsheetApp
-    .openById("1Q8Z3JizmIWMm4ro4ABtuhpk7xuEwxCZNXrMf5TJwKbs")
-    .getSheets()[0];
-
-  const action = e.parameter.action;
-
-  // INSERT
-  if (!action || action === "insert") {
-
-    const now = new Date();
-    const formattedDate = Utilities.formatDate(
-      now,
-      Session.getScriptTimeZone(),
-      "dd MMM yyyy"
-    );
-
-    sheet.appendRow([
-      formattedDate,
-      e.parameter.refid,
-      e.parameter.name,
-      e.parameter.village,
-      e.parameter.phone,
-      e.parameter.amount,
-      e.parameter.utr,
-      "Pending"
-    ]);
-
-    return ContentService.createTextOutput("Inserted");
+function validateName(){
+  const regex=/^[A-Za-z ]+$/;
+  if(!regex.test(nameInput.value.trim())){
+    nameInput.style.border="2px solid red";
+    document.getElementById("nameError").innerText="Letters only";
+    return false;
   }
-
-  // UPDATE STATUS
-  if (action === "updateStatus") {
-
-    const refid = e.parameter.refid;
-    const status = e.parameter.status;
-    const data = sheet.getDataRange().getValues();
-
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][1] === refid) {
-        sheet.getRange(i + 1, 8).setValue(status);
-        break;
-      }
-    }
-
-    return ContentService.createTextOutput("Updated");
-  }
-
-  // CHECK STATUS USING LAST 5 DIGITS
-  if (action === "checkStatus") {
-
-    const last5 = e.parameter.refid;
-    const data = sheet.getDataRange().getValues();
-
-    for (let i = 1; i < data.length; i++) {
-
-      const fullRef = data[i][1];
-
-      if (fullRef && fullRef.slice(-5) === last5) {
-
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            found: true,
-            name: data[i][2],
-            village: data[i][3],
-            phone: data[i][4],
-            amount: data[i][5],
-            status: data[i][7],
-            date: data[i][0]
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ found: false }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // GET ALL FOR ADMIN
-  if (action === "getAll") {
-
-    const data = sheet.getDataRange().getValues();
-    data.shift();
-
-    return ContentService
-      .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  nameInput.style.border="2px solid green";
+  document.getElementById("nameError").innerText="";
+  return true;
 }
-  
-  phoneInput.addEventListener("input", function () {
-  this.value = this.value.replace(/\D/g, "").slice(0, 10);
-  validatePhone();
-  checkForm();
-});
+
+function validatePhone(){
+  phoneInput.value=phoneInput.value.replace(/\D/g,"").slice(0,10);
+  const regex=/^[6-9]\d{9}$/;
+  if(!regex.test(phoneInput.value)){
+    phoneInput.style.border="2px solid red";
+    document.getElementById("phoneError").innerText="Valid 10 digit number starting 6-9";
+    return false;
+  }
+  phoneInput.style.border="2px solid green";
+  document.getElementById("phoneError").innerText="";
+  return true;
+}
+
+function validateAmount(){
+  if(Number(amountInput.value)<50){
+    amountInput.style.border="2px solid red";
+    document.getElementById("amountError").innerText="Minimum ₹50";
+    return false;
+  }
+  amountInput.style.border="2px solid green";
+  document.getElementById("amountError").innerText="";
+  return true;
+}
+
+function checkForm(){
+  proceedBtn.disabled=!(validateName()&&validatePhone()&&validateAmount());
+}
+
+nameInput.addEventListener("input",checkForm);
+phoneInput.addEventListener("input",checkForm);
+amountInput.addEventListener("input",checkForm);
+
+let userData={},upiLink="";
+
+function generateRefID(){ return "REF"+Date.now(); }
+
+function goToPayment(){
+
+userData={
+refid:generateRefID(),
+name:nameInput.value,
+village:document.getElementById("village").value,
+phone:phoneInput.value,
+amount:amountInput.value
+};
+
+const upiID="9014844036@superyes";
+upiLink=`upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
+
+document.getElementById("formPage").style.display="none";
+document.getElementById("paymentPage").style.display="block";
+new QRCode(document.getElementById("qrcode"),upiLink);
+}
+
+function openUPI(){ window.location.href=upiLink; }
+
+function finishPayment(){
+
+userData.utr=document.getElementById("utr").value;
+
+const data=new URLSearchParams();
+data.append("action","insert");
+Object.keys(userData).forEach(k=>data.append(k,userData[k]));
+
+fetch(scriptURL,{method:"POST",body:data})
+.then(()=>generatePDF())
+.catch(()=>alert("Error saving data"));
+}
+
+async function generatePDF(){
+const { jsPDF }=window.jspdf;
+const doc=new jsPDF();
+doc.text("Payment Receipt",20,20);
+doc.text("Ref: "+userData.refid,20,30);
+doc.text("Name: "+userData.name,20,40);
+doc.text("Amount: ₹"+userData.amount,20,50);
+doc.save("Receipt.pdf");
+}
+
 </script>
-
 </body>
 </html>
