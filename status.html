@@ -6,7 +6,6 @@
 <style>
 body{
   font-family:Arial;
-  text-align:center;
   background:#f2f2f2;
   margin:0;
 }
@@ -24,19 +23,24 @@ body{
   font-weight:bold;
 }
 
+.container{
+  display:flex;
+  justify-content:center;
+}
+
 .card{
   background:white;
-  padding:20px;
+  padding:25px;
   margin:60px auto;
-  width:350px;
+  width:380px;
   border-radius:10px;
   box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
 input{
-  width:90%;
+  width:95%;
   padding:8px;
-  margin:8px;
+  margin:8px 0;
   border-radius:6px;
   border:1px solid #ccc;
 }
@@ -57,11 +61,17 @@ button{
   width:25px;
   height:25px;
   animation:spin 1s linear infinite;
-  margin:10px auto;
+  margin:15px auto;
 }
 
 @keyframes spin{
   100%{transform:rotate(360deg);}
+}
+
+.result-box{
+  text-align:left;
+  margin-top:15px;
+  padding-left:10px;
 }
 
 .verified{
@@ -84,13 +94,17 @@ button{
   <a href="admin.html">Admin Login</a>
 </div>
 
+<div class="container">
 <div class="card">
-<h2>Check Payment Status</h2>
+
+<h2 style="text-align:center;">Check Payment Status</h2>
 
 <input id="refid" placeholder="Enter Last 5 digits of RefID">
 <button onclick="checkStatus()">Verify</button>
 
-<div id="result" style="margin-top:15px;"></div>
+<div id="result"></div>
+
+</div>
 </div>
 
 <script>
@@ -102,12 +116,15 @@ function checkStatus(){
   const last5=document.getElementById("refid").value.trim();
   const resultDiv=document.getElementById("result");
 
+  // Clear previous result
+  resultDiv.innerHTML="";
+
   if(last5.length!==5 || isNaN(last5)){
-    resultDiv.innerHTML="<span style='color:red;'>Enter exactly last 5 digits (numbers only)</span>";
+    resultDiv.innerHTML="<p style='color:red;text-align:center;'>Enter exactly last 5 digits (numbers only)</p>";
     return;
   }
 
-  // Show loading animation
+  // Show loader
   resultDiv.innerHTML="<div class='loader'></div>";
 
   fetch(scriptURL+"?action=checkStatus&refid="+last5)
@@ -115,24 +132,28 @@ function checkStatus(){
   .then(data=>{
 
     if(!data.found){
-      resultDiv.innerHTML="<span style='color:red;'>Invalid Reference ID</span>";
+      resultDiv.innerHTML="<p style='color:red;text-align:center;'>Invalid Reference ID</p>";
       return;
     }
 
     const statusClass = data.status==="Verified" ? "verified" : "notverified";
 
     resultDiv.innerHTML=`
-      <p><b>Name:</b> ${data.name}</p>
-      <p><b>Village:</b> ${data.village}</p>
-      <p><b>Phone:</b> ${data.phone}</p>
-      <p><b>Amount:</b> ₹${data.amount}</p>
-      <p><b>Date:</b> ${data.date}</p>
-      <p><b>Time:</b> ${data.time}</p>
-      <p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
+      <div class="result-box">
+        <p><b>Name:</b> ${data.name}</p>
+        <p><b>Village:</b> ${data.village}</p>
+        <p><b>Phone:</b> ${data.phone}</p>
+        <p><b>Amount:</b> ₹${data.amount}</p>
+        <p><b>Date:</b> ${data.date}</p>
+        <p><b>Time:</b> ${data.time}</p>
+        <p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
+        <br>
+        <p style="color:gray;">Thank you for visiting 🙏</p>
+      </div>
     `;
   })
   .catch(()=>{
-    resultDiv.innerHTML="<span style='color:red;'>Server connection error</span>";
+    resultDiv.innerHTML="<p style='color:red;text-align:center;'>Server connection error</p>";
   });
 }
 
