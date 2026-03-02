@@ -2,17 +2,86 @@
 <html>
 <head>
 <title>Verify Payment</title>
+
 <style>
-body{font-family:Arial;text-align:center;background:#f2f2f2;}
-.card{background:white;padding:20px;margin:50px auto;width:350px;border-radius:10px;}
+body{
+  font-family:Arial;
+  text-align:center;
+  background:#f2f2f2;
+  margin:0;
+}
+
+.navbar{
+  background:#1e1e2f;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  margin:60px auto;
+  width:350px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input{
+  width:90%;
+  padding:8px;
+  margin:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:10px 15px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.loader{
+  border:4px solid #f3f3f3;
+  border-top:4px solid #3498db;
+  border-radius:50%;
+  width:25px;
+  height:25px;
+  animation:spin 1s linear infinite;
+  margin:10px auto;
+}
+
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
+
+.verified{
+  color:green;
+  font-weight:bold;
+}
+
+.notverified{
+  color:red;
+  font-weight:bold;
+}
 </style>
 </head>
+
 <body>
 
-<div style="background:#1e1e2f;padding:15px;text-align:center;">
-  <a href="index.html" style="color:white;margin:0 15px;">Home</a>
-  <a href="status.html" style="color:white;margin:0 15px;">Verify Status</a>
-  <a href="admin.html" style="color:white;margin:0 15px;">Admin Login</a>
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="admin.html">Admin Login</a>
 </div>
 
 <div class="card">
@@ -30,33 +99,40 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 function checkStatus(){
 
-  const last5=document.getElementById("refid").value;
+  const last5=document.getElementById("refid").value.trim();
+  const resultDiv=document.getElementById("result");
 
-  if(last5.length!==5){
-    document.getElementById("result").innerHTML="<span style='color:red;'>Enter exactly last 5 digits</span>";
+  if(last5.length!==5 || isNaN(last5)){
+    resultDiv.innerHTML="<span style='color:red;'>Enter exactly last 5 digits (numbers only)</span>";
     return;
   }
+
+  // Show loading animation
+  resultDiv.innerHTML="<div class='loader'></div>";
 
   fetch(scriptURL+"?action=checkStatus&refid="+last5)
   .then(res=>res.json())
   .then(data=>{
 
     if(!data.found){
-      document.getElementById("result").innerHTML="<span style='color:red;'>Invalid ID</span>";
+      resultDiv.innerHTML="<span style='color:red;'>Invalid Reference ID</span>";
       return;
     }
 
-    document.getElementById("result").innerHTML=
-    "<b>Name:</b> "+data.name+"<br>"+
-    "<b>Village:</b> "+data.village+"<br>"+
-    "<b>Phone:</b> "+data.phone+"<br>"+
-    "<b>Amount:</b> ₹"+data.amount+"<br>"+
-    "<b>Status:</b> "+data.status+"<br>"+
-    "<b>Date:</b> "+data.date;
+    const statusClass = data.status==="Verified" ? "verified" : "notverified";
 
+    resultDiv.innerHTML=`
+      <p><b>Name:</b> ${data.name}</p>
+      <p><b>Village:</b> ${data.village}</p>
+      <p><b>Phone:</b> ${data.phone}</p>
+      <p><b>Amount:</b> ₹${data.amount}</p>
+      <p><b>Date:</b> ${data.date}</p>
+      <p><b>Time:</b> ${data.time}</p>
+      <p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
+    `;
   })
   .catch(()=>{
-    document.getElementById("result").innerHTML="<span style='color:red;'>Error connecting to server</span>";
+    resultDiv.innerHTML="<span style='color:red;'>Server connection error</span>";
   });
 }
 
