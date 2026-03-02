@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard</title>
+<style>
+body { font-family: Arial; background:#f2f2f2; text-align:center; }
+table { margin:auto; border-collapse: collapse; width:90%; background:white;}
+th,td { padding:8px; border:1px solid #ddd; }
+button { padding:5px 8px; cursor:pointer; }
+.top { margin:20px; font-size:18px; }
+</style>
+</head>
+<body>
+
+<script>
+const password = prompt("Enter Admin Password:");
+if(password !== "admin123"){
+  alert("Access Denied");
+  window.location.href="index.html";
+}
+</script>
+
+<h2>Admin Dashboard</h2>
+
+<div class="top">
+Total: ₹<span id="total">0</span> |
+Verified: ₹<span id="verified">0</span>
+</div>
+
+<table id="table">
+<tr>
+<th>Date</th>
+<th>RefID</th>
+<th>Name</th>
+<th>Village</th>
+<th>Phone</th>
+<th>Amount</th>
+<th>UTR</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</table>
+
+<script>
+
+const scriptURL="https://script.google.com/macros/s/AKfycbzDkmYhbDWkLI01iAaz76YJ5ubDhdLFFqkmQzxdpyNkXH4Nm7NdEYWooNSALYJCA4MP/exec";
+
+fetch(scriptURL+"?action=getAll")
+.then(res=>res.json())
+.then(data=>{
+  let total=0, verified=0;
+
+  data.forEach(row=>{
+    total+=Number(row[5]);
+    if(row[7]==="Verified") verified+=Number(row[5]);
+
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
+    <td>${row[0]}</td>
+    <td>${row[1]}</td>
+    <td>${row[2]}</td>
+    <td>${row[3]}</td>
+    <td>${row[4]}</td>
+    <td>${row[5]}</td>
+    <td>${row[6]}</td>
+    <td>${row[7]}</td>
+    <td>
+      <button onclick="updateStatus('${row[1]}','Verified')">✓</button>
+      <button onclick="updateStatus('${row[1]}','Rejected')">✗</button>
+    </td>`;
+
+    document.getElementById("table").appendChild(tr);
+  });
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("verified").innerText=verified;
+});
+
+function updateStatus(refid,status){
+
+  const data=new URLSearchParams();
+  data.append("action","updateStatus");
+  data.append("refid",refid);
+  data.append("status",status);
+
+  fetch(scriptURL,{
+    method:"POST",
+    body:data
+  }).then(()=> location.reload());
+}
+
+</script>
+
+</body>
+</html>
