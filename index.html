@@ -107,30 +107,27 @@ function finishPayment() {
 
   userData.utr = document.getElementById("utr").value;
 
-  const formData = new URLSearchParams();
-  formData.append("refid", userData.refid);
-  formData.append("name", userData.name);
-  formData.append("village", userData.village);
-  formData.append("phone", userData.phone);
-  formData.append("amount", userData.amount);
-  formData.append("utr", userData.utr);
+  const data = new URLSearchParams();
+  data.append("refid", userData.refid);
+  data.append("name", userData.name);
+  data.append("village", userData.village);
+  data.append("phone", userData.phone);
+  data.append("amount", userData.amount);
+  data.append("utr", userData.utr);
 
-  fetch("https://script.google.com/macros/s/AKfycbzDkmYhbDWkLI01iAaz76YJ5ubDhdLFFqkmQzxdpyNkXH4Nm7NdEYWooNSALYJCA4MP/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbx6MaQFOq7fS5OixymYYFcfJiAtA1g9JUiPGpr0Y63ukfL6dbsu7pFUxhv0NXpgr80u/exec", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: formData
+    body: data
   })
-  .then(() => {
-      alert("Payment details saved successfully!");
+  .then(response => response.text())
+  .then(result => {
+      alert("Saved Successfully");
       generatePDF();
   })
-  .catch(() => {
-      alert("Error saving data.");
+  .catch(error => {
+      alert("Error saving data");
   });
 }
-
 // Generate PDF Receipt
 async function generatePDF() {
 
