@@ -2,27 +2,39 @@
 <html>
 <head>
 <title>Event Contribution</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Arial;text-align:center;background:#f2f2f2;}
-.card{background:white;padding:20px;margin:40px auto;width:340px;border-radius:12px;}
+body{font-family:Arial;text-align:center;background:#f2f2f2;margin:0;}
+.card{background:white;padding:20px;margin:40px auto;width:340px;border-radius:12px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
 input{width:90%;padding:8px;margin:6px;border-radius:6px;border:1px solid #ccc;}
 button{padding:10px 15px;background:#007bff;color:white;border:none;border-radius:6px;cursor:pointer;margin-top:8px;}
 button:disabled{background:gray;}
 .error{color:red;font-size:13px;}
 .navbar{background:#1e1e2f;padding:15px;text-align:center;}
 .navbar a{color:white;margin:0 20px;text-decoration:none;font-weight:bold;}
+.loader{
+  border:4px solid #f3f3f3;
+  border-top:4px solid #3498db;
+  border-radius:50%;
+  width:25px;height:25px;
+  animation:spin 1s linear infinite;
+  margin:10px auto;
+}
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
 </style>
 </head>
 
 <body>
 
 <div class="navbar">
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="admin.html">Admin Login</a>
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="admin.html">Admin Login</a>
 </div>
 
 <div class="card" id="formPage">
@@ -47,7 +59,8 @@ button:disabled{background:gray;}
 <div id="qrcode"></div><br>
 <button onclick="openUPI()">Open UPI App</button><br><br>
 <input id="utr" placeholder="Enter UTR">
-<button onclick="finishPayment()">Finish</button>
+<button id="finishBtn" onclick="finishPayment()">Finish</button>
+<div id="loadingArea"></div>
 </div>
 
 <script>
@@ -105,7 +118,9 @@ amountInput.addEventListener("input",checkForm);
 
 let userData={},upiLink="";
 
-function generateRefID(){ return "REF"+Date.now(); }
+function generateRefID(){
+  return "REF"+Date.now();
+}
 
 function goToPayment(){
 
@@ -122,34 +137,72 @@ upiLink=`upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userDa
 
 document.getElementById("formPage").style.display="none";
 document.getElementById("paymentPage").style.display="block";
+
+document.getElementById("qrcode").innerHTML="";
 new QRCode(document.getElementById("qrcode"),upiLink);
 }
 
-function openUPI(){ window.location.href=upiLink; }
+function openUPI(){
+  window.location.href=upiLink;
+}
 
 function finishPayment(){
 
+const finishBtn=document.getElementById("finishBtn");
+finishBtn.disabled=true;
+
 userData.utr=document.getElementById("utr").value;
+
+document.getElementById("loadingArea").innerHTML="<div class='loader'></div>";
 
 const data=new URLSearchParams();
 data.append("action","insert");
+
 Object.keys(userData).forEach(k=>data.append(k,userData[k]));
 
-fetch(scriptURL,{method:"POST",body:data})
-.then(()=>generatePDF())
-.catch(()=>alert("Error saving data"));
+fetch(scriptURL,{
+  method:"POST",
+  body:data
+})
+.then(res=>res.text())
+.then(result=>{
+
+  document.getElementById("loadingArea").innerHTML="";
+  finishBtn.disabled=false;
+
+  if(result==="Already Submitted"){
+      alert("Already submitted. Please do not click twice.");
+      return;
+  }
+
+  alert("Saved Successfully");
+  generatePDF();
+})
+.catch(()=>{
+  finishBtn.disabled=false;
+  document.getElementById("loadingArea").innerHTML="";
+  alert("Server Error");
+});
 }
 
 async function generatePDF(){
+
 const { jsPDF }=window.jspdf;
 const doc=new jsPDF();
+
 doc.text("Payment Receipt",20,20);
-doc.text("Ref: "+userData.refid,20,30);
+doc.text("Reference: "+userData.refid,20,30);
 doc.text("Name: "+userData.name,20,40);
-doc.text("Amount: ₹"+userData.amount,20,50);
+doc.text("Village: "+userData.village,20,50);
+doc.text("Phone: "+userData.phone,20,60);
+doc.text("Amount: ₹"+userData.amount,20,70);
+doc.text("UTR: "+userData.utr,20,80);
+doc.text("Date: "+new Date().toLocaleString(),20,90);
+
 doc.save("Receipt.pdf");
 }
 
 </script>
+
 </body>
 </html>
