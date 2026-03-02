@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Check Payment Status</title>
+</head>
+<body style="text-align:center;font-family:Arial">
+
+<h2>Check Payment Status</h2>
+
+<input id="refid" placeholder="Enter RefID">
+<button onclick="checkStatus()">Check</button>
+
+<h3 id="result"></h3>
+
+<script>
+const scriptURL="YOUR_GOOGLE_SCRIPT_URL";
+
+function checkStatus(){
+
+  const ref=document.getElementById("refid").value;
+
+  fetch(scriptURL+"?action=checkStatus&refid="+ref)
+  .then(res=>res.json())
+  .then(data=>{
+    document.getElementById("result").innerText=
+    "Status: "+data.status+
+    " | Amount: ₹"+data.amount+
+    " | Date: "+data.date;
+  });
+}
+</script>
+
+</body>
+</html>
