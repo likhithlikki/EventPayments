@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event Contribution</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f2f2f2;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 40px auto;
+      width: 320px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    input {
+      width: 90%;
+      padding: 8px;
+      margin: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card" id="formPage">
+  <h2>Event Contribution</h2>
+
+  <input id="name" placeholder="Name" required>
+  <input id="village" placeholder="Village" required>
+  <input id="phone" placeholder="Phone Number" required>
+  <input id="amount" type="number" placeholder="Amount" required>
+
+  <button onclick="goToPayment()">Proceed</button>
+</div>
+
+<div class="card" id="paymentPage" style="display:none;">
+  <h3>Scan & Pay</h3>
+  <div id="qrcode"></div><br>
+
+  <button onclick="openUPI()">Open UPI App</button><br><br>
+
+  <input id="utr" placeholder="Enter UTR Number" required>
+  <button onclick="finishPayment()">Finish</button>
+</div>
+
+<script>
+
+let userData = {};
+let upiLink = "";
+
+// Generate Unique Reference ID
+function generateRefID() {
+  return "REF" + Date.now();
+}
+
+// Move to Payment Page
+function goToPayment() {
+
+  userData = {
+    refid: generateRefID(),
+    name: document.getElementById("name").value,
+    village: document.getElementById("village").value,
+    phone: document.getElementById("phone").value,
+    amount: document.getElementById("amount").value
+  };
+
+  const upiID = "9014844036@superyes";   // 🔴 CHANGE THIS
+
+  upiLink = `upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
+
+  document.getElementById("formPage").style.display = "none";
+  document.getElementById("paymentPage").style.display = "block";
+
+  document.getElementById("qrcode").innerHTML = "";
+  new QRCode(document.getElementById("qrcode"), upiLink);
+}
+
+// Open UPI App
+function openUPI() {
+  window.location.href = upiLink;
+}
+
+// Finish Payment
+function finishPayment() {
+
+  userData.utr = document.getElementById("utr").value;
+
+  fetch("https://script.google.com/macros/s/AKfycbx6MaQFOq7fS5OixymYYFcfJiAtA1g9JUiPGpr0Y63ukfL6dbsu7pFUxhv0NXpgr80u/exec", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(userData)
+  })
+  .then(response => response.text())
+  .then(data => {
+      console.log("Success:", data);
+      generatePDF();
+  })
+  .catch(error => {
+      console.error("Error:", error);
+      alert("Error saving data.");
+  });
+}
+
+// Generate PDF Receipt
+async function generatePDF() {
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("Payment Receipt", 20, 20);
+  doc.text("Reference: " + userData.refid, 20, 30);
+  doc.text("Name: " + userData.name, 20, 40);
+  doc.text("Village: " + userData.village, 20, 50);
+  doc.text("Phone: " + userData.phone, 20, 60);
+  doc.text("Amount: ₹" + userData.amount, 20, 70);
+  doc.text("UTR: " + userData.utr, 20, 80);
+  doc.text("Date: " + new Date().toLocaleString(), 20, 90);
+
+  doc.save("Receipt.pdf");
+}
+
+</script>
+
+</body>
+</html>
