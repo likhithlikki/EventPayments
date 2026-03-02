@@ -170,6 +170,103 @@ async function generatePDF() {
   doc.save("Receipt.pdf");
 }
 
+  function doPost(e) {
+
+  const sheet = SpreadsheetApp
+    .openById("1Q8Z3JizmIWMm4ro4ABtuhpk7xuEwxCZNXrMf5TJwKbs")
+    .getSheets()[0];
+
+  const action = e.parameter.action;
+
+  // INSERT
+  if (!action || action === "insert") {
+
+    const now = new Date();
+    const formattedDate = Utilities.formatDate(
+      now,
+      Session.getScriptTimeZone(),
+      "dd MMM yyyy"
+    );
+
+    sheet.appendRow([
+      formattedDate,
+      e.parameter.refid,
+      e.parameter.name,
+      e.parameter.village,
+      e.parameter.phone,
+      e.parameter.amount,
+      e.parameter.utr,
+      "Pending"
+    ]);
+
+    return ContentService.createTextOutput("Inserted");
+  }
+
+  // UPDATE STATUS
+  if (action === "updateStatus") {
+
+    const refid = e.parameter.refid;
+    const status = e.parameter.status;
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][1] === refid) {
+        sheet.getRange(i + 1, 8).setValue(status);
+        break;
+      }
+    }
+
+    return ContentService.createTextOutput("Updated");
+  }
+
+  // CHECK STATUS USING LAST 5 DIGITS
+  if (action === "checkStatus") {
+
+    const last5 = e.parameter.refid;
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+
+      const fullRef = data[i][1];
+
+      if (fullRef && fullRef.slice(-5) === last5) {
+
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            found: true,
+            name: data[i][2],
+            village: data[i][3],
+            phone: data[i][4],
+            amount: data[i][5],
+            status: data[i][7],
+            date: data[i][0]
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ found: false }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // GET ALL FOR ADMIN
+  if (action === "getAll") {
+
+    const data = sheet.getDataRange().getValues();
+    data.shift();
+
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+  
+  phoneInput.addEventListener("input", function () {
+  this.value = this.value.replace(/\D/g, "").slice(0, 10);
+  validatePhone();
+  checkForm();
+});
 </script>
 
 </body>
