@@ -107,18 +107,28 @@ function finishPayment() {
 
   userData.utr = document.getElementById("utr").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbxNb4RruwUarj2vUFXbe4pGUvLgkQybf2n281OSpNdz3rW7sanFBHhAEl37Q6qea7S6/exec", {
+  const formData = new URLSearchParams();
+  formData.append("refid", userData.refid);
+  formData.append("name", userData.name);
+  formData.append("village", userData.village);
+  formData.append("phone", userData.phone);
+  formData.append("amount", userData.amount);
+  formData.append("utr", userData.utr);
+
+  fetch("https://script.google.com/macros/s/AKfycbx6MaQFOq7fS5OixymYYFcfJiAtA1g9JUiPGpr0Y63ukfL6dbsu7pFUxhv0NXpgr80u/exec", {
     method: "POST",
-    mode: "no-cors",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/x-www-form-urlencoded"
     },
-    body: JSON.stringify(userData)
+    body: formData
+  })
+  .then(() => {
+      alert("Payment details saved successfully!");
+      generatePDF();
+  })
+  .catch(() => {
+      alert("Error saving data.");
   });
-
-  alert("Thank you! Your details have been submitted.");
-
-  generatePDF();
 }
 
 // Generate PDF Receipt
