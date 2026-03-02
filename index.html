@@ -88,7 +88,7 @@ function goToPayment() {
     amount: document.getElementById("amount").value
   };
 
-  const upiID = "yourupi@bank";   // 🔴 CHANGE THIS
+  const upiID = "9014844036@superyes";   // 🔴 CHANGE THIS
 
   upiLink = `upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
 
@@ -107,7 +107,7 @@ function finishPayment() {
 
   userData.utr = document.getElementById("utr").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbx6MaQFOq7fS5OixymYYFcfJiAtA1g9JUiPGpr0Y63ukfL6dbsu7pFUxhv0NXpgr80u/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbxNb4RruwUarj2vUFXbe4pGUvLgkQybf2n281OSpNdz3rW7sanFBHhAEl37Q6qea7S6/exec", {
     method: "POST",
     mode: "no-cors",
     headers: {
