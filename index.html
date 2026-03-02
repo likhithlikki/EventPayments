@@ -6,7 +6,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
-    body {
+    body { 
       font-family: Arial;
       text-align: center;
       background: #f2f2f2;
@@ -110,23 +110,17 @@ function finishPayment() {
 
   userData.utr = document.getElementById("utr").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbx6MaQFOq7fS5OixymYYFcfJiAtA1g9JUiPGpr0Y63ukfL6dbsu7pFUxhv0NXpgr80u/exec", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(userData)
-  })
-  .then(response => response.text())
-  .then(data => {
-      console.log("Success:", data);
-      generatePDF();
-  })
-  .catch(error => {
-      console.error("Error:", error);
-      alert("Error saving data.");
-  });
-}
+  fetch("https://docs.google.com/spreadsheets/d/1Q8Z3JizmIWMm4ro4ABtuhpk7xuEwxCZNXrMf5TJwKbs/edit?pli=1&gid=0#gid=0", {
+  method: "POST",
+  mode: "no-cors",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(userData)
+});
+
+generatePDF();
+alert("Payment details submitted successfully!");
 
 // Generate PDF Receipt
 async function generatePDF() {
