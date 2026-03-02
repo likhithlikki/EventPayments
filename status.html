@@ -1,33 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Check Payment Status</title>
+<title>Verify Payment</title>
+<style>
+body{font-family:Arial;text-align:center;background:#f2f2f2;}
+.card{background:white;padding:20px;margin:50px auto;width:350px;border-radius:10px;}
+</style>
 </head>
-<body style="text-align:center;font-family:Arial">
+<body>
 
+<div style="background:#1e1e2f;padding:15px;text-align:center;">
+  <a href="index.html" style="color:white;margin:0 15px;">Home</a>
+  <a href="status.html" style="color:white;margin:0 15px;">Verify Status</a>
+  <a href="admin.html" style="color:white;margin:0 15px;">Admin Login</a>
+</div>
+
+<div class="card">
 <h2>Check Payment Status</h2>
 
-<input id="refid" placeholder="Enter RefID">
-<button onclick="checkStatus()">Check</button>
+<input id="refid" placeholder="Enter Last 5 digits of RefID">
+<button onclick="checkStatus()">Verify</button>
 
-<h3 id="result"></h3>
+<div id="result" style="margin-top:15px;"></div>
+</div>
 
 <script>
-const scriptURL="YOUR_GOOGLE_SCRIPT_URL";
+
+const scriptURL="https://script.google.com/macros/s/AKfycbzDkmYhbDWkLI01iAaz76YJ5ubDhdLFFqkmQzxdpyNkXH4Nm7NdEYWooNSALYJCA4MP/exec";
 
 function checkStatus(){
 
-  const ref=document.getElementById("refid").value;
+  const last5=document.getElementById("refid").value;
 
-  fetch(scriptURL+"?action=checkStatus&refid="+ref)
+  if(last5.length!==5){
+    document.getElementById("result").innerHTML="<span style='color:red;'>Enter exactly last 5 digits</span>";
+    return;
+  }
+
+  fetch(scriptURL+"?action=checkStatus&refid="+last5)
   .then(res=>res.json())
   .then(data=>{
-    document.getElementById("result").innerText=
-    "Status: "+data.status+
-    " | Amount: ₹"+data.amount+
-    " | Date: "+data.date;
+
+    if(!data.found){
+      document.getElementById("result").innerHTML="<span style='color:red;'>Invalid ID</span>";
+      return;
+    }
+
+    document.getElementById("result").innerHTML=
+    "<b>Name:</b> "+data.name+"<br>"+
+    "<b>Village:</b> "+data.village+"<br>"+
+    "<b>Phone:</b> "+data.phone+"<br>"+
+    "<b>Amount:</b> ₹"+data.amount+"<br>"+
+    "<b>Status:</b> "+data.status+"<br>"+
+    "<b>Date:</b> "+data.date;
+
+  })
+  .catch(()=>{
+    document.getElementById("result").innerHTML="<span style='color:red;'>Error connecting to server</span>";
   });
 }
+
 </script>
 
 </body>
