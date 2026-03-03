@@ -2,105 +2,59 @@
 <html>
 <head>
 <title>Admin Dashboard</title>
-
 <style>
 body{font-family:Arial;background:#f2f2f2;margin:0;text-align:center;}
 
-.navbar{
-  background:#1e1e2f;
-  padding:15px;
-}
+.navbar{background:#1e1e2f;padding:15px;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
 
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
+.logout{float:right;background:red;color:white;border:none;padding:6px 12px;cursor:pointer;}
 
-.logout{
-  float:right;
-  background:red;
-  color:white;
-  border:none;
-  padding:6px 12px;
-  cursor:pointer;
-}
-
-table{
-  margin:20px auto;
-  border-collapse:collapse;
-  width:95%;
-  background:white;
-}
-
-th,td{
-  padding:8px;
-  border:1px solid #ddd;
-}
-
-th{
-  background:#f4f4f4;
-}
+table{margin:20px auto;border-collapse:collapse;width:95%;background:white;}
+th,td{padding:8px;border:1px solid #ddd;}
+th{background:#f4f4f4;}
 
 .verified{color:green;font-weight:bold;}
 .notverified{color:red;font-weight:bold;}
+.pending{color:#007bff;font-weight:bold;}
 
-.action-btn{
-  padding:5px 10px;
-  border:none;
-  cursor:pointer;
-  margin:2px;
-}
-
+.action-btn{padding:5px 10px;border:none;cursor:pointer;margin:2px;}
 .verify-btn{background:green;color:white;}
 .reject-btn{background:red;color:white;}
 
-.save-btn{
-  background:green;
-  color:white;
-  padding:10px 18px;
-  border:none;
-  cursor:pointer;
-  margin:15px;
-  display:none;
-}
+.save-btn{background:green;color:white;padding:10px 18px;border:none;cursor:pointer;margin:15px;display:none;}
 
 .loader{
-  border:4px solid #f3f3f3;
-  border-top:4px solid #3498db;
-  border-radius:50%;
-  width:25px;height:25px;
-  animation:spin 1s linear infinite;
-  margin:20px auto;
+border:4px solid #f3f3f3;
+border-top:4px solid #3498db;
+border-radius:50%;
+width:25px;height:25px;
+animation:spin 1s linear infinite;
+margin:20px auto;
 }
-
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
+@keyframes spin{100%{transform:rotate(360deg);}}
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <span style="color:white;">Admin Panel</span>
-  <button class="logout" onclick="logout()">Logout</button>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<span style="color:white;">Admin Panel</span>
+<button class="logout" onclick="logout()">Logout</button>
 </div>
 
 <script>
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="YOUR_EXEC_URL_HERE";
 
 if(sessionStorage.getItem("adminLoggedIn")!=="true"){
-  const password=prompt("Enter Admin Password:");
-  if(password==="admin123"){
-    sessionStorage.setItem("adminLoggedIn","true");
-  } else {
-    alert("Access Denied");
-    window.location.href="index.html";
-  }
+const password=prompt("Enter Admin Password:");
+if(password==="admin123"){
+sessionStorage.setItem("adminLoggedIn","true");
+}else{
+alert("Access Denied");
+window.location.href="index.html";
+}
 }
 </script>
 
@@ -137,93 +91,94 @@ let tableData=[];
 let modifiedRows=[];
 
 function loadTable(){
-
 fetch(scriptURL+"?action=getAll")
 .then(res=>res.json())
 .then(data=>{
 
-  tableData=data;
+tableData=data;
+document.getElementById("loadingArea").style.display="none";
+document.getElementById("table").style.display="table";
+document.getElementById("totals").style.display="block";
 
-  document.getElementById("loadingArea").style.display="none";
-  document.getElementById("table").style.display="table";
-  document.getElementById("totals").style.display="block";
+let total=0,verified=0,notVerified=0;
 
-  let total=0,verified=0,notVerified=0;
+data.forEach(row=>{
 
-  data.forEach(row=>{
-    total+=Number(row[6]);
-    if(row[8]==="Verified")
-      verified+=Number(row[6]);
-    else
-      notVerified+=Number(row[6]);
+total+=Number(row[6]);
 
-    const tr=document.createElement("tr");
+if(row[8]==="Verified")
+verified+=Number(row[6]);
+else if(row[8]==="Pending")
+notVerified+=Number(row[6]);
+else
+notVerified+=Number(row[6]);
 
-    tr.innerHTML=`
-    <td>${row[0]}</td>
-    <td>${row[1]}</td>
-    <td>${row[2]}</td>
-    <td>${row[3]}</td>
-    <td>${row[4]}</td>
-    <td>${row[5]}</td>
-    <td>${row[6]}</td>
-    <td>${row[7]}</td>
-    <td id="status-${row[2]}" class="${row[8]==='Verified'?'verified':'notverified'}">
-      ${row[8]}
-    </td>
-    <td>
-      <button class="action-btn verify-btn" onclick="changeStatus('${row[2]}','Verified')">✓</button>
-      <button class="action-btn reject-btn" onclick="changeStatus('${row[2]}','Not Verified')">✗</button>
-    </td>
-    `;
+const tr=document.createElement("tr");
 
-    document.getElementById("table").appendChild(tr);
-  });
+tr.innerHTML=`
+<td>${row[0]}</td>
+<td>${row[1]}</td>
+<td>${row[2]}</td>
+<td>${row[3]}</td>
+<td>${row[4]}</td>
+<td>${row[5]}</td>
+<td>${row[6]}</td>
+<td>${row[7]}</td>
+<td id="status-${row[2]}" class="${
+row[8]==='Verified'?'verified':
+row[8]==='Not Verified'?'notverified':'pending'
+}">
+${row[8]}
+</td>
+<td>
+<button class="action-btn verify-btn" onclick="changeStatus('${row[2]}','Verified')">✓</button>
+<button class="action-btn reject-btn" onclick="changeStatus('${row[2]}','Not Verified')">✗</button>
+</td>
+`;
 
-  document.getElementById("total").innerText=total;
-  document.getElementById("verified").innerText=verified;
-  document.getElementById("notVerified").innerText=notVerified;
+document.getElementById("table").appendChild(tr);
+});
 
+document.getElementById("total").innerText=total;
+document.getElementById("verified").innerText=verified;
+document.getElementById("notVerified").innerText=notVerified;
 });
 }
 
 function changeStatus(refid,newStatus){
 
-  const cell=document.getElementById("status-"+refid);
-  cell.innerText=newStatus;
-  cell.className=newStatus==="Verified"?"verified":"notverified";
+const cell=document.getElementById("status-"+refid);
+cell.innerText=newStatus;
 
-  const existing=modifiedRows.find(r=>r.refid===refid);
-  if(existing) existing.status=newStatus;
-  else modifiedRows.push({refid:refid,status:newStatus});
+if(newStatus==="Verified") cell.className="verified";
+else if(newStatus==="Not Verified") cell.className="notverified";
+else cell.className="pending";
 
-  document.getElementById("saveBtn").style.display="inline-block";
+const existing=modifiedRows.find(r=>r.refid===refid);
+if(existing) existing.status=newStatus;
+else modifiedRows.push({refid:refid,status:newStatus});
+
+document.getElementById("saveBtn").style.display="inline-block";
 }
 
 function saveChanges(){
+const data=new URLSearchParams();
+data.append("action","bulkUpdate");
+data.append("data",JSON.stringify(modifiedRows));
 
-  document.getElementById("loadingArea").style.display="block";
-
-  const data=new URLSearchParams();
-  data.append("action","bulkUpdate");
-  data.append("data",JSON.stringify(modifiedRows));
-
-  fetch(scriptURL,{method:"POST",body:data})
-  .then(()=> {
-    alert("Sheet data modified successfully");
-    modifiedRows=[];
-    location.reload();
-  });
+fetch(scriptURL,{method:"POST",body:data})
+.then(()=>{
+alert("Sheet data modified successfully");
+location.reload();
+});
 }
 
 function logout(){
-  sessionStorage.removeItem("adminLoggedIn");
-  window.location.href="index.html";
+sessionStorage.removeItem("adminLoggedIn");
+window.location.href="index.html";
 }
 
 loadTable();
-
 </script>
-
 </body>
 </html>
