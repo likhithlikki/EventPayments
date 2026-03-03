@@ -199,8 +199,8 @@ const { jsPDF } = window.jspdf;
 const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a5"});
 const pageWidth=doc.internal.pageSize.getWidth();
 
-const logo=await loadImage("sbi_logo.png");
-const sign=await loadImage("sign.jpg");
+const logo=await loadImage("");
+const sign=await loadImage("sign.jpeg");
 
 doc.addImage(logo,"PNG",10,8,20,20);
 
