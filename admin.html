@@ -2,250 +2,299 @@
 <html>
 <head>
 <title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  font-family:Arial;
-  background:#f2f2f2;
   margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
-.navbar{
-  background:#111;
-  padding:15px;
+.header{
+  background:#111827;
+  padding:15px 20px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   flex-wrap:wrap;
 }
 
-.nav-left a{
-  color:white;
-  margin-right:15px;
-  text-decoration:none;
-  font-weight:bold;
+.header h2{
+  margin:0;
 }
 
-.nav-right button{
+.header button{
   margin-left:10px;
-}
-
-.container{
-  display:flex;
-  gap:20px;
-  padding:20px;
-}
-
-.left-box{
-  background:white;
-  padding:20px;
-  width:250px;
-  border-radius:8px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-
-.right-box{
-  flex:1;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:white;
-}
-
-th,td{
-  padding:8px;
-  border:1px solid #ddd;
-  text-align:center;
-}
-
-th{
-  background:#eee;
-}
-
-.verified{color:green;font-weight:bold;}
-.notverified{color:red;font-weight:bold;}
-.pending{color:#007bff;font-weight:bold;}
-
-.modified{
-  background:#f0f8ff !important;
-}
-
-button{
-  padding:6px 10px;
+  padding:6px 12px;
   border:none;
   cursor:pointer;
   border-radius:4px;
 }
 
-.verify-btn{background:green;color:white;}
-.reject-btn{background:red;color:white;}
+.logout{background:red;color:white;}
+.save{background:#3b82f6;color:white;}
+.save:disabled{background:gray;}
 
-.save-btn{
-  background:#007bff;
+.container{
+  padding:20px;
+}
+
+.tabs button{
+  padding:8px 15px;
+  margin-right:10px;
+  border:none;
+  cursor:pointer;
+  border-radius:5px;
+  background:#1f2937;
   color:white;
 }
 
-.save-btn:disabled{
-  background:gray;
-  cursor:not-allowed;
+.tabs button.active{
+  background:#3b82f6;
 }
 
-.pdf-btn{
-  background:#444;
-  color:white;
+.filter-box{
+  margin:15px 0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
 
+.filter-box input, .filter-box select{
+  padding:6px;
+  border-radius:4px;
+  border:none;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+
+th,td{
+  padding:8px;
+  border:1px solid #374151;
+  text-align:center;
+}
+
+th{
+  background:#1f2937;
+}
+
+tr:nth-child(even){
+  background:#1e293b;
+}
+
+.verified{color:lightgreen;}
+.notverified{color:#f87171;}
+.pending{color:#60a5fa;}
+
+.shortlist{
+  cursor:pointer;
+}
+
+@media(max-width:768px){
+  table{font-size:12px;}
+}
 </style>
 </head>
 
 <body>
 
-<div class="navbar">
-  <div class="nav-left">
-    <a href="index.html">Home</a>
-    <a href="status.html">Verify Status</a>
-  </div>
+<script>
+if(sessionStorage.getItem("adminAuth")!=="true"){
+  window.location.href="login.html";
+}
+</script>
 
-  <div class="nav-right">
-    <button id="saveBtn" class="save-btn" disabled onclick="saveChanges()">Save</button>
-    <button class="pdf-btn" onclick="downloadPDF()">Download PDF</button>
-    <button onclick="logout()" style="background:red;color:white;">Logout</button>
+<div class="header">
+  <h2>Admin Dashboard</h2>
+  <div>
+    <button class="save" id="saveBtn" disabled onclick="saveChanges()">Save</button>
+    <button onclick="downloadData()">Download</button>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 </div>
 
 <div class="container">
 
-  <div class="left-box">
-    <h3>Summary</h3>
-    <p>Total Amount: ₹<span id="total">0</span></p>
-    <p>Verified Amount: ₹<span id="verified">0</span></p>
-    <p>Pending Amount: ₹<span id="pendingTotal">0</span></p>
-    <p>Not Verified Amount: ₹<span id="notVerified">0</span></p>
-  </div>
+<div class="tabs">
+  <button id="paymentTab" class="active" onclick="switchTab('Payment')">Payments</button>
+  <button id="complaintTab" onclick="switchTab('Complaint')">Complaints</button>
+</div>
 
-  <div class="right-box">
+<div class="filter-box">
+  <input type="text" id="search" placeholder="Search Name / Phone">
+  <select id="statusFilter">
+    <option value="">All Status</option>
+    <option value="Pending">Pending</option>
+    <option value="Verified">Verified</option>
+    <option value="Not Verified">Not Verified</option>
+    <option value="Open">Open</option>
+    <option value="Closed">Closed</option>
+  </select>
+  <input type="text" id="villageFilter" placeholder="Village">
+  <input type="number" id="minAmount" placeholder="Min Amount">
+  <input type="number" id="maxAmount" placeholder="Max Amount">
+  <button onclick="applyFilters()">Filter</button>
+</div>
 
-    <table id="table">
-      <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>RefID</th>
-        <th>Name</th>
-        <th>Village</th>
-        <th>Phone</th>
-        <th>Amount</th>
-        <th>UTR</th>
-        <th>Status</th>
-        <th>Changes</th>
-        <th>Action</th>
-      </tr>
-    </table>
-
-  </div>
+<table id="dataTable">
+<thead></thead>
+<tbody></tbody>
+</table>
 
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
-
+const scriptURL="https://script.google.com/macros/library/d/1-WKKsfcoL77SVVCbwfNWvHSI6PDN__xGxsEkW1kIr80-SOMejONonUAU/18";
+let allData=[];
+let currentTab="Payment";
 let modifiedRows=[];
 
 fetch(scriptURL+"?action=getAll")
 .then(res=>res.json())
 .then(data=>{
-
-let total=0,verified=0,pendingTotal=0,notVerified=0;
-
-data.forEach(row=>{
-
-total+=Number(row[6]);
-
-if(row[8]==="Verified") verified+=Number(row[6]);
-else if(row[8]==="Pending") pendingTotal+=Number(row[6]);
-else notVerified+=Number(row[6]);
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-<td>${row[0]}</td>
-<td>${row[1]}</td>
-<td>${row[2]}</td>
-<td>${row[3]}</td>
-<td>${row[4]}</td>
-<td>${row[5]}</td>
-<td>${row[6]}</td>
-<td>${row[7]}</td>
-<td id="status-${row[2]}" class="${
-row[8]==='Verified'?'verified':
-row[8]==='Not Verified'?'notverified':'pending'
-}">
-${row[8]}
-</td>
-<td>${row[9]}</td>
-<td>
-<button class="verify-btn" onclick="changeStatus('${row[2]}','Verified',this)">✓</button>
-<button class="reject-btn" onclick="changeStatus('${row[2]}','Not Verified',this)">✗</button>
-</td>
-`;
-
-document.getElementById("table").appendChild(tr);
-
+  allData=data;
+  renderTable();
 });
 
-document.getElementById("total").innerText=total;
-document.getElementById("verified").innerText=verified;
-document.getElementById("pendingTotal").innerText=pendingTotal;
-document.getElementById("notVerified").innerText=notVerified;
+function switchTab(type){
+  currentTab=type;
+  document.getElementById("paymentTab").classList.remove("active");
+  document.getElementById("complaintTab").classList.remove("active");
 
-});
+  if(type==="Payment") document.getElementById("paymentTab").classList.add("active");
+  else document.getElementById("complaintTab").classList.add("active");
 
-function changeStatus(refid,newStatus,btn){
+  renderTable();
+}
 
-const cell=document.getElementById("status-"+refid);
-cell.innerText=newStatus;
+function renderTable(filteredData){
 
-if(newStatus==="Verified") cell.className="verified";
-else if(newStatus==="Not Verified") cell.className="notverified";
-else cell.className="pending";
+  const tableHead=document.querySelector("#dataTable thead");
+  const tableBody=document.querySelector("#dataTable tbody");
 
-const rowElement=btn.closest("tr");
-rowElement.classList.add("modified");
+  tableHead.innerHTML="";
+  tableBody.innerHTML="";
 
-const existing=modifiedRows.find(r=>r.refid===refid);
-if(existing) existing.status=newStatus;
-else modifiedRows.push({refid:refid,status:newStatus});
+  let data=(filteredData || allData).filter(row=>row[0]===currentTab);
 
-document.getElementById("saveBtn").disabled=false;
+  if(currentTab==="Payment"){
+    tableHead.innerHTML=`
+    <tr>
+    <th>Short</th>
+    <th>Date</th>
+    <th>Name</th>
+    <th>Village</th>
+    <th>Phone</th>
+    <th>Amount</th>
+    <th>Status</th>
+    <th>Change</th>
+    </tr>`;
+
+    data.forEach(row=>{
+      tableBody.innerHTML+=`
+      <tr>
+      <td><input type="checkbox" class="shortlist"></td>
+      <td>${row[1]} ${row[2]}</td>
+      <td>${row[4]}</td>
+      <td>${row[5]}</td>
+      <td>${row[6]}</td>
+      <td>${row[7]}</td>
+      <td class="${
+        row[9]==='Verified'?'verified':
+        row[9]==='Not Verified'?'notverified':'pending'
+      }">${row[9]}</td>
+      <td>
+      <button onclick="changeStatus('${row[3]}','Verified')">✓</button>
+      <button onclick="changeStatus('${row[3]}','Not Verified')">✗</button>
+      </td>
+      </tr>`;
+    });
+  }
+
+  if(currentTab==="Complaint"){
+    tableHead.innerHTML=`
+    <tr>
+    <th>Date</th>
+    <th>Name</th>
+    <th>Village</th>
+    <th>Phone</th>
+    <th>Complaint</th>
+    <th>Status</th>
+    </tr>`;
+
+    data.forEach(row=>{
+      tableBody.innerHTML+=`
+      <tr>
+      <td>${row[1]} ${row[2]}</td>
+      <td>${row[4]}</td>
+      <td>${row[5]}</td>
+      <td>${row[6]}</td>
+      <td>${row[11]}</td>
+      <td>${row[12]}</td>
+      </tr>`;
+    });
+  }
+}
+
+function changeStatus(refid,newStatus){
+  modifiedRows.push({refid:refid,status:newStatus});
+  document.getElementById("saveBtn").disabled=false;
 }
 
 function saveChanges(){
 
-const data=new URLSearchParams();
-data.append("action","bulkUpdate");
-data.append("data",JSON.stringify(modifiedRows));
+  const data=new URLSearchParams();
+  data.append("action","bulkUpdate");
+  data.append("data",JSON.stringify(modifiedRows));
 
-fetch(scriptURL,{method:"POST",body:data})
-.then(()=>{
-alert("Sheet updated successfully");
-location.reload();
-});
+  fetch(scriptURL,{
+    method:"POST",
+    body:data
+  })
+  .then(()=>{
+    alert("Updated Successfully");
+    location.reload();
+  });
 }
 
-function downloadPDF(){
+function applyFilters(){
 
-const printContent=document.getElementById("table").outerHTML;
-const win=window.open("");
-win.document.write(printContent);
-win.print();
-win.close();
+  const search=document.getElementById("search").value.toLowerCase();
+  const status=document.getElementById("statusFilter").value;
+  const village=document.getElementById("villageFilter").value.toLowerCase();
+  const min=document.getElementById("minAmount").value;
+  const max=document.getElementById("maxAmount").value;
+
+  const filtered=allData.filter(row=>{
+
+    if(row[0]!==currentTab) return false;
+
+    if(search && !(row[4].toLowerCase().includes(search) || row[6].includes(search))) return false;
+    if(status && row[9]!==status && row[12]!==status) return false;
+    if(village && !row[5].toLowerCase().includes(village)) return false;
+    if(min && row[7]<min) return false;
+    if(max && row[7]>max) return false;
+
+    return true;
+  });
+
+  renderTable(filtered);
+}
+
+function downloadData(){
+  window.print();
 }
 
 function logout(){
-sessionStorage.removeItem("adminLoggedIn");
-window.location.href="index.html";
+  sessionStorage.removeItem("adminAuth");
+  window.location.href="login.html";
 }
 
 </script>
