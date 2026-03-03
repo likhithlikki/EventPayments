@@ -2,65 +2,67 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard</title>
+<title>Verify Status</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
 
-.navbar{background:#065f46;padding:15px;text-align:center;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.navbar{
+  background:#6b21a8;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
 .container{
-  max-width:1100px;
+  max-width:420px;
   margin:40px auto;
   background:#1e293b;
   padding:20px;
   border-radius:10px;
 }
 
-table{
+input{
   width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
 }
 
-th,td{
-  padding:8px;
-  border:1px solid #334155;
-  text-align:center;
+button{
+  width:100%;
+  padding:12px;
+  background:#8b5cf6;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.resultBox{
+  margin-top:15px;
+  padding:15px;
+  background:#111827;
+  border-radius:6px;
 }
 
 .pending{color:#3b82f6;font-weight:bold;}
 .verified{color:#22c55e;font-weight:bold;}
 .notverified{color:#ef4444;font-weight:bold;}
-
-.changedCount{background:#2d3748;} /* count > 0 */
-.modifiedRow{background:#111827;color:white;} /* modified black shade */
-
-button{
-  padding:6px 10px;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-}
-
-#saveBtn{
-  margin-top:15px;
-  background:#10b981;
-  color:white;
-}
-
-#saveBtn:disabled{
-  background:gray;
-  cursor:not-allowed;
-}
-
-.filterRow input, .filterRow select{
-  padding:6px;
-  margin:5px;
-  border-radius:5px;
-  border:none;
-}
+.error{color:#ef4444;}
 
 .progressBar{
   width:100%;
@@ -75,34 +77,12 @@ button{
   height:100%;
   width:0%;
   background:#22c55e;
-  animation:loading 1.5s infinite;
-}
-
-@keyframes loading{
-  0%{width:0%}
-  50%{width:80%}
-  100%{width:0%}
-}
-
-@media print{
-  .navbar, button, .filterRow{display:none;}
+  transition:width 0.3s linear;
 }
 </style>
 </head>
 
 <body>
-
-<script>
-if(!sessionStorage.getItem("adminAuth")){
-  const pass=prompt("Enter Admin Password");
-  if(pass==="admin123"){
-    sessionStorage.setItem("adminAuth","true");
-  }else{
-    alert("Access Denied");
-    window.location="index.html";
-  }
-}
-</script>
 
 <div class="navbar">
 <a href="index.html">Home</a>
@@ -112,143 +92,139 @@ if(!sessionStorage.getItem("adminAuth")){
 </div>
 
 <div class="container">
+<h2>Check Payment Status</h2>
 
-<h2 style="text-align:center;">Admin Dashboard</h2>
+<input type="text" id="refid" placeholder="Enter Last 5 digits">
+<button onclick="checkStatus()">Verify</button>
 
-<div id="summary"></div>
-
-<div class="filterRow">
-<input type="text" id="filterDate" placeholder="Filter Date (03 Mar 2026)">
-<select id="filterStatus">
-<option value="">All Status</option>
-<option>Pending</option>
-<option>Verified</option>
-<option>Not Verified</option>
-</select>
-<input type="number" id="filterAmount" placeholder="Min Amount">
-<input type="number" id="filterCount" placeholder="Min Count">
-<button onclick="applyFilters()">Filter</button>
-<button onclick="window.print()">Download PDF</button>
-</div>
-
-<div id="tableArea">
-<div class="progressBar"><div class="progressFill"></div></div>
-</div>
-
-<button id="saveBtn" disabled onclick="saveChanges()">Save Changes</button>
-
+<div id="result"></div>
 </div>
 
 <script>
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
-let allData=[];
-let modifiedRows=[];
 
-fetch(scriptURL+"?action=getAll")
+/* -------- PROGRESS BAR -------- */
+function startProgressBar(){
+  const result=document.getElementById("result");
+  result.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
+  const bar=document.getElementById("progressFill");
+
+  setTimeout(()=>{bar.style.width="80%";},100);
+  setTimeout(()=>{bar.style.width="90%";},3000);
+  setTimeout(()=>{bar.style.width="99%";},5000);
+}
+
+function completeProgress(){
+  const bar=document.getElementById("progressFill");
+  if(bar) bar.style.width="100%";
+}
+
+/* -------- DATE FORMAT: 12 Mar 2026 -------- */
+function formatDate(dateValue){
+
+  if(!dateValue) return "";
+
+  // If already formatted like 12 Mar 2026
+  if(typeof dateValue === "string" && dateValue.includes(" ")){
+    return dateValue;
+  }
+
+  const d=new Date(dateValue);
+  if(isNaN(d)) return dateValue;
+
+  const day=d.getDate();
+  const monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const month=monthNames[d.getMonth()];
+  const year=d.getFullYear();
+
+  return `${day} ${month} ${year}`;
+}
+
+/* -------- TIME FORMAT: 2:56 pm -------- */
+function formatTime(timeValue){
+
+  if(!timeValue) return "";
+
+  // If already like 04:25 PM
+  if(typeof timeValue === "string" && timeValue.toLowerCase().includes("m")){
+    return timeValue.toLowerCase();
+  }
+
+  const d=new Date(timeValue);
+  if(isNaN(d)) return timeValue;
+
+  let hours=d.getHours();
+  const minutes=d.getMinutes().toString().padStart(2,"0");
+  const ampm=hours>=12 ? "pm" : "am";
+
+  hours=hours%12;
+  hours=hours ? hours : 12;
+
+  return `${hours}:${minutes} ${ampm}`;
+}
+
+/* -------- MAIN FUNCTION -------- */
+function checkStatus(){
+
+const last5=document.getElementById("refid").value.trim();
+const result=document.getElementById("result");
+
+if(!/^\d{5}$/.test(last5)){
+  result.innerHTML="<p class='error'>Enter exactly 5 digits</p>";
+  return;
+}
+
+startProgressBar();
+
+fetch(scriptURL+"?action=checkStatus&refid="+last5)
 .then(res=>res.json())
 .then(data=>{
-  allData=data;
-  renderTable(data);
-});
 
-function renderTable(data){
+completeProgress();
 
-let total=0, verified=0, notverified=0, pending=0;
+if(data.found===false){
+result.innerHTML="<p class='error'>Invalid Reference ID</p>";
+return;
+}
 
-let html="<table><tr><th>Date</th><th>Time</th><th>RefID</th><th>Name</th><th>Amount</th><th>Status</th><th>Count</th><th>Action</th></tr>";
-
-data.forEach(row=>{
-
-if(row[0]!=="Payment") return;
-
-total+=Number(row[7]||0);
-
-if(row[9]==="Verified") verified+=Number(row[7]||0);
-if(row[9]==="Not Verified") notverified+=Number(row[7]||0);
-if(row[9]==="Pending") pending+=Number(row[7]||0);
+/*
+Sheet Structure:
+0 Type
+1 Date
+2 Time
+3 RefID
+4 Name
+5 Village
+6 Phone
+7 Amount
+8 UTR
+9 Status
+10 Count
+*/
 
 let statusClass="pending";
-if(row[9]==="Verified") statusClass="verified";
-if(row[9]==="Not Verified") statusClass="notverified";
+if(data[9]==="Verified") statusClass="verified";
+if(data[9]==="Not Verified") statusClass="notverified";
 
-let rowClass="";
-if(row[10]>0) rowClass="changedCount";
-
-html+=`
-<tr class="${rowClass}">
-<td>${row[1]}</td>
-<td>${row[2]}</td>
-<td>${row[3]}</td>
-<td>${row[4]}</td>
-<td>${row[7]}</td>
-<td class="statusCell ${statusClass}">${row[9]}</td>
-<td>${row[10]}</td>
-<td>
-<button onclick="markChange(this,'${row[3]}','Verified')">✓</button>
-<button onclick="markChange(this,'${row[3]}','Not Verified')">✗</button>
-</td>
-</tr>`;
+result.innerHTML=`
+<div class="resultBox">
+<p><strong>Name:</strong> ${data[4]}</p>
+<p><strong>Village:</strong> ${data[5]}</p>
+<p><strong>Phone:</strong> ${data[6]}</p>
+<p><strong>Amount:</strong> ₹${data[7]}</p>
+<p><strong>Date:</strong> ${formatDate(data[1])}</p>
+<p><strong>Time:</strong> ${formatTime(data[2])}</p>
+<p><strong>Status:</strong> <span class="${statusClass}">${data[9]}</span></p>
+</div>
+`;
+})
+.catch(()=>{
+result.innerHTML="<p class='error'>Server connection error</p>";
 });
-
-html+="</table>";
-document.getElementById("tableArea").innerHTML=html;
-
-document.getElementById("summary").innerHTML=
-`<p>Total: ₹${total}</p>
-<p>Verified: ₹${verified}</p>
-<p>Not Verified: ₹${notverified}</p>
-<p>Pending: ₹${pending}</p>`;
-}
-
-function markChange(btn,refid,status){
-
-const row=btn.closest("tr");
-
-row.querySelector(".statusCell").innerText=status;
-row.classList.add("modifiedRow");
-
-modifiedRows.push({refid,status});
-document.getElementById("saveBtn").disabled=false;
-}
-
-function saveChanges(){
-
-if(modifiedRows.length===0) return;
-
-document.getElementById("tableArea").innerHTML=
-`<div class="progressBar"><div class="progressFill"></div></div>`;
-
-const data=new URLSearchParams();
-data.append("action","bulkUpdate");
-data.append("data",JSON.stringify(modifiedRows));
-
-fetch(scriptURL,{method:"POST",body:data})
-.then(()=>{
-alert("Sheet Updated Successfully");
-location.reload();
-});
-}
-
-function applyFilters(){
-
-const date=document.getElementById("filterDate").value;
-const status=document.getElementById("filterStatus").value;
-const amount=document.getElementById("filterAmount").value;
-const count=document.getElementById("filterCount").value;
-
-const filtered=allData.filter(row=>{
-if(row[0]!=="Payment") return false;
-if(date && row[1]!==date) return false;
-if(status && row[9]!==status) return false;
-if(amount && Number(row[7])<Number(amount)) return false;
-if(count && Number(row[10])<Number(count)) return false;
-return true;
-});
-
-renderTable(filtered);
 }
 
 </script>
+
 </body>
 </html>
