@@ -1,187 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Verify Payment Status</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Status</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-.navbar{
-  background:#111827;
-  padding:15px;
-  text-align:center;
-}
-
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
-
-.container{
-  display:flex;
-  justify-content:center;
-  padding:40px 15px;
-}
-
-.card{
-  background:#1e293b;
-  padding:30px;
-  width:400px;
-  border-radius:10px;
-  box-shadow:0 0 15px rgba(0,0,0,0.4);
-}
-
-h2{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
-}
-
-button{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#3b82f6;
-  color:white;
-}
-
-button:hover{
-  background:#2563eb;
-}
-
-.loader{
-  border:4px solid #f3f3f3;
-  border-top:4px solid #3b82f6;
-  border-radius:50%;
-  width:25px;
-  height:25px;
-  animation:spin 1s linear infinite;
-  margin:20px auto;
-}
-
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
-
-.result-box{
-  margin-top:15px;
-  padding:15px;
-  background:#111827;
-  border-radius:6px;
-  text-align:left;
-}
-
-.verified{color:lightgreen;font-weight:bold;}
-.notverified{color:#f87171;font-weight:bold;}
-.pending{color:#60a5fa;font-weight:bold;}
-
-.error{
-  color:#f87171;
-  text-align:center;
-  margin-top:10px;
-}
-
-.thankyou{
-  color:gray;
-  margin-top:10px;
-  text-align:center;
-}
-
-@media(max-width:500px){
-  .card{width:100%;}
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+.navbar{background:#6b21a8;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.container{max-width:400px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
+input,button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
+button{background:#8b5cf6;color:white;font-weight:bold;}
+.loader{border:4px solid #fff;border-top:4px solid #8b5cf6;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite;margin:10px auto;}
+@keyframes spin{100%{transform:rotate(360deg);}}
+.pending{color:#3b82f6;}
+.verified{color:#22c55e;}
+.notverified{color:#ef4444;}
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <a href="complaint.html">Complaint</a>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
-<div class="card">
-
-<h2>Check Payment Status</h2>
-
-<input id="refid" placeholder="Enter Last 5 digits of RefID">
-<button onclick="checkStatus()">Verify</button>
-
+<h2>Check Status</h2>
+<input id="refid" placeholder="Enter Last 5 digits">
+<button onclick="check()">Verify</button>
 <div id="result"></div>
-
-</div>
 </div>
 
 <script>
-
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-function checkStatus(){
+function check(){
 
-const last5=document.getElementById("refid").value.trim();
-const resultDiv=document.getElementById("result");
+const result=document.getElementById("result");
+result.innerHTML="<div class='loader'></div>";
 
-resultDiv.innerHTML="";
-
-if(!/^\d{5}$/.test(last5)){
-  resultDiv.innerHTML="<p class='error'>Enter exactly 5 digits</p>";
-  return;
-}
-
-resultDiv.innerHTML="<div class='loader'></div>";
-
-fetch(scriptURL+"?action=checkStatus&refid="+last5)
+fetch(scriptURL+"?action=checkStatus&refid="+refid.value)
 .then(res=>res.json())
 .then(data=>{
-
-if(!data.found){
-  resultDiv.innerHTML="<p class='error'>Invalid Reference ID</p>";
-  return;
+if(data.found===false){
+result.innerHTML="<span style='color:red'>Invalid ID</span>";
+return;
 }
 
-let statusClass;
+let statusClass="pending";
+if(data[9]==="Verified") statusClass="verified";
+if(data[9]==="Not Verified") statusClass="notverified";
 
-if(data.status==="Verified") statusClass="verified";
-else if(data.status==="Not Verified") statusClass="notverified";
-else statusClass="pending";
-
-resultDiv.innerHTML=`
-<div class="result-box">
-<p><strong>Name:</strong> ${data.name}</p>
-<p><strong>Village:</strong> ${data.village}</p>
-<p><strong>Phone:</strong> ${data.phone}</p>
-<p><strong>Amount:</strong> ₹${data.amount || "-"}</p>
-<p><strong>Date:</strong> ${data.date}</p>
-<p><strong>Time:</strong> ${data.time}</p>
-<p><strong>Status:</strong> <span class="${statusClass}">${data.status}</span></p>
-</div>
-<p class="thankyou">Thank you for visiting 🙏</p>
+result.innerHTML=`
+<p><b>Name:</b> ${data[4]}</p>
+<p><b>Village:</b> ${data[5]}</p>
+<p><b>Amount:</b> ${data[7]}</p>
+<p><b>Status:</b> <span class="${statusClass}">${data[9]}</span></p>
+<p><b>Date:</b> ${data[1]} ${data[2]}</p>
 `;
 })
-.catch(()=>{
-  resultDiv.innerHTML="<p class='error'>Server connection error</p>";
-});
+.catch(()=>result.innerHTML="<span style='color:red'>Server Error</span>");
 }
-
 </script>
 
 </body>
