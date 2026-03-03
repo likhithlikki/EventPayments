@@ -2,67 +2,169 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Status</title>
+<title>Verify Status</title>
+
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white;}
-.navbar{background:#6b21a8;padding:15px;text-align:center;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
-.container{max-width:400px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
-input,button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
-button{background:#8b5cf6;color:white;font-weight:bold;}
-.loader{border:4px solid #fff;border-top:4px solid #8b5cf6;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite;margin:10px auto;}
-@keyframes spin{100%{transform:rotate(360deg);}}
-.pending{color:#3b82f6;}
-.verified{color:#22c55e;}
-.notverified{color:#ef4444;}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
+
+.navbar{
+  background:#6b21a8;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.container{
+  max-width:420px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:#8b5cf6;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.loader{
+  border:4px solid #fff;
+  border-top:4px solid #8b5cf6;
+  border-radius:50%;
+  width:25px;
+  height:25px;
+  animation:spin 1s linear infinite;
+  margin:15px auto;
+}
+
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
+
+.resultBox{
+  margin-top:15px;
+  padding:15px;
+  background:#111827;
+  border-radius:6px;
+}
+
+.pending{color:#3b82f6;font-weight:bold;}
+.verified{color:#22c55e;font-weight:bold;}
+.notverified{color:#ef4444;font-weight:bold;}
+
+.error{color:#ef4444;}
+.success{color:#22c55e;}
 </style>
 </head>
+
 <body>
 
 <div class="navbar">
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="complaint.html">Complaint</a>
-<a href="admin.html">Admin</a>
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
-<h2>Check Status</h2>
-<input id="refid" placeholder="Enter Last 5 digits">
-<button onclick="check()">Verify</button>
+
+<h2>Check Payment Status</h2>
+
+<input type="text" id="refid" placeholder="Enter Last 5 digits of RefID">
+<button onclick="checkStatus()">Verify</button>
+
 <div id="result"></div>
+
 </div>
 
 <script>
+
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-function check(){
+function checkStatus(){
 
 const result=document.getElementById("result");
+const last5=document.getElementById("refid").value.trim();
+
+if(!/^\d{5}$/.test(last5)){
+  result.innerHTML="<p class='error'>Enter exactly 5 digits</p>";
+  return;
+}
+
 result.innerHTML="<div class='loader'></div>";
 
-fetch(scriptURL+"?action=checkStatus&refid="+refid.value)
+fetch(scriptURL+"?action=checkStatus&refid="+last5)
 .then(res=>res.json())
 .then(data=>{
+
 if(data.found===false){
-result.innerHTML="<span style='color:red'>Invalid ID</span>";
-return;
+  result.innerHTML="<p class='error'>Invalid Reference ID</p>";
+  return;
 }
+
+/*
+Sheet structure:
+0 Type
+1 Date
+2 Time
+3 RefID
+4 Name
+5 Village
+6 Phone
+7 Amount
+8 UTR
+9 Status
+10 Count
+*/
 
 let statusClass="pending";
 if(data[9]==="Verified") statusClass="verified";
 if(data[9]==="Not Verified") statusClass="notverified";
 
 result.innerHTML=`
-<p><b>Name:</b> ${data[4]}</p>
-<p><b>Village:</b> ${data[5]}</p>
-<p><b>Amount:</b> ${data[7]}</p>
-<p><b>Status:</b> <span class="${statusClass}">${data[9]}</span></p>
-<p><b>Date:</b> ${data[1]} ${data[2]}</p>
+<div class="resultBox">
+<p><strong>Name:</strong> ${data[4]}</p>
+<p><strong>Village:</strong> ${data[5]}</p>
+<p><strong>Phone:</strong> ${data[6]}</p>
+<p><strong>Amount:</strong> ₹${data[7]}</p>
+<p><strong>Date:</strong> ${data[1]}</p>
+<p><strong>Time:</strong> ${data[2]}</p>
+<p><strong>Status:</strong> <span class="${statusClass}">${data[9]}</span></p>
+</div>
 `;
+
 })
-.catch(()=>result.innerHTML="<span style='color:red'>Server Error</span>");
+.catch(()=>{
+  result.innerHTML="<p class='error'>Server connection error</p>";
+});
+
 }
+
 </script>
 
 </body>
