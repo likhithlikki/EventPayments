@@ -49,8 +49,8 @@ th,td{
 .verified{color:#22c55e;font-weight:bold;}
 .notverified{color:#ef4444;font-weight:bold;}
 
-.changedCount{background:#2d3748;}      /* count > 0 */
-.modifiedRow{background:#111827;color:white;} /* modified */
+.changedCount{background:#2d3748;}
+.modifiedRow{background:#111827;color:white;}
 
 button{
   padding:6px 10px;
@@ -127,7 +127,7 @@ if(!sessionStorage.getItem("adminAuth")){
 <div id="summary"></div>
 
 <div class="filterRow">
-<input type="text" id="filterDate" placeholder="Filter Date (03 Mar 2026)">
+<input type="text" id="filterDate" placeholder="Filter Date (12 Mar 2026)">
 <select id="filterStatus">
 <option value="">All Status</option>
 <option>Pending</option>
@@ -140,9 +140,7 @@ if(!sessionStorage.getItem("adminAuth")){
 <button onclick="window.print()">Download PDF</button>
 </div>
 
-<div id="tableArea">
-<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>
-</div>
+<div id="tableArea"></div>
 
 <button id="saveBtn" disabled onclick="saveChanges()">Save Changes</button>
 
@@ -154,7 +152,7 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 let allData=[];
 let modifiedRows=[];
 
-/* -------- Progress Animation -------- */
+/* -------- Progress Bar -------- */
 function startProgressBar(containerId){
   const container=document.getElementById(containerId);
   container.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
@@ -170,9 +168,35 @@ function completeProgress(){
   if(bar) bar.style.width="100%";
 }
 
-/* -------- Date Format (No ISO conversion) -------- */
-function formatDate(d){ return d; }
-function formatTime(t){ return t; }
+/* -------- Format Date -------- */
+function formatDate(value){
+  if(!value) return "";
+  const d=new Date(value);
+  if(isNaN(d)) return value;
+
+  const day=d.getDate();
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const month=months[d.getMonth()];
+  const year=d.getFullYear();
+
+  return `${day} ${month} ${year}`;
+}
+
+/* -------- Format Time -------- */
+function formatTime(value){
+  if(!value) return "";
+  const d=new Date(value);
+  if(isNaN(d)) return value;
+
+  let hours=d.getHours();
+  const minutes=d.getMinutes().toString().padStart(2,"0");
+  const ampm=hours>=12 ? "pm" : "am";
+
+  hours=hours%12;
+  hours=hours ? hours : 12;
+
+  return `${hours}:${minutes} ${ampm}`;
+}
 
 /* -------- Load Data -------- */
 startProgressBar("tableArea");
@@ -237,16 +261,14 @@ document.getElementById("summary").innerHTML=
 
 /* -------- Mark Change -------- */
 function markChange(btn,refid,status){
-
 const row=btn.closest("tr");
 row.querySelector(".statusCell").innerText=status;
 row.classList.add("modifiedRow");
-
 modifiedRows.push({refid,status});
 document.getElementById("saveBtn").disabled=false;
 }
 
-/* -------- Save All -------- */
+/* -------- Save Changes -------- */
 function saveChanges(){
 
 if(modifiedRows.length===0) return;
@@ -274,7 +296,7 @@ const count=document.getElementById("filterCount").value;
 
 const filtered=allData.filter(row=>{
 if(row[0]!=="Payment") return false;
-if(date && row[1]!==date) return false;
+if(date && formatDate(row[1])!==date) return false;
 if(status && row[9]!==status) return false;
 if(amount && Number(row[7])<Number(amount)) return false;
 if(count && Number(row[10])<Number(count)) return false;
@@ -285,5 +307,6 @@ renderTable(filtered);
 }
 
 </script>
+
 </body>
 </html>
