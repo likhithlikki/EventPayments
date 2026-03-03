@@ -2,163 +2,106 @@
 <html>
 <head>
 <title>Verify Payment</title>
-
 <style>
-body{
-  font-family:Arial;
-  background:#f2f2f2;
-  margin:0;
-}
+body{font-family:Arial;background:#f2f2f2;margin:0;}
 
-.navbar{
-  background:#1e1e2f;
-  padding:15px;
-  text-align:center;
-}
-
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
-
-.container{
-  display:flex;
-  justify-content:center;
-}
+.navbar{background:#1e1e2f;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
 
 .card{
-  background:white;
-  padding:25px;
-  margin:60px auto;
-  width:380px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
+background:white;
+padding:25px;
+margin:60px auto;
+width:380px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
-input{
-  width:95%;
-  padding:8px;
-  margin:8px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-
-button{
-  padding:10px 15px;
-  background:#007bff;
-  color:white;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
+input{width:95%;padding:8px;margin:8px 0;border-radius:6px;border:1px solid #ccc;}
+button{padding:10px 15px;background:#007bff;color:white;border:none;border-radius:6px;cursor:pointer;}
 
 .loader{
-  border:4px solid #f3f3f3;
-  border-top:4px solid #3498db;
-  border-radius:50%;
-  width:25px;
-  height:25px;
-  animation:spin 1s linear infinite;
-  margin:15px auto;
+border:4px solid #f3f3f3;
+border-top:4px solid #3498db;
+border-radius:50%;
+width:25px;height:25px;
+animation:spin 1s linear infinite;
+margin:15px auto;
 }
+@keyframes spin{100%{transform:rotate(360deg);}}
 
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
+.result-box{text-align:left;margin-top:15px;padding-left:10px;}
 
-.result-box{
-  text-align:left;
-  margin-top:15px;
-  padding-left:10px;
-}
-
-.verified{
-  color:green;
-  font-weight:bold;
-}
-
-.notverified{
-  color:red;
-  font-weight:bold;
-}
+.verified{color:green;font-weight:bold;}
+.notverified{color:red;font-weight:bold;}
+.pending{color:#007bff;font-weight:bold;}
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <a href="admin.html">Admin Login</a>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="admin.html">Admin Login</a>
 </div>
 
-<div class="container">
 <div class="card">
-
 <h2 style="text-align:center;">Check Payment Status</h2>
-
 <input id="refid" placeholder="Enter Last 5 digits of RefID">
 <button onclick="checkStatus()">Verify</button>
-
 <div id="result"></div>
-
-</div>
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="YOUR_EXEC_URL_HERE";
 
 function checkStatus(){
 
-  const last5=document.getElementById("refid").value.trim();
-  const resultDiv=document.getElementById("result");
+const last5=document.getElementById("refid").value.trim();
+const resultDiv=document.getElementById("result");
 
-  // Clear previous result
-  resultDiv.innerHTML="";
+resultDiv.innerHTML="";
 
-  if(last5.length!==5 || isNaN(last5)){
-    resultDiv.innerHTML="<p style='color:red;text-align:center;'>Enter exactly last 5 digits (numbers only)</p>";
-    return;
-  }
-
-  // Show loader
-  resultDiv.innerHTML="<div class='loader'></div>";
-
-  fetch(scriptURL+"?action=checkStatus&refid="+last5)
-  .then(res=>res.json())
-  .then(data=>{
-
-    if(!data.found){
-      resultDiv.innerHTML="<p style='color:red;text-align:center;'>Invalid Reference ID</p>";
-      return;
-    }
-
-    const statusClass = data.status==="Verified" ? "verified" : "notverified";
-
-    resultDiv.innerHTML=`
-      <div class="result-box">
-        <p style="color:gray;">check your status of payment here 👇</p>
-        <p><b>Name:</b> ${data.name}</p>
-        <p><b>Village:</b> ${data.village}</p>
-        <p><b>Phone:</b> ${data.phone}</p>
-        <p><b>Amount:</b> ₹${data.amount}</p>
-        <p><b>Date:</b> ${data.date}</p>
-        <p><b>Time:</b> ${data.time}</p>
-        <p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
-        <br>
-        
-      </div>
-    `;
-  })
-  .catch(()=>{
-    resultDiv.innerHTML="<p style='color:red;text-align:center;'>Server connection error</p>";
-  });
+if(last5.length!==5 || isNaN(last5)){
+resultDiv.innerHTML="<p style='color:red;text-align:center;'>Enter exactly last 5 digits</p>";
+return;
 }
 
-</script>
+resultDiv.innerHTML="<div class='loader'></div>";
 
+fetch(scriptURL+"?action=checkStatus&refid="+last5)
+.then(res=>res.json())
+.then(data=>{
+
+if(!data.found){
+resultDiv.innerHTML="<p style='color:red;text-align:center;'>Invalid Reference ID</p>";
+return;
+}
+
+let statusClass;
+if(data.status==="Verified") statusClass="verified";
+else if(data.status==="Not Verified") statusClass="notverified";
+else statusClass="pending";
+
+resultDiv.innerHTML=`
+<div class="result-box">
+<p><b>Name:</b> ${data.name}</p>
+<p><b>Village:</b> ${data.village}</p>
+<p><b>Phone:</b> ${data.phone}</p>
+<p><b>Amount:</b> ₹${data.amount}</p>
+<p><b>Date:</b> ${data.date}</p>
+<p><b>Time:</b> ${data.time}</p>
+<p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
+<br>
+<p style="color:gray;">Thank you for visiting 🙏</p>
+</div>
+`;
+})
+.catch(()=>{
+resultDiv.innerHTML="<p style='color:red;text-align:center;'>Server connection error</p>";
+});
+}
+</script>
 </body>
 </html>
