@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Submit Complaint</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complaint</title>
 
 <style>
 body{
-  font-family:Arial;
-  background:#f2f2f2;
   margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
 .navbar{
-  background:#111;
+  background:#c2410c;
   padding:15px;
   text-align:center;
 }
@@ -24,60 +26,48 @@ body{
 }
 
 .container{
-  display:flex;
-  justify-content:center;
-  padding:40px 20px;
-}
-
-.card{
-  background:white;
-  width:400px;
-  padding:25px;
+  max-width:500px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
   border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
-input, textarea{
+input,textarea{
   width:100%;
-  padding:8px;
-  margin:8px 0;
+  padding:10px;
+  margin:10px 0;
   border-radius:6px;
-  border:1px solid #ccc;
+  border:none;
 }
 
 button{
   width:100%;
-  padding:10px;
-  background:#007bff;
-  color:white;
+  padding:12px;
+  background:#f97316;
   border:none;
-  border-radius:6px;
+  color:white;
+  font-weight:bold;
   cursor:pointer;
-  margin-top:10px;
+  border-radius:6px;
 }
 
 button:hover{
-  background:#0056b3;
+  opacity:0.9;
 }
 
-.contact-box{
-  margin-top:20px;
-  text-align:center;
-  font-size:14px;
+.loader{
+  border:4px solid #f3f3f3;
+  border-top:4px solid #f97316;
+  border-radius:50%;
+  width:25px;
+  height:25px;
+  animation:spin 1s linear infinite;
+  margin:15px auto;
 }
 
-.icon{
-  margin:10px;
-  font-size:22px;
-  text-decoration:none;
-}
-
-.whatsapp{
-  color:green;
-}
-
-.gmail{
-  color:red;
+@keyframes spin{
+  100%{transform:rotate(360deg);}
 }
 </style>
 </head>
@@ -87,58 +77,82 @@ button:hover{
 <div class="navbar">
   <a href="index.html">Home</a>
   <a href="status.html">Verify Status</a>
-  <a href="admin.html">Admin Panel</a>
   <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
-  <div class="card">
-    <h2 style="text-align:center;">Submit Complaint</h2>
+<h2>Register Complaint</h2>
 
-    <input type="text" id="name" placeholder="Your Name" required>
-    <input type="text" id="village" placeholder="Village" required>
-    <input type="text" id="phone" placeholder="Phone Number" required>
-    <textarea id="complaint" rows="4" placeholder="Enter your complaint" required></textarea>
+<input type="text" id="name" placeholder="Name" required>
+<input type="text" id="village" placeholder="Village" required>
+<input type="text" id="phone" placeholder="Phone Number" required>
+<textarea id="complaint" placeholder="Write your complaint..." rows="4"></textarea>
 
-    <button onclick="submitComplaint()">Submit Complaint</button>
+<label>Attach Screenshot (Optional)</label>
+<input type="file" id="attachment" accept="image/*,.pdf">
 
-    <div class="contact-box">
-      <p>If not resolved within 24 hours, contact:</p>
+<button onclick="submitComplaint()">Submit Complaint</button>
 
-      <a class="icon gmail"
-         href="mailto:likithmuddada@gmail.com">
-         📧 Gmail
-      </a>
+<div id="message"></div>
 
-      <a class="icon whatsapp"
-         href="https://wa.me/919014844036"
-         target="_blank">
-         💬 WhatsApp
-      </a>
-    </div>
-  </div>
+<p style="font-size:12px;margin-top:15px;">
+If not resolved within 24 hours contact:<br>
+📧 likithmuddada@gmail.com<br>
+📱 WhatsApp: 9014844036
+</p>
+
 </div>
 
 <script>
 
-function submitComplaint(){
+const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-  const name=document.getElementById("name").value.trim();
-  const village=document.getElementById("village").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const complaint=document.getElementById("complaint").value.trim();
+async function submitComplaint(){
 
-  if(!name || !village || !phone || !complaint){
-    alert("Please fill all fields");
-    return;
+  const messageDiv = document.getElementById("message");
+  messageDiv.innerHTML = "<div class='loader'></div>";
+
+  const name = document.getElementById("name").value;
+  const village = document.getElementById("village").value;
+  const phone = document.getElementById("phone").value;
+  const complaint = document.getElementById("complaint").value;
+  const fileInput = document.getElementById("attachment");
+
+  let fileData="";
+  let fileName="";
+
+  if(fileInput.files.length>0){
+    const file=fileInput.files[0];
+    fileName=file.name;
+
+    const reader=new FileReader();
+    fileData=await new Promise(resolve=>{
+      reader.onload=()=>resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
   }
 
-  alert("Complaint submitted successfully.\nWe will review within 24 hours.");
+  const data=new URLSearchParams();
+  data.append("action","insertComplaint");
+  data.append("name",name);
+  data.append("village",village);
+  data.append("phone",phone);
+  data.append("complaint",complaint);
+  data.append("fileData",fileData);
+  data.append("fileName",fileName);
 
-  document.getElementById("name").value="";
-  document.getElementById("village").value="";
-  document.getElementById("phone").value="";
-  document.getElementById("complaint").value="";
+  fetch(scriptURL,{
+    method:"POST",
+    body:data
+  })
+  .then(res=>res.text())
+  .then(()=>{
+    messageDiv.innerHTML="<span style='color:lightgreen;'>Complaint submitted successfully</span>";
+  })
+  .catch(()=>{
+    messageDiv.innerHTML="<span style='color:red;'>Server connection error</span>";
+  });
 }
 
 </script>
