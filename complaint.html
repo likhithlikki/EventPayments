@@ -5,186 +5,102 @@
 <title>Complaint</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
 
-.navbar{
-  background:#c2410c;
-  padding:15px;
-  text-align:center;
-}
+.navbar{background:#c2410c;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
 
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
+.container{max-width:450px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
 
-.container{
-  max-width:450px;
-  margin:40px auto;
-  background:#1e293b;
-  padding:20px;
-  border-radius:10px;
-}
+input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
 
-input, textarea{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
-}
+.invalid{border:2px solid red;}
 
-.invalid{
-  border:2px solid red;
-}
+button{width:100%;padding:12px;background:#f97316;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+button:disabled{background:gray;cursor:not-allowed;}
 
-button{
-  width:100%;
-  padding:12px;
-  background:#f97316;
-  color:white;
-  border:none;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-button:disabled{
-  background:gray;
-  cursor:not-allowed;
-}
-
-.loader{
-  border:4px solid #fff;
-  border-top:4px solid #f97316;
-  border-radius:50%;
-  width:25px;
-  height:25px;
-  animation:spin 1s linear infinite;
-  margin:10px auto;
-}
-
-@keyframes spin{
-  100%{transform:rotate(360deg);}
-}
+.progressBar{width:100%;background:#334155;height:6px;border-radius:4px;overflow:hidden;margin:10px 0;}
+.progressFill{height:100%;width:0%;background:#22c55e;animation:loading 1.5s infinite;}
+@keyframes loading{0%{width:0%}50%{width:80%}100%{width:0%}}
 
 .success{color:lightgreen;}
 .error{color:#ef4444;}
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <a href="complaint.html">Complaint</a>
-  <a href="admin.html">Admin</a>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
 <h2>Register Complaint</h2>
 
-<input type="text" id="name" placeholder="Your Name">
-<input type="text" id="village" placeholder="Village">
-<input type="text" id="phone" placeholder="Phone Number">
-<textarea id="complaint" placeholder="Write your complaint..." rows="4"></textarea>
-
-<label>Attach Screenshot (Optional)</label>
+<input id="name" placeholder="Name">
+<input id="village" placeholder="Village">
+<input id="phone" placeholder="Phone">
+<textarea id="complaint" placeholder="Write your complaint (min 10 characters)"></textarea>
 <input type="file" id="attachment" accept="image/*,.pdf">
 
 <button id="submitBtn" disabled onclick="submitComplaint()">Submit Complaint</button>
 
 <div id="message"></div>
-
-<p style="font-size:12px;margin-top:15px;">
-If not resolved within 24 hours contact:<br>
-📧 likithmuddada@gmail.com<br>
-📱 WhatsApp: 9014844036
-</p>
-
 </div>
 
 <script>
-
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-const nameInput = document.getElementById("name");
-const phoneInput = document.getElementById("phone");
-const complaintInput = document.getElementById("complaint");
-const submitBtn = document.getElementById("submitBtn");
+const nameInput=name;
+const phoneInput=phone;
+const complaintInput=document.getElementById("complaint");
+const submitBtn=document.getElementById("submitBtn");
 
-// ===== Validation Function =====
-function validateComplaintForm(){
+function validate(){
+let valid=true;
 
-let valid = true;
-
-// Name letters only
 if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
-  nameInput.classList.add("invalid");
-  valid=false;
-}else{
-  nameInput.classList.remove("invalid");
-}
+  nameInput.classList.add("invalid"); valid=false;
+}else nameInput.classList.remove("invalid");
 
-// Phone validation
 if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
-  phoneInput.classList.add("invalid");
-  valid=false;
-}else{
-  phoneInput.classList.remove("invalid");
+  phoneInput.classList.add("invalid"); valid=false;
+}else phoneInput.classList.remove("invalid");
+
+if(complaintInput.value.trim().length<10){
+  complaintInput.classList.add("invalid"); valid=false;
+}else complaintInput.classList.remove("invalid");
+
+submitBtn.disabled=!valid;
 }
 
-// Complaint minimum length
-if(complaintInput.value.trim().length < 10){
-  complaintInput.classList.add("invalid");
-  valid=false;
-}else{
-  complaintInput.classList.remove("invalid");
-}
-
-submitBtn.disabled = !valid;
-}
-
-// Live validation
-nameInput.addEventListener("input",validateComplaintForm);
-
+nameInput.addEventListener("input",validate);
 phoneInput.addEventListener("input",function(){
   this.value=this.value.replace(/\D/g,"").slice(0,10);
-  validateComplaintForm();
+  validate();
 });
+complaintInput.addEventListener("input",validate);
 
-complaintInput.addEventListener("input",validateComplaintForm);
-
-
-// ===== Submit Function =====
 async function submitComplaint(){
-
 if(submitBtn.disabled) return;
 
 const msg=document.getElementById("message");
-msg.innerHTML="<div class='loader'></div>";
+msg.innerHTML=`<div class="progressBar"><div class="progressFill"></div></div>`;
 
-const name=nameInput.value.trim();
-const village=document.getElementById("village").value.trim();
-const phone=phoneInput.value.trim();
-const complaint=complaintInput.value.trim();
 const fileInput=document.getElementById("attachment");
-
-let fileData="";
-let fileName="";
+let fileData="", fileName="";
 
 if(fileInput.files.length>0){
   const file=fileInput.files[0];
-  fileName=file.name;
 
+  if(file.size > 5*1024*1024){
+    msg.innerHTML="<span class='error'>File must be under 5MB</span>";
+    return;
+  }
+
+  fileName=file.name;
   const reader=new FileReader();
   fileData=await new Promise(resolve=>{
     reader.onload=()=>resolve(reader.result.split(',')[1]);
@@ -194,37 +110,27 @@ if(fileInput.files.length>0){
 
 const data=new URLSearchParams();
 data.append("action","insertComplaint");
-data.append("name",name);
-data.append("village",village);
-data.append("phone",phone);
-data.append("complaint",complaint);
+data.append("name",nameInput.value.trim());
+data.append("village",village.value.trim());
+data.append("phone",phoneInput.value.trim());
+data.append("complaint",complaintInput.value.trim());
 data.append("fileData",fileData);
 data.append("fileName",fileName);
 
-fetch(scriptURL,{
-  method:"POST",
-  body:data
-})
+fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
 .then(res=>{
-  if(res==="Inserted"){
-    msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
-    nameInput.value="";
-    phoneInput.value="";
-    complaintInput.value="";
-    document.getElementById("village").value="";
-    document.getElementById("attachment").value="";
-    submitBtn.disabled=true;
-  }else{
-    msg.innerHTML="<span class='error'>Server error</span>";
-  }
-})
-.catch(()=>{
-  msg.innerHTML="<span class='error'>Server connection failed</span>";
-});
+if(res==="Inserted"){
+msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
+nameInput.value=""; village.value=""; phoneInput.value="";
+complaintInput.value=""; fileInput.value="";
+submitBtn.disabled=true;
+}else{
+msg.innerHTML="<span class='error'>Server error</span>";
 }
-
+})
+.catch(()=>msg.innerHTML="<span class='error'>Server connection error</span>");
+}
 </script>
-
 </body>
 </html>
