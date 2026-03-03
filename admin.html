@@ -5,10 +5,25 @@
 <title>Admin Dashboard</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
 
-.navbar{background:#065f46;padding:15px;text-align:center;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.navbar{
+  background:#065f46;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
 .container{
   max-width:1100px;
@@ -34,8 +49,8 @@ th,td{
 .verified{color:#22c55e;font-weight:bold;}
 .notverified{color:#ef4444;font-weight:bold;}
 
-.changedCount{background:#2d3748;} /* count > 0 */
-.modifiedRow{background:#111827;color:white;} /* modified black shade */
+.changedCount{background:#2d3748;}      /* count > 0 */
+.modifiedRow{background:#111827;color:white;} /* modified */
 
 button{
   padding:6px 10px;
@@ -75,13 +90,7 @@ button{
   height:100%;
   width:0%;
   background:#22c55e;
-  animation:loading 1.5s infinite;
-}
-
-@keyframes loading{
-  0%{width:0%}
-  50%{width:80%}
-  100%{width:0%}
+  transition:width 0.3s linear;
 }
 
 @media print{
@@ -132,7 +141,7 @@ if(!sessionStorage.getItem("adminAuth")){
 </div>
 
 <div id="tableArea">
-<div class="progressBar"><div class="progressFill"></div></div>
+<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>
 </div>
 
 <button id="saveBtn" disabled onclick="saveChanges()">Save Changes</button>
@@ -145,13 +154,38 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 let allData=[];
 let modifiedRows=[];
 
+/* -------- Progress Animation -------- */
+function startProgressBar(containerId){
+  const container=document.getElementById(containerId);
+  container.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
+  const bar=document.getElementById("progressFill");
+
+  setTimeout(()=>{bar.style.width="80%";},100);
+  setTimeout(()=>{bar.style.width="90%";},3000);
+  setTimeout(()=>{bar.style.width="99%";},5000);
+}
+
+function completeProgress(){
+  const bar=document.getElementById("progressFill");
+  if(bar) bar.style.width="100%";
+}
+
+/* -------- Date Format (No ISO conversion) -------- */
+function formatDate(d){ return d; }
+function formatTime(t){ return t; }
+
+/* -------- Load Data -------- */
+startProgressBar("tableArea");
+
 fetch(scriptURL+"?action=getAll")
 .then(res=>res.json())
 .then(data=>{
+  completeProgress();
   allData=data;
   renderTable(data);
 });
 
+/* -------- Render Table -------- */
 function renderTable(data){
 
 let total=0, verified=0, notverified=0, pending=0;
@@ -177,8 +211,8 @@ if(row[10]>0) rowClass="changedCount";
 
 html+=`
 <tr class="${rowClass}">
-<td>${row[1]}</td>
-<td>${row[2]}</td>
+<td>${formatDate(row[1])}</td>
+<td>${formatTime(row[2])}</td>
 <td>${row[3]}</td>
 <td>${row[4]}</td>
 <td>${row[7]}</td>
@@ -201,10 +235,10 @@ document.getElementById("summary").innerHTML=
 <p>Pending: ₹${pending}</p>`;
 }
 
+/* -------- Mark Change -------- */
 function markChange(btn,refid,status){
 
 const row=btn.closest("tr");
-
 row.querySelector(".statusCell").innerText=status;
 row.classList.add("modifiedRow");
 
@@ -212,12 +246,12 @@ modifiedRows.push({refid,status});
 document.getElementById("saveBtn").disabled=false;
 }
 
+/* -------- Save All -------- */
 function saveChanges(){
 
 if(modifiedRows.length===0) return;
 
-document.getElementById("tableArea").innerHTML=
-`<div class="progressBar"><div class="progressFill"></div></div>`;
+startProgressBar("tableArea");
 
 const data=new URLSearchParams();
 data.append("action","bulkUpdate");
@@ -230,6 +264,7 @@ location.reload();
 });
 }
 
+/* -------- Filters -------- */
 function applyFilters(){
 
 const date=document.getElementById("filterDate").value;
