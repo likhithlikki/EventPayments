@@ -140,6 +140,7 @@ function checkStatus(){
 
     resultDiv.innerHTML=`
       <div class="result-box">
+        <p style="color:gray;">check your status of payment here 👇</p>
         <p><b>Name:</b> ${data.name}</p>
         <p><b>Village:</b> ${data.village}</p>
         <p><b>Phone:</b> ${data.phone}</p>
@@ -148,7 +149,7 @@ function checkStatus(){
         <p><b>Time:</b> ${data.time}</p>
         <p><b>Status:</b> <span class="${statusClass}">${data.status}</span></p>
         <br>
-        <p style="color:gray;">Thank you for visiting 🙏</p>
+        
       </div>
     `;
   })
