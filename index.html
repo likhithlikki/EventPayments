@@ -3,67 +3,236 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Event Contribution</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white;}
-.navbar{background:#1e40af;padding:15px;text-align:center;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
-.container{max-width:400px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
-input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
-button{width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
-.loader{border:4px solid #fff;border-top:4px solid #2563eb;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite;margin:10px auto;}
-@keyframes spin{100%{transform:rotate(360deg);}}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
+
+.navbar{
+  background:#1e40af;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.container{
+  max-width:420px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
+}
+
+.invalid{
+  border:2px solid red;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:disabled{
+  background:gray;
+  cursor:not-allowed;
+}
+
+.loader{
+  border:4px solid #fff;
+  border-top:4px solid #2563eb;
+  border-radius:50%;
+  width:25px;
+  height:25px;
+  animation:spin 1s linear infinite;
+  margin:10px auto;
+}
+
+@keyframes spin{
+  100%{transform:rotate(360deg);}
+}
+
+.success{color:lightgreen;}
+.error{color:#ef4444;}
+
+#paymentSection{display:none;}
 </style>
 </head>
+
 <body>
 
 <div class="navbar">
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="complaint.html">Complaint</a>
-<a href="admin.html">Admin</a>
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
+
 <h2>Event Contribution</h2>
-<input id="name" placeholder="Name">
-<input id="village" placeholder="Village">
-<input id="phone" placeholder="Phone">
-<input id="amount" type="number" placeholder="Amount">
-<input id="utr" placeholder="UTR Number">
-<button onclick="submit()">Submit</button>
-<div id="msg"></div>
+
+<div id="formSection">
+<input type="text" id="name" placeholder="Name (letters only)">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="phone" placeholder="Phone (10 digits)">
+<input type="number" id="amount" placeholder="Amount (Min ₹50)">
+<button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
+</div>
+
+<div id="paymentSection">
+<h3>Scan & Pay</h3>
+<div id="qrcode"></div>
+<button onclick="openUPI()">Open UPI App</button>
+<input type="text" id="utr" placeholder="Enter UTR Number">
+<button onclick="finishPayment()">Finish Payment</button>
+</div>
+
+<div id="message"></div>
+
 </div>
 
 <script>
+
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-function generateRefID(){ return "REF"+Date.now(); }
+let userData={};
+let upiLink="";
 
-function submit(){
+const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
+const amountInput=document.getElementById("amount");
+const proceedBtn=document.getElementById("proceedBtn");
 
-const msg=document.getElementById("msg");
+function validateForm(){
+
+let valid=true;
+
+// Name validation
+if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
+  nameInput.classList.add("invalid");
+  valid=false;
+}else{
+  nameInput.classList.remove("invalid");
+}
+
+// Phone validation
+if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
+  phoneInput.classList.add("invalid");
+  valid=false;
+}else{
+  phoneInput.classList.remove("invalid");
+}
+
+// Min ₹50
+if(Number(amountInput.value) < 50){
+  amountInput.classList.add("invalid");
+  valid=false;
+}else{
+  amountInput.classList.remove("invalid");
+}
+
+proceedBtn.disabled=!valid;
+}
+
+// Live validation
+nameInput.addEventListener("input",validateForm);
+
+phoneInput.addEventListener("input",function(){
+  this.value=this.value.replace(/\D/g,"").slice(0,10);
+  validateForm();
+});
+
+amountInput.addEventListener("input",validateForm);
+
+function generateRefID(){
+  return "REF"+Date.now();
+}
+
+function goToPayment(){
+
+userData={
+  refid:generateRefID(),
+  name:nameInput.value.trim(),
+  village:document.getElementById("village").value.trim(),
+  phone:phoneInput.value.trim(),
+  amount:amountInput.value.trim()
+};
+
+const upiID="9014844036@superyes";
+upiLink=`upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
+
+document.getElementById("formSection").style.display="none";
+document.getElementById("paymentSection").style.display="block";
+
+document.getElementById("qrcode").innerHTML="";
+new QRCode(document.getElementById("qrcode"), upiLink);
+}
+
+function openUPI(){
+window.location.href=upiLink;
+}
+
+function finishPayment(){
+
+const msg=document.getElementById("message");
+const utr=document.getElementById("utr").value.trim();
+
+if(!utr){
+  alert("Enter UTR Number");
+  return;
+}
+
 msg.innerHTML="<div class='loader'></div>";
 
 const data=new URLSearchParams();
 data.append("action","insertPayment");
-data.append("refid",generateRefID());
-data.append("name",name.value);
-data.append("village",village.value);
-data.append("phone",phone.value);
-data.append("amount",amount.value);
-data.append("utr",utr.value);
+data.append("refid",userData.refid);
+data.append("name",userData.name);
+data.append("village",userData.village);
+data.append("phone",userData.phone);
+data.append("amount",userData.amount);
+data.append("utr",utr);
 
 fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
 .then(res=>{
-if(res==="Duplicate"){
-msg.innerHTML="<span style='color:red'>Already submitted</span>";
-}else{
-msg.innerHTML="<span style='color:lightgreen'>Submitted Successfully</span>";
-}
+  if(res==="Duplicate"){
+    msg.innerHTML="<span class='error'>Duplicate Submission</span>";
+  }else{
+    msg.innerHTML="<span class='success'>Payment Submitted Successfully</span>";
+  }
 })
-.catch(()=>msg.innerHTML="<span style='color:red'>Server Error</span>");
+.catch(()=>{
+  msg.innerHTML="<span class='error'>Server Error</span>";
+});
 }
+
 </script>
 
 </body>
