@@ -26,17 +26,17 @@ body{
 }
 
 .container{
-  max-width:500px;
+  max-width:450px;
   margin:40px auto;
   background:#1e293b;
   padding:20px;
   border-radius:10px;
 }
 
-input,textarea{
+input, textarea{
   width:100%;
   padding:10px;
-  margin:10px 0;
+  margin:8px 0;
   border-radius:6px;
   border:none;
 }
@@ -45,11 +45,11 @@ button{
   width:100%;
   padding:12px;
   background:#f97316;
-  border:none;
   color:white;
+  border:none;
+  border-radius:6px;
   font-weight:bold;
   cursor:pointer;
-  border-radius:6px;
 }
 
 button:hover{
@@ -57,18 +57,21 @@ button:hover{
 }
 
 .loader{
-  border:4px solid #f3f3f3;
+  border:4px solid #fff;
   border-top:4px solid #f97316;
   border-radius:50%;
   width:25px;
   height:25px;
   animation:spin 1s linear infinite;
-  margin:15px auto;
+  margin:10px auto;
 }
 
 @keyframes spin{
   100%{transform:rotate(360deg);}
 }
+
+.success{color:lightgreen;}
+.error{color:#ef4444;}
 </style>
 </head>
 
@@ -84,7 +87,7 @@ button:hover{
 <div class="container">
 <h2>Register Complaint</h2>
 
-<input type="text" id="name" placeholder="Name" required>
+<input type="text" id="name" placeholder="Your Name" required>
 <input type="text" id="village" placeholder="Village" required>
 <input type="text" id="phone" placeholder="Phone Number" required>
 <textarea id="complaint" placeholder="Write your complaint..." rows="4"></textarea>
@@ -110,14 +113,19 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 async function submitComplaint(){
 
-  const messageDiv = document.getElementById("message");
-  messageDiv.innerHTML = "<div class='loader'></div>";
+  const msg=document.getElementById("message");
+  msg.innerHTML="<div class='loader'></div>";
 
-  const name = document.getElementById("name").value;
-  const village = document.getElementById("village").value;
-  const phone = document.getElementById("phone").value;
-  const complaint = document.getElementById("complaint").value;
-  const fileInput = document.getElementById("attachment");
+  const name=document.getElementById("name").value.trim();
+  const village=document.getElementById("village").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const complaint=document.getElementById("complaint").value.trim();
+  const fileInput=document.getElementById("attachment");
+
+  if(!name || !village || !phone || !complaint){
+    msg.innerHTML="<span class='error'>Please fill all fields</span>";
+    return;
+  }
 
   let fileData="";
   let fileName="";
@@ -147,11 +155,20 @@ async function submitComplaint(){
     body:data
   })
   .then(res=>res.text())
-  .then(()=>{
-    messageDiv.innerHTML="<span style='color:lightgreen;'>Complaint submitted successfully</span>";
+  .then(res=>{
+    if(res==="Inserted"){
+      msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
+      document.getElementById("name").value="";
+      document.getElementById("village").value="";
+      document.getElementById("phone").value="";
+      document.getElementById("complaint").value="";
+      document.getElementById("attachment").value="";
+    }else{
+      msg.innerHTML="<span class='error'>Server error</span>";
+    }
   })
   .catch(()=>{
-    messageDiv.innerHTML="<span style='color:red;'>Server connection error</span>";
+    msg.innerHTML="<span class='error'>Server connection failed</span>";
   });
 }
 
