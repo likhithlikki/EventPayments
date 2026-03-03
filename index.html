@@ -63,24 +63,26 @@ button:disabled{
   cursor:not-allowed;
 }
 
-.loader{
-  border:4px solid #fff;
-  border-top:4px solid #2563eb;
-  border-radius:50%;
-  width:25px;
-  height:25px;
-  animation:spin 1s linear infinite;
-  margin:10px auto;
+#paymentSection{display:none;}
+
+.progressBar{
+  width:100%;
+  background:#334155;
+  height:6px;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
-@keyframes spin{
-  100%{transform:rotate(360deg);}
+.progressFill{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:width 0.3s linear;
 }
 
 .success{color:lightgreen;}
 .error{color:#ef4444;}
-
-#paymentSection{display:none;}
 </style>
 </head>
 
@@ -133,34 +135,21 @@ function validateForm(){
 
 let valid=true;
 
-// Name validation
 if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
-  nameInput.classList.add("invalid");
-  valid=false;
-}else{
-  nameInput.classList.remove("invalid");
-}
+  nameInput.classList.add("invalid"); valid=false;
+}else nameInput.classList.remove("invalid");
 
-// Phone validation
 if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
-  phoneInput.classList.add("invalid");
-  valid=false;
-}else{
-  phoneInput.classList.remove("invalid");
-}
+  phoneInput.classList.add("invalid"); valid=false;
+}else phoneInput.classList.remove("invalid");
 
-// Min ₹50
 if(Number(amountInput.value) < 50){
-  amountInput.classList.add("invalid");
-  valid=false;
-}else{
-  amountInput.classList.remove("invalid");
-}
+  amountInput.classList.add("invalid"); valid=false;
+}else amountInput.classList.remove("invalid");
 
 proceedBtn.disabled=!valid;
 }
 
-// Live validation
 nameInput.addEventListener("input",validateForm);
 
 phoneInput.addEventListener("input",function(){
@@ -198,17 +187,32 @@ function openUPI(){
 window.location.href=upiLink;
 }
 
-function finishPayment(){
-
+function startProgressBar(){
 const msg=document.getElementById("message");
-const utr=document.getElementById("utr").value.trim();
+msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
+const bar=document.getElementById("progressFill");
 
-if(!utr){
-  alert("Enter UTR Number");
-  return;
+setTimeout(()=>{bar.style.width="80%";},100);
+setTimeout(()=>{bar.style.width="90%";},3000);
+setTimeout(()=>{bar.style.width="99%";},5000);
 }
 
-msg.innerHTML="<div class='loader'></div>";
+function completeProgress(){
+const bar=document.getElementById("progressFill");
+if(bar) bar.style.width="100%";
+}
+
+function finishPayment(){
+
+const utr=document.getElementById("utr").value.trim();
+const msg=document.getElementById("message");
+
+if(!utr){
+alert("Enter UTR Number");
+return;
+}
+
+startProgressBar();
 
 const data=new URLSearchParams();
 data.append("action","insertPayment");
@@ -222,15 +226,15 @@ data.append("utr",utr);
 fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
 .then(res=>{
-  if(res==="Duplicate"){
-    msg.innerHTML="<span class='error'>Duplicate Submission</span>";
-  }else{
-    msg.innerHTML="<span class='success'>Payment Submitted Successfully</span>";
-  }
+completeProgress();
+
+if(res==="Duplicate"){
+msg.innerHTML="<span class='error'>Duplicate Submission</span>";
+}else{
+msg.innerHTML="<span class='success'>Payment Submitted Successfully</span>";
+}
 })
-.catch(()=>{
-  msg.innerHTML="<span class='error'>Server Error</span>";
-});
+.catch(()=>msg.innerHTML="<span class='error'>Server Error</span>");
 }
 
 </script>
