@@ -2,116 +2,170 @@
 <html>
 <head>
 <title>Admin Dashboard</title>
+
 <style>
-body{font-family:Arial;background:#f2f2f2;margin:0;text-align:center;}
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  margin:0;
+}
 
-.navbar{background:#1e1e2f;padding:15px;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.navbar{
+  background:#111;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
-.logout{float:right;background:red;color:white;border:none;padding:6px 12px;cursor:pointer;}
+.nav-left a{
+  color:white;
+  margin-right:15px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
-table{margin:20px auto;border-collapse:collapse;width:95%;background:white;}
-th,td{padding:8px;border:1px solid #ddd;}
-th{background:#f4f4f4;}
+.nav-right button{
+  margin-left:10px;
+}
+
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+}
+
+.left-box{
+  background:white;
+  padding:20px;
+  width:250px;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.right-box{
+  flex:1;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th,td{
+  padding:8px;
+  border:1px solid #ddd;
+  text-align:center;
+}
+
+th{
+  background:#eee;
+}
 
 .verified{color:green;font-weight:bold;}
 .notverified{color:red;font-weight:bold;}
 .pending{color:#007bff;font-weight:bold;}
 
-.action-btn{padding:5px 10px;border:none;cursor:pointer;margin:2px;}
+.modified{
+  background:#f0f8ff !important;
+}
+
+button{
+  padding:6px 10px;
+  border:none;
+  cursor:pointer;
+  border-radius:4px;
+}
+
 .verify-btn{background:green;color:white;}
 .reject-btn{background:red;color:white;}
 
-.save-btn{background:green;color:white;padding:10px 18px;border:none;cursor:pointer;margin:15px;display:none;}
-
-.loader{
-border:4px solid #f3f3f3;
-border-top:4px solid #3498db;
-border-radius:50%;
-width:25px;height:25px;
-animation:spin 1s linear infinite;
-margin:20px auto;
+.save-btn{
+  background:#007bff;
+  color:white;
 }
-@keyframes spin{100%{transform:rotate(360deg);}}
+
+.save-btn:disabled{
+  background:gray;
+  cursor:not-allowed;
+}
+
+.pdf-btn{
+  background:#444;
+  color:white;
+}
+
 </style>
 </head>
+
 <body>
 
 <div class="navbar">
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<span style="color:white;">Admin Panel</span>
-<button class="logout" onclick="logout()">Logout</button>
+  <div class="nav-left">
+    <a href="index.html">Home</a>
+    <a href="status.html">Verify Status</a>
+  </div>
+
+  <div class="nav-right">
+    <button id="saveBtn" class="save-btn" disabled onclick="saveChanges()">Save</button>
+    <button class="pdf-btn" onclick="downloadPDF()">Download PDF</button>
+    <button onclick="logout()" style="background:red;color:white;">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="left-box">
+    <h3>Summary</h3>
+    <p>Total Amount: ₹<span id="total">0</span></p>
+    <p>Verified Amount: ₹<span id="verified">0</span></p>
+    <p>Pending Amount: ₹<span id="pendingTotal">0</span></p>
+    <p>Not Verified Amount: ₹<span id="notVerified">0</span></p>
+  </div>
+
+  <div class="right-box">
+
+    <table id="table">
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>RefID</th>
+        <th>Name</th>
+        <th>Village</th>
+        <th>Phone</th>
+        <th>Amount</th>
+        <th>UTR</th>
+        <th>Status</th>
+        <th>Changes</th>
+        <th>Action</th>
+      </tr>
+    </table>
+
+  </div>
+
 </div>
 
 <script>
+
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-if(sessionStorage.getItem("adminLoggedIn")!=="true"){
-const password=prompt("Enter Admin Password:");
-if(password==="admin123"){
-sessionStorage.setItem("adminLoggedIn","true");
-}else{
-alert("Access Denied");
-window.location.href="index.html";
-}
-}
-</script>
-
-<h2>Admin Dashboard</h2>
-
-<button id="saveBtn" class="save-btn" onclick="saveChanges()">Save Changes</button>
-
-<div id="loadingArea"><div class="loader"></div></div>
-
-<div id="totals" style="display:none;">
-<p>Total Amount: ₹<span id="total"></span></p>
-<p>Verified Amount: ₹<span id="verified"></span></p>
-<p>Not Verified Amount: ₹<span id="notVerified"></span></p>
-</div>
-
-<table id="table" style="display:none;">
-<tr>
-<th>Date</th>
-<th>Time</th>
-<th>RefID</th>
-<th>Name</th>
-<th>Village</th>
-<th>Phone</th>
-<th>Amount</th>
-<th>UTR</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-</table>
-
-<script>
-
-let tableData=[];
 let modifiedRows=[];
 
-function loadTable(){
 fetch(scriptURL+"?action=getAll")
 .then(res=>res.json())
 .then(data=>{
 
-tableData=data;
-document.getElementById("loadingArea").style.display="none";
-document.getElementById("table").style.display="table";
-document.getElementById("totals").style.display="block";
-
-let total=0,verified=0,notVerified=0;
+let total=0,verified=0,pendingTotal=0,notVerified=0;
 
 data.forEach(row=>{
 
 total+=Number(row[6]);
 
-if(row[8]==="Verified")
-verified+=Number(row[6]);
-else if(row[8]==="Pending")
-notVerified+=Number(row[6]);
-else
-notVerified+=Number(row[6]);
+if(row[8]==="Verified") verified+=Number(row[6]);
+else if(row[8]==="Pending") pendingTotal+=Number(row[6]);
+else notVerified+=Number(row[6]);
 
 const tr=document.createElement("tr");
 
@@ -130,22 +184,25 @@ row[8]==='Not Verified'?'notverified':'pending'
 }">
 ${row[8]}
 </td>
+<td>${row[9]}</td>
 <td>
-<button class="action-btn verify-btn" onclick="changeStatus('${row[2]}','Verified')">✓</button>
-<button class="action-btn reject-btn" onclick="changeStatus('${row[2]}','Not Verified')">✗</button>
+<button class="verify-btn" onclick="changeStatus('${row[2]}','Verified',this)">✓</button>
+<button class="reject-btn" onclick="changeStatus('${row[2]}','Not Verified',this)">✗</button>
 </td>
 `;
 
 document.getElementById("table").appendChild(tr);
+
 });
 
 document.getElementById("total").innerText=total;
 document.getElementById("verified").innerText=verified;
+document.getElementById("pendingTotal").innerText=pendingTotal;
 document.getElementById("notVerified").innerText=notVerified;
-});
-}
 
-function changeStatus(refid,newStatus){
+});
+
+function changeStatus(refid,newStatus,btn){
 
 const cell=document.getElementById("status-"+refid);
 cell.innerText=newStatus;
@@ -154,23 +211,36 @@ if(newStatus==="Verified") cell.className="verified";
 else if(newStatus==="Not Verified") cell.className="notverified";
 else cell.className="pending";
 
+const rowElement=btn.closest("tr");
+rowElement.classList.add("modified");
+
 const existing=modifiedRows.find(r=>r.refid===refid);
 if(existing) existing.status=newStatus;
 else modifiedRows.push({refid:refid,status:newStatus});
 
-document.getElementById("saveBtn").style.display="inline-block";
+document.getElementById("saveBtn").disabled=false;
 }
 
 function saveChanges(){
+
 const data=new URLSearchParams();
 data.append("action","bulkUpdate");
 data.append("data",JSON.stringify(modifiedRows));
 
 fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
-alert("Sheet data modified successfully");
+alert("Sheet updated successfully");
 location.reload();
 });
+}
+
+function downloadPDF(){
+
+const printContent=document.getElementById("table").outerHTML;
+const win=window.open("");
+win.document.write(printContent);
+win.print();
+win.close();
 }
 
 function logout(){
@@ -178,7 +248,7 @@ sessionStorage.removeItem("adminLoggedIn");
 window.location.href="index.html";
 }
 
-loadTable();
 </script>
+
 </body>
 </html>
