@@ -1,271 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Event Contribution</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<title>Event Contribution</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-.navbar{
-  background:#111827;
-  padding:15px;
-  text-align:center;
-}
-
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
-
-.container{
-  display:flex;
-  justify-content:center;
-  padding:40px 15px;
-}
-
-.card{
-  background:#1e293b;
-  padding:30px;
-  width:380px;
-  border-radius:10px;
-  box-shadow:0 0 15px rgba(0,0,0,0.4);
-}
-
-h2{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
-}
-
-input.invalid{
-  border:2px solid red;
-}
-
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#3b82f6;
-  color:white;
-}
-
-button:disabled{
-  background:gray;
-  cursor:not-allowed;
-}
-
-#paymentSection{
-  display:none;
-  text-align:center;
-}
-
-#qrcode{
-  margin:15px 0;
-}
-
-.success{
-  color:lightgreen;
-}
-
-.error{
-  color:#f87171;
-}
-
-@media(max-width:500px){
-  .card{width:100%;}
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+.navbar{background:#1e40af;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.container{max-width:400px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
+input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
+button{width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+.loader{border:4px solid #fff;border-top:4px solid #2563eb;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite;margin:10px auto;}
+@keyframes spin{100%{transform:rotate(360deg);}}
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-  <a href="index.html">Home</a>
-  <a href="status.html">Verify Status</a>
-  <a href="complaint.html">Complaint</a>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
-<div class="card">
-
 <h2>Event Contribution</h2>
-
-<div id="formSection">
-
-<input id="name" placeholder="Name (letters only)">
+<input id="name" placeholder="Name">
 <input id="village" placeholder="Village">
-<input id="phone" placeholder="Phone (10 digits)">
-<input id="amount" type="number" placeholder="Amount (Min ₹50)">
-
-<button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
-
-<p id="formMessage"></p>
-
-</div>
-
-<div id="paymentSection">
-
-<h3>Scan & Pay</h3>
-<div id="qrcode"></div>
-
-<button onclick="openUPI()">Open UPI App</button>
-
-<input id="utr" placeholder="Enter UTR Number">
-
-<button onclick="finishPayment()">Finish</button>
-
-<p id="paymentMessage"></p>
-
-</div>
-
-</div>
+<input id="phone" placeholder="Phone">
+<input id="amount" type="number" placeholder="Amount">
+<input id="utr" placeholder="UTR Number">
+<button onclick="submit()">Submit</button>
+<div id="msg"></div>
 </div>
 
 <script>
-
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-let userData={};
-let upiLink="";
+function generateRefID(){ return "REF"+Date.now(); }
 
-const nameInput=document.getElementById("name");
-const phoneInput=document.getElementById("phone");
-const amountInput=document.getElementById("amount");
-const proceedBtn=document.getElementById("proceedBtn");
+function submit(){
 
-function validateForm(){
-
-let valid=true;
-
-if(!/^[A-Za-z ]+$/.test(nameInput.value)){
-  nameInput.classList.add("invalid");
-  valid=false;
-}else nameInput.classList.remove("invalid");
-
-if(!/^[6-9]\d{9}$/.test(phoneInput.value)){
-  phoneInput.classList.add("invalid");
-  valid=false;
-}else phoneInput.classList.remove("invalid");
-
-if(Number(amountInput.value)<50){
-  amountInput.classList.add("invalid");
-  valid=false;
-}else amountInput.classList.remove("invalid");
-
-proceedBtn.disabled=!valid;
-}
-
-nameInput.addEventListener("input",validateForm);
-phoneInput.addEventListener("input",function(){
-  this.value=this.value.replace(/\D/g,"").slice(0,10);
-  validateForm();
-});
-amountInput.addEventListener("input",validateForm);
-
-function generateRefID(){
-  return "REF"+Date.now();
-}
-
-function goToPayment(){
-
-userData={
-  refid:generateRefID(),
-  name:nameInput.value.trim(),
-  village:document.getElementById("village").value.trim(),
-  phone:phoneInput.value.trim(),
-  amount:amountInput.value.trim()
-};
-
-const upiID="9014844036@superyes";
-
-upiLink=`upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
-
-document.getElementById("formSection").style.display="none";
-document.getElementById("paymentSection").style.display="block";
-
-document.getElementById("qrcode").innerHTML="";
-new QRCode(document.getElementById("qrcode"), upiLink);
-}
-
-function openUPI(){
-window.location.href=upiLink;
-}
-
-function finishPayment(){
-
-userData.utr=document.getElementById("utr").value.trim();
-
-if(!userData.utr){
-  document.getElementById("paymentMessage").innerHTML="<span class='error'>Enter UTR Number</span>";
-  return;
-}
+const msg=document.getElementById("msg");
+msg.innerHTML="<div class='loader'></div>";
 
 const data=new URLSearchParams();
 data.append("action","insertPayment");
-data.append("refid",userData.refid);
-data.append("name",userData.name);
-data.append("village",userData.village);
-data.append("phone",userData.phone);
-data.append("amount",userData.amount);
-data.append("utr",userData.utr);
+data.append("refid",generateRefID());
+data.append("name",name.value);
+data.append("village",village.value);
+data.append("phone",phone.value);
+data.append("amount",amount.value);
+data.append("utr",utr.value);
 
-fetch(scriptURL,{
-  method:"POST",
-  body:data
-})
+fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
-.then(result=>{
-
-if(result==="Already Submitted"){
-  document.getElementById("paymentMessage").innerHTML="<span class='error'>Duplicate Submission</span>";
-  return;
+.then(res=>{
+if(res==="Duplicate"){
+msg.innerHTML="<span style='color:red'>Already submitted</span>";
+}else{
+msg.innerHTML="<span style='color:lightgreen'>Submitted Successfully</span>";
 }
-
-document.getElementById("paymentMessage").innerHTML="<span class='success'>Payment Recorded</span>";
-generatePDF();
 })
-.catch(()=>{
-  document.getElementById("paymentMessage").innerHTML="<span class='error'>Server Error</span>";
-});
+.catch(()=>msg.innerHTML="<span style='color:red'>Server Error</span>");
 }
-
-async function generatePDF(){
-
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
-
-doc.text("Payment Receipt",20,20);
-doc.text("RefID: "+userData.refid,20,30);
-doc.text("Name: "+userData.name,20,40);
-doc.text("Village: "+userData.village,20,50);
-doc.text("Phone: "+userData.phone,20,60);
-doc.text("Amount: ₹"+userData.amount,20,70);
-doc.text("UTR: "+userData.utr,20,80);
-
-doc.save("Receipt.pdf");
-}
-
 </script>
 
 </body>
