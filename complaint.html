@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Submit Complaint</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  margin:0;
+}
+
+.navbar{
+  background:#111;
+  padding:15px;
+  text-align:center;
+}
+
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.container{
+  display:flex;
+  justify-content:center;
+  padding:40px 20px;
+}
+
+.card{
+  background:white;
+  width:400px;
+  padding:25px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input, textarea{
+  width:100%;
+  padding:8px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+button:hover{
+  background:#0056b3;
+}
+
+.contact-box{
+  margin-top:20px;
+  text-align:center;
+  font-size:14px;
+}
+
+.icon{
+  margin:10px;
+  font-size:22px;
+  text-decoration:none;
+}
+
+.whatsapp{
+  color:green;
+}
+
+.gmail{
+  color:red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="admin.html">Admin Panel</a>
+  <a href="complaint.html">Complaint</a>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h2 style="text-align:center;">Submit Complaint</h2>
+
+    <input type="text" id="name" placeholder="Your Name" required>
+    <input type="text" id="village" placeholder="Village" required>
+    <input type="text" id="phone" placeholder="Phone Number" required>
+    <textarea id="complaint" rows="4" placeholder="Enter your complaint" required></textarea>
+
+    <button onclick="submitComplaint()">Submit Complaint</button>
+
+    <div class="contact-box">
+      <p>If not resolved within 24 hours, contact:</p>
+
+      <a class="icon gmail"
+         href="mailto:likithmuddada@gmail.com">
+         📧 Gmail
+      </a>
+
+      <a class="icon whatsapp"
+         href="https://wa.me/919014844036"
+         target="_blank">
+         💬 WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function submitComplaint(){
+
+  const name=document.getElementById("name").value.trim();
+  const village=document.getElementById("village").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const complaint=document.getElementById("complaint").value.trim();
+
+  if(!name || !village || !phone || !complaint){
+    alert("Please fill all fields");
+    return;
+  }
+
+  alert("Complaint submitted successfully.\nWe will review within 24 hours.");
+
+  document.getElementById("name").value="";
+  document.getElementById("village").value="";
+  document.getElementById("phone").value="";
+  document.getElementById("complaint").value="";
+}
+
+</script>
+
+</body>
+</html>
