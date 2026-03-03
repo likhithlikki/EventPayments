@@ -1,302 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Admin</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-.header{
-  background:#111827;
-  padding:15px 20px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-}
-
-.header h2{
-  margin:0;
-}
-
-.header button{
-  margin-left:10px;
-  padding:6px 12px;
-  border:none;
-  cursor:pointer;
-  border-radius:4px;
-}
-
-.logout{background:red;color:white;}
-.save{background:#3b82f6;color:white;}
-.save:disabled{background:gray;}
-
-.container{
-  padding:20px;
-}
-
-.tabs button{
-  padding:8px 15px;
-  margin-right:10px;
-  border:none;
-  cursor:pointer;
-  border-radius:5px;
-  background:#1f2937;
-  color:white;
-}
-
-.tabs button.active{
-  background:#3b82f6;
-}
-
-.filter-box{
-  margin:15px 0;
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.filter-box input, .filter-box select{
-  padding:6px;
-  border-radius:4px;
-  border:none;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-}
-
-th,td{
-  padding:8px;
-  border:1px solid #374151;
-  text-align:center;
-}
-
-th{
-  background:#1f2937;
-}
-
-tr:nth-child(even){
-  background:#1e293b;
-}
-
-.verified{color:lightgreen;}
-.notverified{color:#f87171;}
-.pending{color:#60a5fa;}
-
-.shortlist{
-  cursor:pointer;
-}
-
-@media(max-width:768px){
-  table{font-size:12px;}
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+.navbar{background:#065f46;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
+.container{padding:20px;}
+table{width:100%;border-collapse:collapse;background:#1e293b;}
+th,td{padding:8px;border:1px solid #334155;text-align:center;}
+button{padding:5px 10px;border:none;border-radius:4px;cursor:pointer;}
+.verified{color:#22c55e;}
+.pending{color:#3b82f6;}
+.notverified{color:#ef4444;}
+.loader{border:4px solid #fff;border-top:4px solid #10b981;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite;margin:20px auto;}
+@keyframes spin{100%{transform:rotate(360deg);}}
 </style>
 </head>
-
 <body>
 
 <script>
-if(sessionStorage.getItem("adminAuth")!=="true"){
-  window.location.href="login.html";
+if(prompt("Enter Admin Password")!=="admin123"){
+alert("Access Denied");
+window.location="index.html";
 }
 </script>
 
-<div class="header">
-  <h2>Admin Dashboard</h2>
-  <div>
-    <button class="save" id="saveBtn" disabled onclick="saveChanges()">Save</button>
-    <button onclick="downloadData()">Download</button>
-    <button class="logout" onclick="logout()">Logout</button>
-  </div>
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
-
-<div class="tabs">
-  <button id="paymentTab" class="active" onclick="switchTab('Payment')">Payments</button>
-  <button id="complaintTab" onclick="switchTab('Complaint')">Complaints</button>
-</div>
-
-<div class="filter-box">
-  <input type="text" id="search" placeholder="Search Name / Phone">
-  <select id="statusFilter">
-    <option value="">All Status</option>
-    <option value="Pending">Pending</option>
-    <option value="Verified">Verified</option>
-    <option value="Not Verified">Not Verified</option>
-    <option value="Open">Open</option>
-    <option value="Closed">Closed</option>
-  </select>
-  <input type="text" id="villageFilter" placeholder="Village">
-  <input type="number" id="minAmount" placeholder="Min Amount">
-  <input type="number" id="maxAmount" placeholder="Max Amount">
-  <button onclick="applyFilters()">Filter</button>
-</div>
-
-<table id="dataTable">
-<thead></thead>
-<tbody></tbody>
-</table>
-
+<h2>Admin Dashboard</h2>
+<div id="summary"></div>
+<div id="tableArea"><div class="loader"></div></div>
 </div>
 
 <script>
-
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
-let allData=[];
-let currentTab="Payment";
-let modifiedRows=[];
 
 fetch(scriptURL+"?action=getAll")
 .then(res=>res.json())
 .then(data=>{
-  allData=data;
-  renderTable();
+
+let total=0,verified=0,pending=0;
+let html="<table><tr><th>Date</th><th>Time</th><th>RefID</th><th>Name</th><th>Amount</th><th>Status</th><th>Count</th><th>Action</th></tr>";
+
+data.forEach(row=>{
+if(row[0]!=="Payment") return;
+
+total+=Number(row[7]);
+if(row[9]==="Verified") verified+=Number(row[7]);
+if(row[9]==="Pending") pending+=Number(row[7]);
+
+let statusClass="pending";
+if(row[9]==="Verified") statusClass="verified";
+if(row[9]==="Not Verified") statusClass="notverified";
+
+html+=`
+<tr>
+<td>${row[1]}</td>
+<td>${row[2]}</td>
+<td>${row[3]}</td>
+<td>${row[4]}</td>
+<td>${row[7]}</td>
+<td class="${statusClass}">${row[9]}</td>
+<td>${row[10]}</td>
+<td>
+<button onclick="update('${row[3]}','Verified')">✓</button>
+<button onclick="update('${row[3]}','Not Verified')">✗</button>
+</td>
+</tr>`;
 });
 
-function switchTab(type){
-  currentTab=type;
-  document.getElementById("paymentTab").classList.remove("active");
-  document.getElementById("complaintTab").classList.remove("active");
+html+="</table>";
+document.getElementById("tableArea").innerHTML=html;
 
-  if(type==="Payment") document.getElementById("paymentTab").classList.add("active");
-  else document.getElementById("complaintTab").classList.add("active");
+document.getElementById("summary").innerHTML=
+`Total: ₹${total} | Verified: ₹${verified} | Pending: ₹${pending}`;
 
-  renderTable();
+});
+
+function update(refid,status){
+
+const data=new URLSearchParams();
+data.append("action","updateStatus");
+data.append("refid",refid);
+data.append("status",status);
+
+fetch(scriptURL,{method:"POST",body:data})
+.then(()=>location.reload());
 }
-
-function renderTable(filteredData){
-
-  const tableHead=document.querySelector("#dataTable thead");
-  const tableBody=document.querySelector("#dataTable tbody");
-
-  tableHead.innerHTML="";
-  tableBody.innerHTML="";
-
-  let data=(filteredData || allData).filter(row=>row[0]===currentTab);
-
-  if(currentTab==="Payment"){
-    tableHead.innerHTML=`
-    <tr>
-    <th>Short</th>
-    <th>Date</th>
-    <th>Name</th>
-    <th>Village</th>
-    <th>Phone</th>
-    <th>Amount</th>
-    <th>Status</th>
-    <th>Change</th>
-    </tr>`;
-
-    data.forEach(row=>{
-      tableBody.innerHTML+=`
-      <tr>
-      <td><input type="checkbox" class="shortlist"></td>
-      <td>${row[1]} ${row[2]}</td>
-      <td>${row[4]}</td>
-      <td>${row[5]}</td>
-      <td>${row[6]}</td>
-      <td>${row[7]}</td>
-      <td class="${
-        row[9]==='Verified'?'verified':
-        row[9]==='Not Verified'?'notverified':'pending'
-      }">${row[9]}</td>
-      <td>
-      <button onclick="changeStatus('${row[3]}','Verified')">✓</button>
-      <button onclick="changeStatus('${row[3]}','Not Verified')">✗</button>
-      </td>
-      </tr>`;
-    });
-  }
-
-  if(currentTab==="Complaint"){
-    tableHead.innerHTML=`
-    <tr>
-    <th>Date</th>
-    <th>Name</th>
-    <th>Village</th>
-    <th>Phone</th>
-    <th>Complaint</th>
-    <th>Status</th>
-    </tr>`;
-
-    data.forEach(row=>{
-      tableBody.innerHTML+=`
-      <tr>
-      <td>${row[1]} ${row[2]}</td>
-      <td>${row[4]}</td>
-      <td>${row[5]}</td>
-      <td>${row[6]}</td>
-      <td>${row[11]}</td>
-      <td>${row[12]}</td>
-      </tr>`;
-    });
-  }
-}
-
-function changeStatus(refid,newStatus){
-  modifiedRows.push({refid:refid,status:newStatus});
-  document.getElementById("saveBtn").disabled=false;
-}
-
-function saveChanges(){
-
-  const data=new URLSearchParams();
-  data.append("action","bulkUpdate");
-  data.append("data",JSON.stringify(modifiedRows));
-
-  fetch(scriptURL,{
-    method:"POST",
-    body:data
-  })
-  .then(()=>{
-    alert("Updated Successfully");
-    location.reload();
-  });
-}
-
-function applyFilters(){
-
-  const search=document.getElementById("search").value.toLowerCase();
-  const status=document.getElementById("statusFilter").value;
-  const village=document.getElementById("villageFilter").value.toLowerCase();
-  const min=document.getElementById("minAmount").value;
-  const max=document.getElementById("maxAmount").value;
-
-  const filtered=allData.filter(row=>{
-
-    if(row[0]!==currentTab) return false;
-
-    if(search && !(row[4].toLowerCase().includes(search) || row[6].includes(search))) return false;
-    if(status && row[9]!==status && row[12]!==status) return false;
-    if(village && !row[5].toLowerCase().includes(village)) return false;
-    if(min && row[7]<min) return false;
-    if(max && row[7]>max) return false;
-
-    return true;
-  });
-
-  renderTable(filtered);
-}
-
-function downloadData(){
-  window.print();
-}
-
-function logout(){
-  sessionStorage.removeItem("adminAuth");
-  window.location.href="login.html";
-}
-
 </script>
 
 </body>
