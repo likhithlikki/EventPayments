@@ -41,6 +41,10 @@ input, textarea{
   border:none;
 }
 
+.invalid{
+  border:2px solid red;
+}
+
 button{
   width:100%;
   padding:12px;
@@ -52,8 +56,9 @@ button{
   cursor:pointer;
 }
 
-button:hover{
-  opacity:0.9;
+button:disabled{
+  background:gray;
+  cursor:not-allowed;
 }
 
 .loader{
@@ -87,15 +92,15 @@ button:hover{
 <div class="container">
 <h2>Register Complaint</h2>
 
-<input type="text" id="name" placeholder="Your Name" required>
-<input type="text" id="village" placeholder="Village" required>
-<input type="text" id="phone" placeholder="Phone Number" required>
+<input type="text" id="name" placeholder="Your Name">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="phone" placeholder="Phone Number">
 <textarea id="complaint" placeholder="Write your complaint..." rows="4"></textarea>
 
 <label>Attach Screenshot (Optional)</label>
 <input type="file" id="attachment" accept="image/*,.pdf">
 
-<button onclick="submitComplaint()">Submit Complaint</button>
+<button id="submitBtn" disabled onclick="submitComplaint()">Submit Complaint</button>
 
 <div id="message"></div>
 
@@ -111,65 +116,112 @@ If not resolved within 24 hours contact:<br>
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
+const nameInput = document.getElementById("name");
+const phoneInput = document.getElementById("phone");
+const complaintInput = document.getElementById("complaint");
+const submitBtn = document.getElementById("submitBtn");
+
+// ===== Validation Function =====
+function validateComplaintForm(){
+
+let valid = true;
+
+// Name letters only
+if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
+  nameInput.classList.add("invalid");
+  valid=false;
+}else{
+  nameInput.classList.remove("invalid");
+}
+
+// Phone validation
+if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
+  phoneInput.classList.add("invalid");
+  valid=false;
+}else{
+  phoneInput.classList.remove("invalid");
+}
+
+// Complaint minimum length
+if(complaintInput.value.trim().length < 10){
+  complaintInput.classList.add("invalid");
+  valid=false;
+}else{
+  complaintInput.classList.remove("invalid");
+}
+
+submitBtn.disabled = !valid;
+}
+
+// Live validation
+nameInput.addEventListener("input",validateComplaintForm);
+
+phoneInput.addEventListener("input",function(){
+  this.value=this.value.replace(/\D/g,"").slice(0,10);
+  validateComplaintForm();
+});
+
+complaintInput.addEventListener("input",validateComplaintForm);
+
+
+// ===== Submit Function =====
 async function submitComplaint(){
 
-  const msg=document.getElementById("message");
-  msg.innerHTML="<div class='loader'></div>";
+if(submitBtn.disabled) return;
 
-  const name=document.getElementById("name").value.trim();
-  const village=document.getElementById("village").value.trim();
-  const phone=document.getElementById("phone").value.trim();
-  const complaint=document.getElementById("complaint").value.trim();
-  const fileInput=document.getElementById("attachment");
+const msg=document.getElementById("message");
+msg.innerHTML="<div class='loader'></div>";
 
-  if(!name || !village || !phone || !complaint){
-    msg.innerHTML="<span class='error'>Please fill all fields</span>";
-    return;
-  }
+const name=nameInput.value.trim();
+const village=document.getElementById("village").value.trim();
+const phone=phoneInput.value.trim();
+const complaint=complaintInput.value.trim();
+const fileInput=document.getElementById("attachment");
 
-  let fileData="";
-  let fileName="";
+let fileData="";
+let fileName="";
 
-  if(fileInput.files.length>0){
-    const file=fileInput.files[0];
-    fileName=file.name;
+if(fileInput.files.length>0){
+  const file=fileInput.files[0];
+  fileName=file.name;
 
-    const reader=new FileReader();
-    fileData=await new Promise(resolve=>{
-      reader.onload=()=>resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  const data=new URLSearchParams();
-  data.append("action","insertComplaint");
-  data.append("name",name);
-  data.append("village",village);
-  data.append("phone",phone);
-  data.append("complaint",complaint);
-  data.append("fileData",fileData);
-  data.append("fileName",fileName);
-
-  fetch(scriptURL,{
-    method:"POST",
-    body:data
-  })
-  .then(res=>res.text())
-  .then(res=>{
-    if(res==="Inserted"){
-      msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
-      document.getElementById("name").value="";
-      document.getElementById("village").value="";
-      document.getElementById("phone").value="";
-      document.getElementById("complaint").value="";
-      document.getElementById("attachment").value="";
-    }else{
-      msg.innerHTML="<span class='error'>Server error</span>";
-    }
-  })
-  .catch(()=>{
-    msg.innerHTML="<span class='error'>Server connection failed</span>";
+  const reader=new FileReader();
+  fileData=await new Promise(resolve=>{
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
   });
+}
+
+const data=new URLSearchParams();
+data.append("action","insertComplaint");
+data.append("name",name);
+data.append("village",village);
+data.append("phone",phone);
+data.append("complaint",complaint);
+data.append("fileData",fileData);
+data.append("fileName",fileName);
+
+fetch(scriptURL,{
+  method:"POST",
+  body:data
+})
+.then(res=>res.text())
+.then(res=>{
+  if(res==="Inserted"){
+    msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
+    nameInput.value="";
+    phoneInput.value="";
+    complaintInput.value="";
+    document.getElementById("village").value="";
+    document.getElementById("attachment").value="";
+    submitBtn.disabled=true;
+  }else{
+    msg.innerHTML="<span class='error'>Server error</span>";
+  }
+})
+.catch(()=>{
+  msg.innerHTML="<span class='error'>Server connection failed</span>";
+});
 }
 
 </script>
