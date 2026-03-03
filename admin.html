@@ -5,31 +5,16 @@
 <title>Admin Dashboard</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
 
-.navbar{
-  background:#065f46;
-  padding:15px;
-  text-align:center;
-}
-
-.navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
-}
+.navbar{background:#065f46;padding:15px;text-align:center;}
+.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
 
 .container{
   max-width:1100px;
   margin:40px auto;
-  padding:20px;
   background:#1e293b;
+  padding:20px;
   border-radius:10px;
 }
 
@@ -49,8 +34,8 @@ th,td{
 .verified{color:#22c55e;font-weight:bold;}
 .notverified{color:#ef4444;font-weight:bold;}
 
-.modified{background:#1f2937;}
-.changedCount{background:#2d3748;}
+.changedCount{background:#2d3748;} /* count > 0 */
+.modifiedRow{background:#111827;color:white;} /* modified black shade */
 
 button{
   padding:6px 10px;
@@ -77,22 +62,30 @@ button{
   border:none;
 }
 
-.loader{
-  border:4px solid #fff;
-  border-top:4px solid #10b981;
-  border-radius:50%;
-  width:30px;
-  height:30px;
-  animation:spin 1s linear infinite;
-  margin:20px auto;
+.progressBar{
+  width:100%;
+  background:#334155;
+  height:6px;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
-@keyframes spin{
-  100%{transform:rotate(360deg);}
+.progressFill{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  animation:loading 1.5s infinite;
+}
+
+@keyframes loading{
+  0%{width:0%}
+  50%{width:80%}
+  100%{width:0%}
 }
 
 @media print{
-  button, .navbar{display:none;}
+  .navbar, button, .filterRow{display:none;}
 }
 </style>
 </head>
@@ -101,7 +94,7 @@ button{
 
 <script>
 if(!sessionStorage.getItem("adminAuth")){
-  const pass = prompt("Enter Admin Password");
+  const pass=prompt("Enter Admin Password");
   if(pass==="admin123"){
     sessionStorage.setItem("adminAuth","true");
   }else{
@@ -125,7 +118,7 @@ if(!sessionStorage.getItem("adminAuth")){
 <div id="summary"></div>
 
 <div class="filterRow">
-<input type="text" id="filterDate" placeholder="Filter Date (e.g. 03 Mar 2026)">
+<input type="text" id="filterDate" placeholder="Filter Date (03 Mar 2026)">
 <select id="filterStatus">
 <option value="">All Status</option>
 <option>Pending</option>
@@ -138,7 +131,9 @@ if(!sessionStorage.getItem("adminAuth")){
 <button onclick="window.print()">Download PDF</button>
 </div>
 
-<div id="tableArea"><div class="loader"></div></div>
+<div id="tableArea">
+<div class="progressBar"><div class="progressFill"></div></div>
+</div>
 
 <button id="saveBtn" disabled onclick="saveChanges()">Save Changes</button>
 
@@ -177,7 +172,8 @@ let statusClass="pending";
 if(row[9]==="Verified") statusClass="verified";
 if(row[9]==="Not Verified") statusClass="notverified";
 
-let rowClass = row[10] > 0 ? "changedCount" : "";
+let rowClass="";
+if(row[10]>0) rowClass="changedCount";
 
 html+=`
 <tr class="${rowClass}">
@@ -207,9 +203,10 @@ document.getElementById("summary").innerHTML=
 
 function markChange(btn,refid,status){
 
-const row = btn.closest("tr");
+const row=btn.closest("tr");
+
 row.querySelector(".statusCell").innerText=status;
-row.classList.add("modified");
+row.classList.add("modifiedRow");
 
 modifiedRows.push({refid,status});
 document.getElementById("saveBtn").disabled=false;
@@ -219,7 +216,8 @@ function saveChanges(){
 
 if(modifiedRows.length===0) return;
 
-document.getElementById("saveBtn").innerText="Saving...";
+document.getElementById("tableArea").innerHTML=
+`<div class="progressBar"><div class="progressFill"></div></div>`;
 
 const data=new URLSearchParams();
 data.append("action","bulkUpdate");
@@ -239,15 +237,12 @@ const status=document.getElementById("filterStatus").value;
 const amount=document.getElementById("filterAmount").value;
 const count=document.getElementById("filterCount").value;
 
-const filtered = allData.filter(row=>{
-
+const filtered=allData.filter(row=>{
 if(row[0]!=="Payment") return false;
-
 if(date && row[1]!==date) return false;
 if(status && row[9]!==status) return false;
 if(amount && Number(row[7])<Number(amount)) return false;
 if(count && Number(row[10])<Number(count)) return false;
-
 return true;
 });
 
@@ -255,6 +250,5 @@ renderTable(filtered);
 }
 
 </script>
-
 </body>
 </html>
