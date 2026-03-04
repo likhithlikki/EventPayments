@@ -109,6 +109,46 @@ transition:width 0.3s linear;
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
+
+/* -------- DATE FORMAT -------- */
+
+function formatDate(value){
+
+if(!value) return "";
+
+const d=new Date(value);
+
+const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let day=d.getDate().toString().padStart(2,"0");
+let month=months[d.getMonth()];
+let year=d.getFullYear();
+
+return day+"-"+month+"-"+year;
+
+}
+
+
+/* -------- TIME FORMAT -------- */
+
+function formatTime(value){
+
+if(!value) return "";
+
+const d=new Date(value);
+
+let h=d.getHours();
+let m=d.getMinutes().toString().padStart(2,"0");
+
+let ampm=h>=12?"pm":"am";
+
+h=h%12 || 12;
+
+return h+":"+m+" "+ampm;
+
+}
+
+
 /* -------- PROGRESS BAR -------- */
 
 function startProgressBar(){
@@ -132,49 +172,6 @@ if(bar) bar.style.width="100%";
 
 }
 
-/* -------- DATE FORMAT (dd-MMM-yyyy) -------- */
-
-function formatDate(value){
-
-if(!value) return "";
-
-let d=new Date(value);
-
-if(isNaN(d)) return value;
-
-const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-let day=d.getDate().toString().padStart(2,"0");
-
-let month=months[d.getMonth()];
-
-let year=d.getFullYear();
-
-return day+"-"+month+"-"+year;
-
-}
-
-/* -------- TIME FORMAT -------- */
-
-function formatTime(value){
-
-if(!value) return value;
-
-let d=new Date("1970-01-01T"+value);
-
-if(isNaN(d)) return value;
-
-let h=d.getHours();
-
-let m=d.getMinutes().toString().padStart(2,"0");
-
-let ampm=h>=12?"pm":"am";
-
-h=h%12 || 12;
-
-return h+":"+m+" "+ampm;
-
-}
 
 /* -------- CHECK STATUS -------- */
 
@@ -205,7 +202,6 @@ completeProgress();
 if(data.found===false){
 
 result.innerHTML="<p class='error'>Invalid Reference ID</p>";
-
 return;
 
 }
@@ -215,7 +211,11 @@ let statusClass="pending";
 if(data[9]==="Verified") statusClass="verified";
 if(data[9]==="Not Verified") statusClass="notverified";
 
+let formattedDate=formatDate(data[1]);
+let formattedTime=formatTime(data[2]);
+
 result.innerHTML=`
+
 <div class="resultBox">
 
 <p><strong>Name:</strong> ${data[4]}</p>
@@ -226,13 +226,14 @@ result.innerHTML=`
 
 <p><strong>Amount:</strong> ₹${data[7]}</p>
 
-<p><strong>Date:</strong> ${data[1]}</p>
+<p><strong>Date:</strong> ${formattedDate}</p>
 
-<p><strong>Time:</strong> ${data[2]}</p>
+<p><strong>Time:</strong> ${formattedTime}</p>
 
 <p><strong>Status:</strong> <span class="${statusClass}">${data[9]}</span></p>
 
 </div>
+
 `;
 
 })
