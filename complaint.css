@@ -1,95 +1,79 @@
 body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
 .navbar{
-background:#c2410c;
-padding:15px;
-text-align:center;
+  background:#c2410c;
+  padding:15px;
+  text-align:center;
 }
 
 .navbar a{
-color:white;
-margin:0 15px;
-text-decoration:none;
-font-weight:bold;
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
 }
 
 .container{
-max-width:450px;
-margin:40px auto;
-background:#1e293b;
-padding:20px;
-border-radius:10px;
+  max-width:450px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
 }
 
 input, textarea{
-width:100%;
-padding:10px;
-margin:8px 0;
-border-radius:6px;
-border:none;
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
 }
 
 .invalid{
-border:2px solid red;
+  border:2px solid red;
 }
 
 button{
-width:100%;
-padding:12px;
-background:#f97316;
-color:white;
-border:none;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer;
+  width:100%;
+  padding:12px;
+  background:#f97316;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 button:disabled{
-background:gray;
-cursor:not-allowed;
+  background:gray;
+  cursor:not-allowed;
 }
 
 .progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin:10px 0;
+  width:100%;
+  background:#334155;
+  height:6px;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
 .progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:width 0.3s linear;
 }
 
 .success{
-color:lightgreen;
+  color:lightgreen;
 }
 
 .error{
-color:#ef4444;
-}
-
-.loader{
-display:none;
-border:4px solid #334155;
-border-top:4px solid #22c55e;
-border-radius:50%;
-width:28px;
-height:28px;
-animation:spin 1s linear infinite;
-margin:20px auto;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg)}
-100%{transform:rotate(360deg)}
+  color:#ef4444;
 }
