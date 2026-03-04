@@ -1,243 +1,113 @@
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+<!DOCTYPE html>
+<html>
 
-let paymentUpdates=[];
-let complaintUpdates=[];
+<head>
 
-document.getElementById("pageLoader").style.display="block";
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
 
-/* SESSION TIMER */
+<link rel="stylesheet" href="admin.css">
 
-let sessionMinutes=30;
-let loginTime=Date.now();
-
-function startTimer(){
-
-setInterval(()=>{
-
-let now=Date.now();
-let remaining=sessionMinutes*60000-(now-loginTime);
-
-let m=Math.floor(remaining/60000);
-let s=Math.floor((remaining%60000)/1000);
-
-let timer=document.getElementById("timer");
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
+</head>
 
-if(m<5){
-timer.classList.add("blink");
-}
+<body>
 
-if(remaining<=0){
-logout();
-}
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
+</div>
 
-},1000);
-}
+<div class="container">
 
-startTimer();
+<div class="dashboardTitle">
+Admin Dashboard
+</div>
 
-function logout(){
-sessionStorage.clear();
-location="admin-login.html";
-}
+<div class="topActions">
 
-/* SUMMARY */
+<span id="timer"></span>
 
-fetch(scriptURL+"?action=getPaymentSummary")
-.then(r=>r.json())
-.then(d=>{
+<button class="pdfBtn" onclick="window.print()">Export PDF</button>
 
-document.getElementById("totalAmount").innerText="₹"+d.total;
-document.getElementById("verifiedAmount").innerText="₹"+d.verified;
-document.getElementById("pendingAmount").innerText="₹"+d.pending;
-document.getElementById("notVerifiedAmount").innerText="₹"+d.notverified;
+<button class="logoutBtn" onclick="logout()">Logout</button>
 
-new Chart(document.getElementById("pieChart"),{
-type:"pie",
-data:{
-labels:["Verified","Pending","Not Verified"],
-datasets:[{
-data:[d.verified,d.pending,d.notverified],
-backgroundColor:["#22c55e","#3b82f6","#ef4444"]
-}]
-},
-options:{
-plugins:{
-legend:{display:false}
-}
-}
-});
+</div>
 
-});
+<div id="pageLoader" class="loader"></div>
 
-/* PAYMENTS */
+<div class="dashboard">
 
-fetch(scriptURL+"?action=getAllPayments")
-.then(r=>r.json())
-.then(data=>{
+<div class="summaryBoxes">
 
-let html="<table>";
+<div class="box">
+<h4>Total Amount</h4>
+<p id="totalAmount">₹0</p>
+</div>
 
-html+="<tr>";
-html+="<th>Date</th>";
-html+="<th>Time</th>";
-html+="<th>RefID</th>";
-html+="<th>Name</th>";
-html+="<th>Village</th>";
-html+="<th>Phone</th>";
-html+="<th>Amount</th>";
-html+="<th>UTR</th>";
-html+="<th>Status</th>";
-html+="<th>Action</th>";
-html+="</tr>";
+<div class="box">
+<h4>Verified Amount</h4>
+<p id="verifiedAmount">₹0</p>
+</div>
 
-data.forEach((r,i)=>{
+<div class="box">
+<h4>Pending Amount</h4>
+<p id="pendingAmount">₹0</p>
+</div>
 
-let statusClass="statusPending";
-if(r[9]=="Verified") statusClass="statusVerified";
-if(r[9]=="Not Verified") statusClass="statusNotVerified";
+<div class="box">
+<h4>Not Verified Amount</h4>
+<p id="notVerifiedAmount">₹0</p>
+</div>
 
-html+=`
-<tr>
-<td>${r[1]}</td>
-<td>${r[2]}</td>
-<td>${r[3]}</td>
-<td>${r[4]}</td>
-<td>${r[5]}</td>
-<td>${r[6]}</td>
-<td>${r[7]}</td>
-<td>${r[8]}</td>
-<td id="payStatus${i}" class="${statusClass}">${r[9]}</td>
+</div>
 
-<td>
-<button class="btnVerify" onclick="setPaymentStatus(${i},'Verified')">✓</button>
-<button class="btnReject" onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
-</td>
+<div style="display:flex">
 
-</tr>
-`;
-});
+<div class="chartBox">
+<canvas id="pieChart"></canvas>
+</div>
 
-html+="</table>";
+<div class="legendBox">
 
-document.getElementById("paymentTable").innerHTML=html;
+<div class="legendItem">
+<div class="legendColor green"></div> Verified
+</div>
 
-});
+<div class="legendItem">
+<div class="legendColor blue"></div> Pending
+</div>
 
-/* JS status change */
+<div class="legendItem">
+<div class="legendColor red"></div> Not Verified
+</div>
 
-function setPaymentStatus(i,status){
+</div>
 
-let cell=document.getElementById("payStatus"+i);
+</div>
 
-cell.innerText=status;
+</div>
 
-cell.className=status==="Verified"?"statusVerified":"statusNotVerified";
+<h3>Event Payments</h3>
 
-paymentUpdates.push({row:i+2,status});
-}
+<div id="paymentTable"></div>
 
-/* SAVE PAYMENTS */
+<button class="saveBtn" onclick="savePayments()">Save Payment Changes</button>
+<div id="paymentLoader" class="loader"></div>
 
-function savePayments(){
+<h3>Complaints</h3>
 
-document.getElementById("paymentLoader").style.display="block";
+<div id="complaintTable"></div>
 
-const data=new URLSearchParams();
-data.append("action","updatePayments");
-data.append("data",JSON.stringify(paymentUpdates));
+<button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
+<div id="complaintLoader" class="loader"></div>
 
-fetch(scriptURL,{method:"POST",body:data})
-.then(()=>location.reload());
+</div>
 
-}
+<script src="admin.js"></script>
 
-/* COMPLAINTS */
-
-fetch(scriptURL+"?action=getAllComplaints")
-.then(r=>r.json())
-.then(data=>{
-
-let html="<table>";
-
-html+="<tr>";
-html+="<th>Date</th>";
-html+="<th>Name</th>";
-html+="<th>Phone</th>";
-html+="<th>Complaint</th>";
-html+="<th>Status</th>";
-html+="<th>Reply</th>";
-html+="<th>WhatsApp</th>";
-html+="<th>Action</th>";
-html+="</tr>";
-
-data.forEach((r,i)=>{
-
-html+=`
-<tr>
-
-<td>${r[0]}</td>
-<td>${r[2]}</td>
-<td>${r[4]}</td>
-<td>${r[6]}</td>
-
-<td id="compStatus${i}">${r[7]}</td>
-
-<td>
-<textarea id="reply${i}">${r[8]||""}</textarea>
-</td>
-
-<td>${r[10]||"Pending"}</td>
-
-<td>
-<button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
-<button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
-</td>
-
-</tr>
-`;
-
-});
-
-html+="</table>";
-
-document.getElementById("complaintTable").innerHTML=html;
-
-document.getElementById("pageLoader").style.display="none";
-
-});
-
-/* JS complaint status change */
-
-function setComplaintStatus(i,status){
-
-document.getElementById("compStatus"+i).innerText=status;
-
-const reply=document.getElementById("reply"+i).value;
-
-complaintUpdates.push({
-row:i+2,
-status,
-reply
-});
-}
-
-/* SAVE COMPLAINTS */
-
-function saveComplaints(){
-
-document.getElementById("complaintLoader").style.display="block";
-
-const data=new URLSearchParams();
-
-data.append("action","updateComplaints");
-data.append("data",JSON.stringify(complaintUpdates));
-
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
-.then(()=>location.reload());
-
-}
+</body>
+</html>
