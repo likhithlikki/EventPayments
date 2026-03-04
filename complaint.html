@@ -5,7 +5,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Submit Complaint</title>
+<title>Complaint</title>
 
 <link rel="stylesheet" href="complaint.css">
 
@@ -26,15 +26,20 @@
 
 <form id="complaintForm">
 
-<input type="text" id="name" placeholder="Your Name" required>
+<input type="text" id="name" placeholder="Name" required>
 
 <input type="text" id="village" placeholder="Village" required>
 
-<input type="tel" id="phone" placeholder="Phone Number" required>
+<input type="tel"
+id="phone"
+placeholder="Phone (10 digits)"
+maxlength="10"
+pattern="[0-9]{10}"
+required>
 
 <input type="email" id="email" placeholder="Email" required>
 
-<textarea id="complaint" placeholder="Enter your complaint" required></textarea>
+<textarea id="complaint" placeholder="Complaint" required></textarea>
 
 <label>Upload File (Max 2MB)</label>
 
@@ -46,7 +51,7 @@
 
 <div id="loader" class="loader"></div>
 
-<div id="message"></div>
+<div id="msg"></div>
 
 </div>
 
@@ -54,33 +59,41 @@
 
 const scriptURL="YOUR_WEB_APP_URL";
 
+document.getElementById("phone").addEventListener("input",function(){
+
+this.value=this.value.replace(/[^0-9]/g,"");
+
+});
+
 document.getElementById("complaintForm").addEventListener("submit",function(e){
 
 e.preventDefault();
 
-const loader=document.getElementById("loader");
-const msg=document.getElementById("message");
+const phone=document.getElementById("phone").value;
 
-loader.style.display="block";
-msg.innerHTML="";
+if(phone.length!==10){
 
-const file=document.getElementById("fileUpload").files[0];
-
-if(file && file.size>2*1024*1024){
-
-loader.style.display="none";
-
-msg.innerHTML="File size must be less than 2MB";
+alert("Phone number must be exactly 10 digits");
 
 return;
 
 }
 
+const file=document.getElementById("fileUpload").files[0];
+
+if(file && file.size>2*1024*1024){
+
+alert("File must be less than 2MB");
+
+return;
+
+}
+
+document.getElementById("loader").style.display="block";
+
 let reader=new FileReader();
 
 reader.onloadend=function(){
-
-const base64=reader.result;
 
 const data=new URLSearchParams();
 
@@ -90,13 +103,13 @@ data.append("name",document.getElementById("name").value);
 
 data.append("village",document.getElementById("village").value);
 
-data.append("phone",document.getElementById("phone").value);
+data.append("phone",phone);
 
 data.append("email",document.getElementById("email").value);
 
 data.append("complaint",document.getElementById("complaint").value);
 
-data.append("file",base64);
+data.append("file",reader.result||"");
 
 data.append("filename",file?file.name:"");
 
@@ -107,9 +120,9 @@ body:data
 .then(r=>r.text())
 .then(res=>{
 
-loader.style.display="none";
+document.getElementById("loader").style.display="none";
 
-msg.innerHTML="Complaint submitted successfully";
+document.getElementById("msg").innerHTML="Complaint Submitted";
 
 document.getElementById("complaintForm").reset();
 
