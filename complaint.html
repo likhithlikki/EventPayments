@@ -1,200 +1,251 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Complaint</title>
 
 <style>
-
 body{
-font-family:Arial;
-background:#eef2f8;
-margin:0;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
-
-/* NAVBAR */
 
 .navbar{
-background:#0b1c3d;
-color:white;
-padding:16px;
-text-align:center;
-font-size:20px;
-font-weight:bold;
+  background:#c2410c;
+  padding:15px;
+  text-align:center;
 }
 
-/* CONTAINER */
+.navbar a{
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
 .container{
-width:360px;
-margin:40px auto;
-background:white;
-padding:25px;
-border-radius:10px;
-box-shadow:0 8px 20px rgba(0,0,0,0.1);
+  max-width:450px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
 }
 
-/* INPUT */
-
-input,textarea{
-width:100%;
-padding:10px;
-margin-top:10px;
-margin-bottom:12px;
-border:1px solid #ccc;
-border-radius:5px;
-font-size:14px;
+input, textarea{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
 }
 
-/* BUTTON */
+.invalid{
+  border:2px solid red;
+}
 
 button{
-width:100%;
-padding:12px;
-background:#0b1c3d;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
+  width:100%;
+  padding:12px;
+  background:#f97316;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-button:hover{
-background:#152a63;
+button:disabled{
+  background:gray;
+  cursor:not-allowed;
 }
 
-/* LOADER */
-
-.loader{
-display:none;
-text-align:center;
-margin-top:15px;
+.progressBar{
+  width:100%;
+  background:#334155;
+  height:6px;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
-.spinner{
-border:4px solid #f3f3f3;
-border-top:4px solid #0b1c3d;
-border-radius:50%;
-width:24px;
-height:24px;
-animation:spin 1s linear infinite;
-margin:auto;
+.progressFill{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:width 0.3s linear;
 }
 
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
-}
-
+.success{color:lightgreen;}
+.error{color:#ef4444;}
 </style>
-
 </head>
 
 <body>
 
 <div class="navbar">
-Complaint Form
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
+<h2>Register Complaint</h2>
 
-<input id="name" placeholder="Name">
+<input type="text" id="name" placeholder="Name (letters only)">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="phone" placeholder="Phone (10 digits)">
+<textarea id="complaint" placeholder="Write complaint (min 10 characters)"></textarea>
+<input type="file" id="attachment" accept="image/*,.pdf">
 
-<input id="village" placeholder="Village">
+<button id="submitBtn" disabled onclick="submitComplaint()">Submit Complaint</button>
 
-<input id="phone" placeholder="Phone">
+<div id="message"></div>
 
-<input id="email" placeholder="Email (optional)">
-
-<textarea id="complaint" placeholder="Write your complaint"></textarea>
-
-<button onclick="submitComplaint()">Submit Complaint</button>
-
-<div class="loader" id="loader">
-
-<div class="spinner"></div>
-
-<p>Submitting...</p>
-
-</div>
+<p style="font-size:12px;margin-top:15px;">
+If not resolved within 24 hours contact:<br>
+📧 likithmuddada@gmail.com<br>
+📱 WhatsApp: 9014844036
+</p>
 
 </div>
 
 <script>
 
-/***********************
-CONFIG
-***********************/
+const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
+const complaintInput=document.getElementById("complaint");
+const submitBtn=document.getElementById("submitBtn");
 
-/***********************
-SUBMIT COMPLAINT
-***********************/
+function validate(){
 
-function submitComplaint(){
+let valid=true;
 
-const name=document.getElementById("name").value;
-const village=document.getElementById("village").value;
-const phone=document.getElementById("phone").value;
-const email=document.getElementById("email").value;
-const complaint=document.getElementById("complaint").value;
+if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
+  nameInput.classList.add("invalid");
+  valid=false;
+}else nameInput.classList.remove("invalid");
 
-if(!name||!village||!phone||!complaint){
+if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
+  phoneInput.classList.add("invalid");
+  valid=false;
+}else phoneInput.classList.remove("invalid");
 
-alert("Please fill all required fields");
+if(complaintInput.value.trim().length<10){
+  complaintInput.classList.add("invalid");
+  valid=false;
+}else complaintInput.classList.remove("invalid");
 
-return;
+submitBtn.disabled=!valid;
 
 }
 
-document.getElementById("loader").style.display="block";
+nameInput.addEventListener("input",validate);
 
-const controller=new AbortController();
+phoneInput.addEventListener("input",function(){
+  this.value=this.value.replace(/\D/g,"").slice(0,10);
+  validate();
+});
 
-setTimeout(()=>{
+complaintInput.addEventListener("input",validate);
 
-controller.abort();
+function startProgressBar(){
 
-},10000);
+  const msg=document.getElementById("message");
 
-fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
+  msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
 
-action:"complaint",
-name:name,
-village:village,
-phone:phone,
-email:email,
-complaint:complaint
+  const bar=document.getElementById("progressFill");
 
-}),
-signal:controller.signal
-})
+  setTimeout(()=>{bar.style.width="80%";},100);
+  setTimeout(()=>{bar.style.width="90%";},3000);
+  setTimeout(()=>{bar.style.width="99%";},5000);
 
-.then(r=>r.json())
+}
+
+function completeProgress(){
+
+  const bar=document.getElementById("progressFill");
+  if(bar) bar.style.width="100%";
+
+}
+
+async function submitComplaint(){
+
+if(submitBtn.disabled) return;
+
+const msg=document.getElementById("message");
+
+startProgressBar();
+
+const fileInput=document.getElementById("attachment");
+
+let fileData="";
+let fileName="";
+
+if(fileInput.files.length>0){
+
+  const file=fileInput.files[0];
+
+  const maxSize=5*1024*1024;
+
+  if(file.size > maxSize){
+
+    msg.innerHTML="<span class='error'>File must be under 5MB</span>";
+    return;
+
+  }
+
+  fileName=file.name;
+
+  const reader=new FileReader();
+
+  fileData=await new Promise(resolve=>{
+
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+
+  });
+
+}
+
+const data=new URLSearchParams();
+
+data.append("action","insertComplaint");
+data.append("name",nameInput.value.trim());
+data.append("village",document.getElementById("village").value.trim());
+data.append("phone",phoneInput.value.trim());
+data.append("complaint",complaintInput.value.trim());
+data.append("fileData",fileData);
+data.append("fileName",fileName);
+
+fetch(scriptURL,{method:"POST",body:data})
+
+.then(res=>res.text())
 
 .then(res=>{
 
-document.getElementById("loader").style.display="none";
+completeProgress();
 
-if(res.status==="submitted"){
+if(res==="Inserted"){
 
-alert("Complaint submitted successfully");
+msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
 
-document.getElementById("name").value="";
+nameInput.value="";
+phoneInput.value="";
+complaintInput.value="";
 document.getElementById("village").value="";
-document.getElementById("phone").value="";
-document.getElementById("email").value="";
-document.getElementById("complaint").value="";
+fileInput.value="";
+
+submitBtn.disabled=true;
 
 }else{
 
-alert("Submission failed");
+msg.innerHTML="<span class='error'>Server error</span>";
 
 }
 
@@ -202,9 +253,7 @@ alert("Submission failed");
 
 .catch(()=>{
 
-document.getElementById("loader").style.display="none";
-
-alert("Server not responding");
+msg.innerHTML="<span class='error'>Server connection error</span>";
 
 });
 
