@@ -1,60 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Admin Dashboard</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
 
 <style>
 
 body{
 font-family:Arial;
-background:#f4f6fb;
+background:#eef2fb;
 margin:0;
 }
 
+/* NAVBAR */
+
 .navbar{
 background:#0b1c3d;
-color:white;
 padding:14px;
 display:flex;
-justify-content:space-between;
-}
-
-.navbar a{
+justify-content:center;
+gap:30px;
 color:white;
-margin-right:20px;
-text-decoration:none;
 font-weight:bold;
 }
 
-.container{
-padding:20px;
-}
+/* LOGIN */
 
-.dashboard{
-text-align:center;
-margin-bottom:20px;
-}
-
-.dashboard h1{
-font-size:34px;
-}
-
-.cardRow{
-display:flex;
-gap:20px;
-margin-bottom:20px;
-flex-wrap:wrap;
-}
-
-.card{
+#loginBox{
+width:320px;
+margin:120px auto;
 background:white;
+padding:30px;
+border-radius:8px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+background:#0b1c3d;
+color:white;
+border:none;
+padding:10px;
+width:100%;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#142b66;
+}
+
+/* DASHBOARD */
+
+#dashboard{
+display:none;
 padding:20px;
-border-radius:10px;
-flex:1;
-box-shadow:0 3px 8px rgba(0,0,0,0.1);
 }
 
 table{
@@ -64,9 +73,9 @@ background:white;
 }
 
 th,td{
-padding:10px;
 border:1px solid #ddd;
-font-size:14px;
+padding:8px;
+text-align:center;
 }
 
 th{
@@ -74,407 +83,324 @@ background:#0b1c3d;
 color:white;
 }
 
-.statusVerified{
-color:green;
-font-weight:bold;
+.statusSelect{
+padding:5px;
 }
 
-.statusPending{
-color:#1a73e8;
-font-weight:bold;
-}
-
-.statusRejected{
-color:red;
-font-weight:bold;
-}
-
-.modifiedRow{
-background:#f0f3ff;
-}
-
-button{
-padding:8px 14px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-.verifyBtn{
-background:#28a745;
-color:white;
-}
-
-.rejectBtn{
-background:#dc3545;
-color:white;
-}
-
-.saveBtn{
-background:#007bff;
-color:white;
-margin-top:15px;
-}
-
-.logoutBtn{
-background:red;
-color:white;
-}
-
-.timer{
-font-size:18px;
-font-weight:bold;
-}
-
-.blink{
-animation:blink 1s infinite;
-}
-
-@keyframes blink{
-50%{opacity:0.3}
-}
-
-.loadingBar{
-width:100%;
-height:4px;
-background:#ddd;
-overflow:hidden;
-}
-
-.loadingProgress{
-width:0%;
-height:100%;
-background:#007bff;
-animation:load 5s linear forwards;
-}
-
-@keyframes load{
-0%{width:0%}
-60%{width:80%}
-90%{width:90%}
-100%{width:100%}
+.loader{
+display:none;
+text-align:center;
+margin-top:20px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="navbar">
-
-<div>
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="admin.html">Admin Panel</a>
+Admin Panel
 </div>
 
-<div>
-<span class="timer" id="timer"></span>
-<button class="logoutBtn" onclick="logout()">Logout</button>
-</div>
+<!-- LOGIN -->
 
-</div>
+<div id="loginBox">
 
-<div class="loadingBar" id="loadingBar" style="display:none">
-<div class="loadingProgress"></div>
-</div>
+<h3>Admin Login</h3>
 
-<div class="container">
+<input id="user" placeholder="Username">
 
-<div class="dashboard">
+<input id="pass" type="password" placeholder="Password">
 
-<h1 id="welcomeText">Admin Dashboard</h1>
+<button onclick="login()">Login</button>
+
+<div id="loginMsg"></div>
 
 </div>
 
-<div class="cardRow">
+<!-- DASHBOARD -->
 
-<div class="card">
-<h3>Total Amount</h3>
-<p id="totalAmount">₹0</p>
-</div>
+<div id="dashboard">
 
-<div class="card">
-<h3>Verified</h3>
-<p id="verifiedAmount">₹0</p>
-</div>
+<h2 id="welcome"></h2>
 
-<div class="card">
-<h3>Pending</h3>
-<p id="pendingAmount">₹0</p>
-</div>
-
-<div class="card">
-<h3>Not Verified</h3>
-<p id="notAmount">₹0</p>
-</div>
-
-</div>
-
-<canvas id="chart" height="100"></canvas>
-
-<h2>Payments</h2>
+<h3>Payments</h3>
 
 <table id="paymentTable">
+
 <thead>
+
 <tr>
-<th>Date</th>
-<th>Time</th>
-<th>RefID</th>
+<th>Ref</th>
 <th>Name</th>
 <th>Village</th>
 <th>Phone</th>
 <th>Amount</th>
-<th>UTR</th>
 <th>Status</th>
-<th>Count</th>
-<th>Action</th>
+<th>Update</th>
 </tr>
+
 </thead>
+
 <tbody></tbody>
+
 </table>
 
-<button class="saveBtn" id="saveBtn" disabled onclick="saveChanges()">Save Changes</button>
+<br>
 
-<h2 style="margin-top:40px">Complaints</h2>
+<button onclick="saveStatus()">Save Changes</button>
+
+<br><br>
+
+<h3>Complaints</h3>
 
 <table id="complaintTable">
+
 <thead>
+
 <tr>
-<th>Date</th>
 <th>Name</th>
-<th>Phone</th>
+<th>Village</th>
 <th>Complaint</th>
 <th>Status</th>
-<th>Action</th>
+<th>Resolve</th>
 </tr>
-</thead>
-<tbody></tbody>
-</table>
 
-<button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
+</thead>
+
+<tbody></tbody>
+
+</table>
 
 </div>
 
+<div class="loader" id="loader">
+Loading...
+</div>
+
+
 <script>
 
-const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-let sessionTime=1800;
-let changes=[];
-let complaintChanges=[];
 
-function startTimer(){
+let token="";
+let role="";
 
-const timer=document.getElementById("timer");
 
-setInterval(()=>{
+/***********************
+LOGIN
+***********************/
 
-sessionTime--;
+function login(){
 
-let m=Math.floor(sessionTime/60);
-let s=sessionTime%60;
+const user=document.getElementById("user").value;
+const pass=document.getElementById("pass").value;
 
-timer.innerText=`${m}:${s}`;
+fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+action:"login",
+user:user,
+pass:pass
+})
+})
+.then(r=>r.json())
+.then(data=>{
 
-if(sessionTime<300){
-timer.classList.add("blink");
-timer.style.color="red";
+if(data.status=="success"){
+
+token=data.token;
+role=data.role;
+
+document.getElementById("loginBox").style.display="none";
+document.getElementById("dashboard").style.display="block";
+
+document.getElementById("welcome").innerText=
+"Welcome "+role;
+
+loadPayments();
+loadComplaints();
+
+}
+else{
+
+document.getElementById("loginMsg").innerText="Invalid login";
+
 }
 
-if(sessionTime<=0){
-logout();
-}
-
-},1000)
-
-}
-
-function logout(){
-
-localStorage.removeItem("adminToken");
-window.location="index.html";
+})
+.catch(()=>{
+alert("Server not responding");
+});
 
 }
+
+
+/***********************
+LOAD PAYMENTS
+***********************/
 
 function loadPayments(){
 
-document.getElementById("loadingBar").style.display="block";
-
-fetch(API_URL+"?action=getPayments")
+fetch(API+"?action=payments")
 .then(r=>r.json())
 .then(data=>{
 
-document.getElementById("loadingBar").style.display="none";
-
-let tbody=document.querySelector("#paymentTable tbody");
+const tbody=document.querySelector("#paymentTable tbody");
 tbody.innerHTML="";
 
-data.forEach(row=>{
+for(let i=1;i<data.length;i++){
+
+let row=data[i];
 
 let tr=document.createElement("tr");
 
-let statusClass="";
-
-if(row.status=="Verified") statusClass="statusVerified";
-if(row.status=="Pending") statusClass="statusPending";
-if(row.status=="Not Verified") statusClass="statusRejected";
-
 tr.innerHTML=`
-<td>${row.date}</td>
-<td>${row.time}</td>
-<td>${row.ref}</td>
-<td>${row.name}</td>
-<td>${row.village}</td>
-<td>${row.phone}</td>
-<td>${row.amount}</td>
-<td>${row.utr}</td>
-<td class="${statusClass}">${row.status}</td>
-<td>${row.count}</td>
+
+<td>${row[2]}</td>
+<td>${row[3]}</td>
+<td>${row[4]}</td>
+<td>${row[5]}</td>
+<td>${row[6]}</td>
+
 <td>
-<button class="verifyBtn" onclick="mark('${row.ref}','Verified',this)">✓</button>
-<button class="rejectBtn" onclick="mark('${row.ref}','Not Verified',this)">✗</button>
+
+<select class="statusSelect">
+
+<option ${row[8]=="Pending"?"selected":""}>Pending</option>
+<option ${row[8]=="Verified"?"selected":""}>Verified</option>
+<option ${row[8]=="Rejected"?"selected":""}>Rejected</option>
+
+</select>
+
 </td>
+
+<td>
+<button onclick="updateRow(this,'${row[2]}')">Update</button>
+</td>
+
 `;
 
 tbody.appendChild(tr);
 
-});
+}
 
-})
+});
 
 }
 
-function mark(ref,status,btn){
 
-let tr=btn.closest("tr");
+/***********************
+UPDATE PAYMENT
+***********************/
 
-tr.classList.add("modifiedRow");
+function updateRow(btn,ref){
 
-changes.push({
-ref:ref,
-status:status
-});
+const status=
+btn.parentElement.parentElement
+.querySelector("select").value;
 
-document.getElementById("saveBtn").disabled=false;
-
-}
-
-function saveChanges(){
-
-fetch(API_URL,{
+fetch(API,{
 method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
-action:"updatePayments",
-data:changes
+action:"updateStatus",
+ref:ref,
+status:status,
+admin:"admin"
 })
-}).then(()=>{
-
-alert("Sheet Updated Successfully");
-
-changes=[];
-
-document.getElementById("saveBtn").disabled=true;
-
-loadPayments();
-
 })
+.then(r=>r.json())
+.then(res=>{
+alert("Updated");
+});
 
 }
+
+
+function saveStatus(){
+loadPayments();
+}
+
+
+/***********************
+LOAD COMPLAINTS
+***********************/
 
 function loadComplaints(){
 
-fetch(API_URL+"?action=getComplaints")
+fetch(API+"?action=complaints")
 .then(r=>r.json())
 .then(data=>{
 
-let tbody=document.querySelector("#complaintTable tbody");
-
+const tbody=document.querySelector("#complaintTable tbody");
 tbody.innerHTML="";
 
-data.forEach(c=>{
+for(let i=1;i<data.length;i++){
+
+let r=data[i];
 
 let tr=document.createElement("tr");
 
 tr.innerHTML=`
-<td>${c.date}</td>
-<td>${c.name}</td>
-<td>${c.phone}</td>
-<td>${c.text}</td>
-<td>${c.status}</td>
+
+<td>${r[2]}</td>
+<td>${r[3]}</td>
+<td>${r[6]}</td>
+<td>${r[7]}</td>
+
 <td>
-<button onclick="resolveComplaint('${c.id}',this)">Resolve</button>
+
+<button onclick="resolveComplaint(${i+1})">
+Resolve
+</button>
+
 </td>
+
 `;
 
 tbody.appendChild(tr);
 
-})
-
-})
-
-}
-
-function resolveComplaint(id,btn){
-
-complaintChanges.push(id);
-
-btn.closest("tr").classList.add("modifiedRow");
-
-}
-
-function saveComplaints(){
-
-fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({
-action:"resolveComplaints",
-ids:complaintChanges
-})
-}).then(()=>{
-
-alert("Complaints Updated");
-
-complaintChanges=[];
-
-loadComplaints();
-
-})
-
-}
-
-function loadAnalytics(){
-
-fetch(API_URL+"?action=analytics")
-.then(r=>r.json())
-.then(data=>{
-
-document.getElementById("totalAmount").innerText="₹"+data.total;
-document.getElementById("verifiedAmount").innerText="₹"+data.verified;
-document.getElementById("pendingAmount").innerText="₹"+data.pending;
-document.getElementById("notAmount").innerText="₹"+data.notverified;
-
-new Chart(document.getElementById("chart"),{
-
-type:"pie",
-
-data:{
-labels:["Verified","Pending","Not Verified"],
-datasets:[{
-data:[data.verified,data.pending,data.notverified]
-}]
 }
 
 });
 
-})
-
 }
 
-startTimer();
-loadPayments();
+
+/***********************
+RESOLVE COMPLAINT
+***********************/
+
+function resolveComplaint(row){
+
+const reply=prompt("Enter reply");
+
+fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+action:"resolveComplaint",
+row:row,
+reply:reply
+})
+})
+.then(r=>r.json())
+.then(()=>{
+alert("Resolved");
 loadComplaints();
-loadAnalytics();
+});
+
+}
 
 </script>
 
