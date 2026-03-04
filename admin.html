@@ -1,429 +1,406 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
-font-family:Arial;
-background:#eef2f8;
 margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
 }
 
-/* NAVBAR */
-
 .navbar{
-background:#0b1c3d;
-color:white;
-padding:16px;
+background:#065f46;
+padding:15px;
 text-align:center;
-font-size:20px;
+}
+
+.navbar a{
+color:white;
+margin:0 10px;
+text-decoration:none;
 font-weight:bold;
 }
 
-/* LOGIN */
-
-.loginBox{
-width:320px;
-margin:80px auto;
-background:white;
-padding:25px;
+.container{
+max-width:1100px;
+margin:30px auto;
+background:#1e293b;
+padding:20px;
 border-radius:10px;
-box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-margin-bottom:12px;
-border:1px solid #ccc;
-border-radius:5px;
+.topBar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
 }
 
 button{
-width:100%;
-padding:12px;
-background:#0b1c3d;
-color:white;
+padding:8px 12px;
 border:none;
 border-radius:6px;
 cursor:pointer;
 }
 
-button:hover{
-background:#142b60;
+.logoutBtn{
+background:#ef4444;
+color:white;
 }
 
-/* DASHBOARD */
-
-.dashboard{
-display:none;
-width:90%;
-margin:auto;
-margin-top:30px;
+.pdfBtn{
+background:#2563eb;
+color:white;
 }
 
-/* CARD */
-
-.card{
-background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
+.saveBtn{
+background:#10b981;
+color:white;
+margin-top:10px;
 }
-
-/* TABLE */
 
 table{
 width:100%;
 border-collapse:collapse;
+margin-top:20px;
 }
 
-td,th{
-border:1px solid #ddd;
+th,td{
+border:1px solid #334155;
 padding:8px;
-font-size:14px;
-}
-
-th{
-background:#0b1c3d;
-color:white;
-}
-
-/* LOADER */
-
-.loader{
-display:none;
 text-align:center;
-margin-top:10px;
 }
 
-.spinner{
-border:4px solid #f3f3f3;
-border-top:4px solid #0b1c3d;
-border-radius:50%;
-width:24px;
-height:24px;
-animation:spin 1s linear infinite;
+.pending{color:#3b82f6;font-weight:bold;}
+.verified{color:#22c55e;font-weight:bold;}
+.notverified{color:#ef4444;font-weight:bold;}
+
+.modifiedRow{
+background:#111827;
+}
+
+.progressBar{
+width:100%;
+background:#334155;
+height:6px;
+border-radius:4px;
+overflow:hidden;
+margin:10px 0;
+}
+
+.progressFill{
+height:100%;
+width:0%;
+background:#22c55e;
+transition:width 0.3s linear;
+}
+
+.chartBox{
+max-width:400px;
 margin:auto;
 }
 
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
+@media print{
+.navbar,.logoutBtn,.pdfBtn,.saveBtn{display:none;}
 }
 
 </style>
-
 </head>
 
 <body>
 
+<script>
+
+const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+
+/* ---------- SESSION CHECK ---------- */
+
+const user=sessionStorage.getItem("adminUser");
+const role=sessionStorage.getItem("adminRole");
+const loginTime=sessionStorage.getItem("loginTime");
+
+if(!user){
+window.location="admin-login.html";
+}
+
+/* ---------- SESSION TIMER ---------- */
+
+let sessionMinutes=10;
+
+function startTimer(){
+
+const timer=document.getElementById("timer");
+
+setInterval(()=>{
+
+const now=Date.now();
+
+let remaining=sessionMinutes*60*1000-(now-loginTime);
+
+if(remaining<=0){
+
+alert("Session expired");
+logout();
+
+}
+
+let min=Math.floor(remaining/60000);
+let sec=Math.floor((remaining%60000)/1000);
+
+timer.innerText="Session: "+min+":"+sec.toString().padStart(2,"0");
+
+},1000);
+
+}
+
+/* ---------- LOGOUT ---------- */
+
+function logout(){
+
+const data=new URLSearchParams();
+
+data.append("action","logoutAdmin");
+data.append("admin",user);
+data.append("role",role);
+
+fetch(scriptURL,{method:"POST",body:data});
+
+sessionStorage.clear();
+
+window.location="admin-login.html";
+
+}
+
+/* ---------- EXPORT PDF ---------- */
+
+function exportPDF(){
+window.print();
+}
+
+</script>
+
 <div class="navbar">
-Admin Dashboard
-</div>
 
-<!-- LOGIN -->
-
-<div class="loginBox" id="loginBox">
-
-<input id="user" placeholder="Username">
-
-<input id="pass" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-
-<div class="loader" id="loginLoader">
-<div class="spinner"></div>
-</div>
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
 
 </div>
 
+<div class="container">
 
-<!-- DASHBOARD -->
+<div class="topBar">
 
-<div class="dashboard" id="dashboard">
+<h2>Admin Dashboard</h2>
 
-<div class="card">
-
-<h3>Verify Payment</h3>
-
-<input id="verifyRef" placeholder="Reference ID">
-
-<select id="status">
-<option>Verified</option>
-<option>Rejected</option>
-</select>
-
-<button onclick="updateStatus()">Update Status</button>
-
-</div>
-
-
-<div class="card">
-
-<h3>Fraud Detection</h3>
-
-<button onclick="loadFraud()">Check Fraud</button>
-
-<div id="fraudResult"></div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Village Ranking</h3>
-
-<button onclick="loadRanking()">Load Ranking</button>
-
-<table id="rankingTable">
-
-<tr>
-<th>Village</th>
-<th>Amount</th>
-</tr>
-
-</table>
-
-</div>
-
-
-<div class="card">
-
-<h3>Complaints</h3>
-
-<button onclick="loadComplaints()">Load Complaints</button>
-
-<table id="complaintTable">
-
-<tr>
-<th>Name</th>
-<th>Village</th>
-<th>Complaint</th>
-<th>Status</th>
-</tr>
-
-</table>
-
+<div>
+<span id="timer"></span>
+<button class="pdfBtn" onclick="exportPDF()">Export PDF</button>
+<button class="logoutBtn" onclick="logout()">Logout</button>
 </div>
 
 </div>
 
+<div class="chartBox">
+<canvas id="pieChart"></canvas>
+</div>
+
+<div id="summary"></div>
+
+<div id="tableArea"></div>
+
+<button class="saveBtn" id="saveBtn" onclick="saveChanges()" style="display:none">Save Changes</button>
+
+</div>
 
 <script>
 
-/***********************
-CONFIG
-***********************/
+let allData=[];
+let modifiedRows=[];
 
-const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+/* ---------- PROGRESS BAR ---------- */
 
-let token="";
+function startProgress(){
 
-/***********************
-LOGIN
-***********************/
+document.getElementById("tableArea").innerHTML=
+'<div class="progressBar"><div class="progressFill" id="bar"></div></div>';
 
-function login(){
+const bar=document.getElementById("bar");
 
-const user=document.getElementById("user").value;
-const pass=document.getElementById("pass").value;
-
-if(!user||!pass){
-
-alert("Enter credentials");
-
-return;
+setTimeout(()=>bar.style.width="80%",100);
+setTimeout(()=>bar.style.width="95%",3000);
 
 }
 
-document.getElementById("loginLoader").style.display="block";
+function finishProgress(){
 
-const controller=new AbortController();
+const bar=document.getElementById("bar");
 
-setTimeout(()=>{
-
-controller.abort();
-
-},10000);
-
-fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-action:"login",
-user:user,
-pass:pass
-}),
-signal:controller.signal
-})
-
-.then(r=>r.json())
-
-.then(res=>{
-
-document.getElementById("loginLoader").style.display="none";
-
-if(res.status==="success"){
-
-token=res.token;
-
-document.getElementById("loginBox").style.display="none";
-
-document.getElementById("dashboard").style.display="block";
-
-}else{
-
-alert("Invalid login");
+if(bar) bar.style.width="100%";
 
 }
 
-})
+/* ---------- LOAD DATA ---------- */
 
-.catch(()=>{
+startProgress();
 
-document.getElementById("loginLoader").style.display="none";
+fetch(scriptURL+"?action=getAllPayments")
 
-alert("Server not responding");
-
-});
-
-}
-
-
-/***********************
-UPDATE STATUS
-***********************/
-
-function updateStatus(){
-
-const ref=document.getElementById("verifyRef").value;
-
-const status=document.getElementById("status").value;
-
-fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-action:"updateStatus",
-ref:ref,
-status:status,
-admin:"admin"
-})
-})
-
-.then(r=>r.json())
-
-.then(res=>{
-
-alert("Status updated");
-
-});
-
-}
-
-
-/***********************
-LOAD FRAUD
-***********************/
-
-function loadFraud(){
-
-fetch(API+"?action=fraud")
-
-.then(r=>r.json())
+.then(res=>res.json())
 
 .then(data=>{
 
-let html="<ul>";
+finishProgress();
 
-data.forEach(f=>{
+allData=data;
 
-html+="<li>"+f+"</li>";
+renderTable(data);
+
+createChart(data);
 
 });
 
-html+="</ul>";
+/* ---------- TABLE ---------- */
 
-document.getElementById("fraudResult").innerHTML=html;
+function renderTable(data){
+
+let html="<table><tr><th>Date</th><th>Time</th><th>RefID</th><th>Name</th><th>Amount</th><th>Status</th>";
+
+if(role==="SuperAdmin"){
+html+="<th>Action</th>";
+}
+
+html+="</tr>";
+
+data.forEach(row=>{
+
+if(row[0]!=="Payment") return;
+
+let cls="pending";
+
+if(row[9]==="Verified") cls="verified";
+if(row[9]==="Not Verified") cls="notverified";
+
+html+=`
+<tr>
+<td>${row[1]}</td>
+<td>${row[2]}</td>
+<td>${row[3]}</td>
+<td>${row[4]}</td>
+<td>${row[7]}</td>
+<td class="${cls}">${row[9]}</td>
+`;
+
+if(role==="SuperAdmin"){
+
+html+=`
+<td>
+<button onclick="changeStatus('${row[3]}','Verified')">✓</button>
+<button onclick="changeStatus('${row[3]}','Not Verified')">✗</button>
+</td>
+`;
+
+}
+
+html+="</tr>";
+
+});
+
+html+="</table>";
+
+document.getElementById("tableArea").innerHTML=html;
+
+}
+
+/* ---------- CHANGE STATUS ---------- */
+
+function changeStatus(refid,status){
+
+modifiedRows.push({refid,status});
+
+document.getElementById("saveBtn").style.display="inline-block";
+
+}
+
+/* ---------- SAVE CHANGES ---------- */
+
+function saveChanges(){
+
+const data=new URLSearchParams();
+
+data.append("action","bulkUpdate");
+data.append("data",JSON.stringify(modifiedRows));
+data.append("admin",user);
+data.append("role",role);
+
+fetch(scriptURL,{method:"POST",body:data})
+
+.then(()=>{
+
+alert("Updated successfully");
+
+location.reload();
 
 });
 
 }
 
+/* ---------- ANALYTICS PIE CHART ---------- */
 
-/***********************
-VILLAGE RANKING
-***********************/
+function createChart(data){
 
-function loadRanking(){
-
-fetch(API+"?action=ranking")
-
-.then(r=>r.json())
-
-.then(data=>{
-
-let table=document.getElementById("rankingTable");
+let verified=0;
+let pending=0;
+let notverified=0;
 
 data.forEach(r=>{
 
-let row=table.insertRow();
+if(r[0]!=="Payment") return;
 
-row.insertCell(0).innerText=r.village;
-
-row.insertCell(1).innerText=r.amount;
+if(r[9]==="Verified") verified++;
+if(r[9]==="Pending") pending++;
+if(r[9]==="Not Verified") notverified++;
 
 });
+
+new Chart(document.getElementById("pieChart"),{
+
+type:"pie",
+
+data:{
+
+labels:["Verified","Pending","Not Verified"],
+
+datasets:[{
+data:[verified,pending,notverified],
+backgroundColor:["#22c55e","#3b82f6","#ef4444"]
+}]
+
+},
+
+options:{
+animation:{
+animateRotate:true,
+duration:1500
+}
+}
 
 });
 
 }
 
-
-/***********************
-LOAD COMPLAINTS
-***********************/
-
-function loadComplaints(){
-
-fetch(API+"?action=complaints")
-
-.then(r=>r.json())
-
-.then(data=>{
-
-let table=document.getElementById("complaintTable");
-
-data.forEach(c=>{
-
-let row=table.insertRow();
-
-row.insertCell(0).innerText=c.name;
-
-row.insertCell(1).innerText=c.village;
-
-row.insertCell(2).innerText=c.complaint;
-
-row.insertCell(3).innerText=c.status;
-
-});
-
-});
-
-}
+startTimer();
 
 </script>
 
 </body>
 </html>
+
