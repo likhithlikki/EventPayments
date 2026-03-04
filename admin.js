@@ -3,12 +3,46 @@ const scriptURL="YOUR_WEB_APP_URL";
 let paymentUpdates=[];
 let complaintUpdates=[];
 
+/* LOGOUT */
+
 function logout(){
 sessionStorage.clear();
 location="admin-login.html";
 }
 
-/* PAYMENT SUMMARY */
+/* SESSION TIMER */
+
+let sessionMinutes=30;
+let loginTime=sessionStorage.getItem("loginTime");
+
+if(!loginTime){
+loginTime=Date.now();
+sessionStorage.setItem("loginTime",loginTime);
+}
+
+setInterval(()=>{
+
+const now=Date.now();
+let remaining=sessionMinutes*60000-(now-loginTime);
+
+if(remaining<=0) logout();
+
+let m=Math.floor(remaining/60000);
+let s=Math.floor((remaining%60000)/1000);
+
+let timer=document.getElementById("timer");
+
+timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
+
+if(m<5){
+timer.classList.add("blink");
+}
+
+},1000);
+
+
+
+/* SUMMARY */
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -27,13 +61,17 @@ datasets:[{
 data:[d.verified,d.pending,d.notverified],
 backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 }]
+},
+options:{
+plugins:{legend:{display:false}}
 }
 });
 
 });
 
 
-/* PAYMENTS TABLE */
+
+/* PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -42,7 +80,6 @@ fetch(scriptURL+"?action=getAllPayments")
 let html="<table>";
 
 html+="<tr>";
-
 html+="<th>Date</th>";
 html+="<th>Time</th>";
 html+="<th>RefID</th>";
@@ -53,7 +90,6 @@ html+="<th>Amount</th>";
 html+="<th>UTR</th>";
 html+="<th>Status</th>";
 html+="<th>Action</th>";
-
 html+="</tr>";
 
 data.forEach((r,i)=>{
@@ -64,7 +100,6 @@ if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
 html+=`
-
 <tr>
 
 <td>${r[1]}</td>
@@ -76,17 +111,17 @@ html+=`
 <td>${r[7]}</td>
 <td>${r[8]}</td>
 
-<td class="${statusClass}" id="payStatus${i}">
+<td id="payStatus${i}" class="${statusClass}">
 ${r[9]}
 </td>
 
 <td>
 
-<button class="btnVerify"
-onclick="setPaymentStatus(${i},'Verified')">✓</button>
+<button class="symbolBtn verify"
+onclick="changePaymentStatus(${i},'Verified')">✓</button>
 
-<button class="btnReject"
-onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
+<button class="symbolBtn reject"
+onclick="changePaymentStatus(${i},'Not Verified')">✗</button>
 
 </td>
 
@@ -101,9 +136,16 @@ document.getElementById("paymentTable").innerHTML=html;
 
 });
 
-function setPaymentStatus(i,status){
+function changePaymentStatus(i,status){
 
-document.getElementById("payStatus"+i).innerText=status;
+let cell=document.getElementById("payStatus"+i);
+
+cell.innerText=status;
+
+cell.className=
+status=="Verified"
+?"statusVerified"
+:"statusNotVerified";
 
 paymentUpdates.push({
 row:i+2,
@@ -113,7 +155,8 @@ status
 }
 
 
-/* SAVE PAYMENT CHANGES */
+
+/* SAVE PAYMENTS */
 
 function savePayments(){
 
@@ -124,17 +167,14 @@ const data=new URLSearchParams();
 data.append("action","updatePayments");
 data.append("data",JSON.stringify(paymentUpdates));
 
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
+fetch(scriptURL,{method:"POST",body:data})
 .then(()=>location.reload());
 
 }
 
 
 
-/* COMPLAINT TABLE */
+/* COMPLAINTS */
 
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
@@ -143,7 +183,6 @@ fetch(scriptURL+"?action=getAllComplaints")
 let html="<table>";
 
 html+="<tr>";
-
 html+="<th>Date</th>";
 html+="<th>Name</th>";
 html+="<th>Phone</th>";
@@ -152,7 +191,6 @@ html+="<th>Status</th>";
 html+="<th>Reply</th>";
 html+="<th>WhatsApp</th>";
 html+="<th>Action</th>";
-
 html+="</tr>";
 
 data.forEach((r,i)=>{
@@ -179,15 +217,16 @@ html+=`
 
 <td>
 
-<button class="btnVerify"
-onclick="setComplaintStatus(${i},'Resolved')">✓</button>
+<button class="symbolBtn verify"
+onclick="changeComplaintStatus(${i},'Resolved')">✓</button>
 
-<button class="btnReject"
-onclick="setComplaintStatus(${i},'Pending')">✗</button>
+<button class="symbolBtn reject"
+onclick="changeComplaintStatus(${i},'Pending')">✗</button>
 
 </td>
 
 </tr>
+
 `;
 
 });
@@ -198,11 +237,12 @@ document.getElementById("complaintTable").innerHTML=html;
 
 });
 
-function setComplaintStatus(i,status){
+
+function changeComplaintStatus(i,status){
 
 document.getElementById("compStatus"+i).innerText=status;
 
-const reply=document.getElementById("reply"+i).value;
+let reply=document.getElementById("reply"+i).value;
 
 complaintUpdates.push({
 row:i+2,
@@ -211,6 +251,7 @@ reply
 });
 
 }
+
 
 
 /* SAVE COMPLAINTS */
@@ -224,10 +265,7 @@ const data=new URLSearchParams();
 data.append("action","updateComplaints");
 data.append("data",JSON.stringify(complaintUpdates));
 
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
+fetch(scriptURL,{method:"POST",body:data})
 .then(()=>location.reload());
 
 }
