@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Complaint</title>
 
 <link rel="stylesheet" href="complaint.css">
@@ -14,138 +11,179 @@
 <body>
 
 <div class="navbar">
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="complaint.html">Complaint</a>
-<a href="admin-login.html">Admin</a>
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
 <div class="container">
 
-<h2>Submit Complaint</h2>
+<h2>Register Complaint</h2>
 
-<form id="complaintForm">
+<input type="text" id="name" placeholder="Name (letters only)">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="phone" placeholder="Phone (10 digits)">
+<textarea id="complaint" placeholder="Write complaint (min 10 characters)"></textarea>
+<input type="file" id="attachment" accept="image/*,.pdf">
 
-<input type="text" id="name" placeholder="Name" required>
+<button id="submitBtn" disabled onclick="submitComplaint()">Submit Complaint</button>
 
-<input type="text" id="village" placeholder="Village" required>
+<div id="message"></div>
 
-<input type="tel"
-id="phone"
-placeholder="Phone (10 digits)"
-maxlength="10"
-pattern="[0-9]{10}"
-required>
-
-<input type="email" id="email" placeholder="Email" required>
-
-<textarea id="complaint" placeholder="Complaint" required></textarea>
-
-<label>Upload File (Max 2MB)</label>
-
-<input type="file" id="fileUpload">
-
-<button type="submit">Submit Complaint</button>
-  
-<div class="loader" id="uploadLoader"></div>
-  
-</form>
-
-<div id="loader" class="loader"></div>
-
-<div id="msg"></div>
+<p style="font-size:12px;margin-top:15px;">
+If not resolved within 24 hours contact:<br>
+📧 likithmuddada@gmail.com<br>
+📱 WhatsApp: 9014844036
+</p>
 
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="PASTE_YOUR_EXEC_URL_HERE";
 
-document.getElementById("phone").addEventListener("input",function(){
+const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
+const complaintInput=document.getElementById("complaint");
+const submitBtn=document.getElementById("submitBtn");
 
-this.value=this.value.replace(/[^0-9]/g,"");
+function validate(){
 
+let valid=true;
+
+if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
+  nameInput.classList.add("invalid");
+  valid=false;
+}else nameInput.classList.remove("invalid");
+
+if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
+  phoneInput.classList.add("invalid");
+  valid=false;
+}else phoneInput.classList.remove("invalid");
+
+if(complaintInput.value.trim().length<10){
+  complaintInput.classList.add("invalid");
+  valid=false;
+}else complaintInput.classList.remove("invalid");
+
+submitBtn.disabled=!valid;
+
+}
+
+nameInput.addEventListener("input",validate);
+
+phoneInput.addEventListener("input",function(){
+  this.value=this.value.replace(/\D/g,"").slice(0,10);
+  validate();
 });
 
-document.getElementById("complaintForm").addEventListener("submit",function(e){
+complaintInput.addEventListener("input",validate);
 
-e.preventDefault();
+function startProgressBar(){
 
-const phone=document.getElementById("phone").value;
+const msg=document.getElementById("message");
 
-if(phone.length!==10){
+msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
 
-alert("Phone number must be exactly 10 digits");
+const bar=document.getElementById("progressFill");
 
-return;
-
-}
-
-const file=document.getElementById("fileUpload").files[0];
-
-if(file && file.size>2*1024*1024){
-
-alert("File must be less than 2MB");
-
-return;
+setTimeout(()=>{bar.style.width="80%";},100);
+setTimeout(()=>{bar.style.width="90%";},3000);
+setTimeout(()=>{bar.style.width="99%";},5000);
 
 }
 
-document.getElementById("loader").style.display="block";
+function completeProgress(){
 
-let reader=new FileReader();
+const bar=document.getElementById("progressFill");
 
-reader.onloadend=function(){
+if(bar) bar.style.width="100%";
+
+}
+
+async function submitComplaint(){
+
+if(submitBtn.disabled) return;
+
+const msg=document.getElementById("message");
+
+startProgressBar();
+
+const fileInput=document.getElementById("attachment");
+
+let fileData="";
+let fileName="";
+
+if(fileInput.files.length>0){
+
+  const file=fileInput.files[0];
+
+  const maxSize=5*1024*1024;
+
+  if(file.size > maxSize){
+    msg.innerHTML="<span class='error'>File must be under 5MB</span>";
+    return;
+  }
+
+  fileName=file.name;
+
+  const reader=new FileReader();
+
+  fileData=await new Promise(resolve=>{
+    reader.onload=()=>resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+
+}
 
 const data=new URLSearchParams();
 
 data.append("action","insertComplaint");
+data.append("name",nameInput.value.trim());
+data.append("village",document.getElementById("village").value.trim());
+data.append("phone",phoneInput.value.trim());
+data.append("email","");
+data.append("complaint",complaintInput.value.trim());
+data.append("fileData",fileData);
+data.append("fileName",fileName);
 
-data.append("name",document.getElementById("name").value);
+fetch(scriptURL,{method:"POST",body:data})
 
-data.append("village",document.getElementById("village").value);
+.then(res=>res.text())
 
-data.append("phone",phone);
-
-data.append("email",document.getElementById("email").value);
-
-data.append("complaint",document.getElementById("complaint").value);
-
-data.append("file",reader.result||"");
-
-data.append("filename",file?file.name:"");
-
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
-.then(r=>r.text())
 .then(res=>{
 
-document.getElementById("loader").style.display="none";
+completeProgress();
 
-document.getElementById("msg").innerHTML="Complaint Submitted";
+if(res==="Inserted"){
 
-document.getElementById("complaintForm").reset();
+msg.innerHTML="<span class='success'>Complaint submitted successfully</span>";
 
-});
-
-};
-
-if(file){
-
-reader.readAsDataURL(file);
+nameInput.value="";
+phoneInput.value="";
+complaintInput.value="";
+document.getElementById("village").value="";
+fileInput.value="";
+submitBtn.disabled=true;
 
 }else{
 
-reader.onloadend();
+msg.innerHTML="<span class='error'>Server error</span>";
 
 }
 
+})
+
+.catch(()=>{
+
+msg.innerHTML="<span class='error'>Server connection error</span>";
+
 });
+
+}
 
 </script>
 
 </body>
-
 </html>
