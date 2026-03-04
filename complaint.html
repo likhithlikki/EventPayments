@@ -23,6 +23,7 @@
 <input type="text" id="name" placeholder="Name (letters only)">
 <input type="text" id="village" placeholder="Village">
 <input type="text" id="phone" placeholder="Phone (10 digits)">
+<input type="email" id="email" placeholder="Email">
 <textarea id="complaint" placeholder="Write complaint (min 10 characters)"></textarea>
 <input type="file" id="attachment" accept="image/*,.pdf">
 
@@ -67,6 +68,7 @@ if(complaintInput.value.trim().length<10){
 }else complaintInput.classList.remove("invalid");
 
 submitBtn.disabled=!valid;
+
 }
 
 nameInput.addEventListener("input",validate);
@@ -111,6 +113,7 @@ let fileName="";
 if(fileInput.files.length>0){
 
   const file=fileInput.files[0];
+
   const maxSize=5*1024*1024;
 
   if(file.size > maxSize){
@@ -135,7 +138,7 @@ data.append("action","insertComplaint");
 data.append("name",nameInput.value.trim());
 data.append("village",document.getElementById("village").value.trim());
 data.append("phone",phoneInput.value.trim());
-data.append("email","");
+data.append("email",document.getElementById("email").value.trim());
 data.append("complaint",complaintInput.value.trim());
 data.append("fileData",fileData);
 data.append("fileName",fileName);
@@ -145,6 +148,7 @@ fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
 
 .then(res=>{
+
 completeProgress();
 
 if(res==="Inserted"){
@@ -155,6 +159,7 @@ nameInput.value="";
 phoneInput.value="";
 complaintInput.value="";
 document.getElementById("village").value="";
+document.getElementById("email").value="";
 fileInput.value="";
 submitBtn.disabled=true;
 
