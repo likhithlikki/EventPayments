@@ -1,227 +1,245 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verify Status</title>
+
+<meta charset="UTF-8">
+<title>Verify Payment Status</title>
 
 <style>
+
 body{
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
+font-family:Arial;
+margin:0;
+background:#f4f6fb;
 }
 
 .navbar{
-  background:#6b21a8;
-  padding:15px;
-  text-align:center;
+background:#0b1c3d;
+color:white;
+padding:14px;
+display:flex;
+justify-content:space-between;
 }
 
 .navbar a{
-  color:white;
-  margin:0 15px;
-  text-decoration:none;
-  font-weight:bold;
+color:white;
+margin-right:20px;
+text-decoration:none;
+font-weight:bold;
 }
 
 .container{
-  max-width:420px;
-  margin:40px auto;
-  background:#1e293b;
-  padding:20px;
-  border-radius:10px;
+max-width:500px;
+margin:40px auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
 }
 
 input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
+width:100%;
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
 }
 
 button{
-  width:100%;
-  padding:12px;
-  background:#8b5cf6;
-  color:white;
-  border:none;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
+margin-top:15px;
+padding:12px;
+width:100%;
+background:#0b1c3d;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
 }
 
-.resultBox{
-  margin-top:15px;
-  padding:15px;
-  background:#111827;
-  border-radius:6px;
+.result{
+margin-top:20px;
+padding:15px;
+background:#f4f6fb;
+border-radius:6px;
+display:none;
 }
 
-.pending{color:#3b82f6;font-weight:bold;}
-.verified{color:#22c55e;font-weight:bold;}
-.notverified{color:#ef4444;font-weight:bold;}
-.error{color:#ef4444;}
-
-.progressBar{
-  width:100%;
-  background:#334155;
-  height:6px;
-  border-radius:4px;
-  overflow:hidden;
-  margin:10px 0;
+.statusVerified{
+color:green;
+font-weight:bold;
 }
 
-.progressFill{
-  height:100%;
-  width:0%;
-  background:#22c55e;
-  transition:width 0.3s linear;
+.statusPending{
+color:#1a73e8;
+font-weight:bold;
 }
+
+.statusRejected{
+color:red;
+font-weight:bold;
+}
+
+.loadingBar{
+width:100%;
+height:4px;
+background:#ddd;
+margin-top:10px;
+overflow:hidden;
+display:none;
+}
+
+.loadingProgress{
+height:100%;
+width:0%;
+background:#007bff;
+}
+
+.error{
+color:red;
+margin-top:10px;
+text-align:center;
+}
+
+.thanks{
+margin-top:20px;
+text-align:center;
+color:#444;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="navbar">
+
+<div>
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
+<a href="admin.html">Admin Panel</a>
 <a href="complaint.html">Complaint</a>
-<a href="admin.html">Admin</a>
+</div>
+
 </div>
 
 <div class="container">
+
 <h2>Check Payment Status</h2>
 
-<input type="text" id="refid" placeholder="Enter Last 5 digits of reference no">
-<button onclick="checkStatus()">Verify</button>
+<input id="refInput" placeholder="Enter last 5 digits of Reference ID">
 
-<div id="result"></div>
+<button onclick="checkStatus()">Verify Status</button>
+
+<div class="loadingBar" id="loadingBar">
+<div class="loadingProgress" id="progress"></div>
+</div>
+
+<div class="error" id="errorMsg"></div>
+
+<div class="result" id="resultBox">
+
+<p><b>Name:</b> <span id="name"></span></p>
+<p><b>Village:</b> <span id="village"></span></p>
+<p><b>Phone:</b> <span id="phone"></span></p>
+<p><b>Amount:</b> ₹<span id="amount"></span></p>
+<p><b>Date:</b> <span id="date"></span></p>
+<p><b>Time:</b> <span id="time"></span></p>
+<p><b>Status:</b> <span id="status"></span></p>
+
+</div>
+
+<div class="thanks">
+Thank you for visiting
+</div>
+
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-/* -------- PROGRESS BAR -------- */
-function startProgressBar(){
-  const result=document.getElementById("result");
-  result.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-  const bar=document.getElementById("progressFill");
+function startLoading(){
 
-  setTimeout(()=>{bar.style.width="80%";},100);
-  setTimeout(()=>{bar.style.width="90%";},3000);
-  setTimeout(()=>{bar.style.width="99%";},5000);
+document.getElementById("loadingBar").style.display="block";
+
+let p=document.getElementById("progress");
+
+let width=0;
+
+let interval=setInterval(()=>{
+
+width+=5;
+
+if(width<=80){
+p.style.width=width+"%";
 }
 
-function completeProgress(){
-  const bar=document.getElementById("progressFill");
-  if(bar) bar.style.width="100%";
+},150);
+
+setTimeout(()=>{p.style.width="90%"},3000);
+setTimeout(()=>{p.style.width="100%"},5000);
+
 }
 
-/* -------- DATE FORMAT: 12 Mar 2026 -------- */
-function formatDate(dateValue){
-
-  if(!dateValue) return "";
-
-  // If already formatted like 12 Mar 2026
-  if(typeof dateValue === "string" && dateValue.includes(" ")){
-    return dateValue;
-  }
-
-  const d=new Date(dateValue);
-  if(isNaN(d)) return dateValue;
-
-  const day=d.getDate();
-  const monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const month=monthNames[d.getMonth()];
-  const year=d.getFullYear();
-
-  return `${day} ${month} ${year}`;
-}
-
-/* -------- TIME FORMAT: 2:56 pm -------- */
-function formatTime(timeValue){
-
-  if(!timeValue) return "";
-
-  // If already like 04:25 PM
-  if(typeof timeValue === "string" && timeValue.toLowerCase().includes("m")){
-    return timeValue.toLowerCase();
-  }
-
-  const d=new Date(timeValue);
-  if(isNaN(d)) return timeValue;
-
-  let hours=d.getHours();
-  const minutes=d.getMinutes().toString().padStart(2,"0");
-  const ampm=hours>=12 ? "pm" : "am";
-
-  hours=hours%12;
-  hours=hours ? hours : 12;
-
-  return `${hours}:${minutes} ${ampm}`;
-}
-
-/* -------- MAIN FUNCTION -------- */
 function checkStatus(){
 
-const last5=document.getElementById("refid").value.trim();
-const result=document.getElementById("result");
+let ref=document.getElementById("refInput").value.trim();
 
-if(!/^\d{5}$/.test(last5)){
-  result.innerHTML="<p class='error'>Enter exactly 5 digits</p>";
-  return;
+document.getElementById("errorMsg").innerText="";
+document.getElementById("resultBox").style.display="none";
+
+if(ref.length!==5){
+
+document.getElementById("errorMsg").innerText="Enter last 5 digits of reference";
+
+return;
+
 }
 
-startProgressBar();
+startLoading();
 
-fetch(scriptURL+"?action=checkStatus&refid="+last5)
-.then(res=>res.json())
+fetch(API_URL+"?action=getStatus&ref="+ref)
+.then(r=>r.json())
 .then(data=>{
 
-completeProgress();
+document.getElementById("loadingBar").style.display="none";
 
-if(data.found===false){
-result.innerHTML="<p class='error'>Invalid Reference ID</p>";
+if(data.error){
+
+document.getElementById("errorMsg").innerText="Reference not found";
+
 return;
+
 }
 
-/*
-Sheet Structure:
-0 Type
-1 Date
-2 Time
-3 RefID
-4 Name
-5 Village
-6 Phone
-7 Amount
-8 UTR
-9 Status
-10 Count
-*/
+document.getElementById("resultBox").style.display="block";
 
-let statusClass="pending";
-if(data[9]==="Verified") statusClass="verified";
-if(data[9]==="Not Verified") statusClass="notverified";
+document.getElementById("name").innerText=data.name;
+document.getElementById("village").innerText=data.village;
+document.getElementById("phone").innerText=data.phone;
+document.getElementById("amount").innerText=data.amount;
+document.getElementById("date").innerText=data.date;
+document.getElementById("time").innerText=data.time;
 
-result.innerHTML=`
-<div class="resultBox">
-<p><strong>Name:</strong> ${data[4]}</p>
-<p><strong>Village:</strong> ${data[5]}</p>
-<p><strong>Phone:</strong> ${data[6]}</p>
-<p><strong>Amount:</strong> ₹${data[7]}</p>
-<p><strong>Date:</strong> ${formatDate(data[1])}</p>
-<p><strong>Time:</strong> ${formatTime(data[2])}</p>
-<p><strong>Status:</strong> <span class="${statusClass}">${data[9]}</span></p>
-</div>
-`;
+let statusEl=document.getElementById("status");
+
+statusEl.innerText=data.status;
+
+statusEl.className="";
+
+if(data.status=="Verified") statusEl.className="statusVerified";
+if(data.status=="Pending") statusEl.className="statusPending";
+if(data.status=="Not Verified") statusEl.className="statusRejected";
+
 })
-.catch(()=>{
-result.innerHTML="<p class='error'>Server connection error</p>";
-});
+
 }
 
 </script>
