@@ -13,10 +13,26 @@ margin:0;
 font-family:Arial;
 background:#0f172a;
 color:white;
+}
+
+.navbar{
+background:#065f46;
+padding:15px;
+text-align:center;
+}
+
+.navbar a{
+color:white;
+margin:0 15px;
+text-decoration:none;
+font-weight:bold;
+}
+
+.container{
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+height:80vh;
 }
 
 .box{
@@ -58,6 +74,26 @@ font-weight:bold;
 cursor:pointer;
 }
 
+.loading{
+display:none;
+margin-top:10px;
+}
+
+.spinner{
+border:4px solid #334155;
+border-top:4px solid #22c55e;
+border-radius:50%;
+width:30px;
+height:30px;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg)}
+100%{transform:rotate(360deg)}
+}
+
 .error{
 color:red;
 margin-top:10px;
@@ -68,6 +104,15 @@ margin-top:10px;
 </head>
 
 <body>
+
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin-login.html">Admin</a>
+</div>
+
+<div class="container">
 
 <div class="box">
 
@@ -85,7 +130,13 @@ margin-top:10px;
 
 <button onclick="login()">Login</button>
 
+<div class="loading" id="loading">
+<div class="spinner"></div>
+</div>
+
 <div id="msg"></div>
+
+</div>
 
 </div>
 
@@ -94,20 +145,17 @@ margin-top:10px;
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 function togglePass(){
-
 const p=document.getElementById("password");
-
 p.type=p.type==="password"?"text":"password";
-
 }
 
 function login(){
 
-const username=document.getElementById("username").value;
+const username=document.getElementById("username").value.trim();
+const password=document.getElementById("password").value.trim();
 
-const password=document.getElementById("password").value;
-
-const msg=document.getElementById("msg");
+document.getElementById("msg").innerHTML="";
+document.getElementById("loading").style.display="block";
 
 const data=new URLSearchParams();
 
@@ -124,6 +172,8 @@ body:data
 
 .then(res=>{
 
+document.getElementById("loading").style.display="none";
+
 if(res.success){
 
 sessionStorage.setItem("adminUser",username);
@@ -131,14 +181,17 @@ sessionStorage.setItem("adminRole",res.role);
 
 window.location="admin.html";
 
-}
-else{
+}else{
 
-msg.innerHTML="<p class='error'>Invalid username or password</p>";
+document.getElementById("msg").innerHTML="<p class='error'>Invalid username or password</p>";
 
 }
 
 })
+
+.catch(()=>{
+document.getElementById("msg").innerHTML="<p class='error'>Server error</p>";
+});
 
 }
 
