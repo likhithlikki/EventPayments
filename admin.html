@@ -4,7 +4,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Admin Dashboard</title>
 
 <link rel="stylesheet" href="admin.css">
@@ -15,22 +14,18 @@
 
 <body>
 
-<div class="navbar">
+<div class="container">
 
+<div class="navbar">
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
 <a href="complaint.html">Complaint</a>
 <a href="admin.html">Admin</a>
-
 </div>
-
-<div class="container">
-
-<div class="topBar">
 
 <h2>Admin Dashboard</h2>
 
-<div>
+<div class="topActions">
 
 <span id="timer"></span>
 
@@ -40,39 +35,35 @@
 
 </div>
 
-</div>
 
-
-<div class="summaryChart">
+<div class="dashboard">
 
 <div class="summaryBoxes">
 
 <div class="box">
 <h4>Total Amount</h4>
-<p id="totalAmount">0</p>
+<p id="totalAmount">₹0</p>
 </div>
 
 <div class="box">
-<h4>Verified</h4>
-<p id="verifiedAmount">0</p>
+<h4>Verified Amount</h4>
+<p id="verifiedAmount">₹0</p>
 </div>
 
 <div class="box">
-<h4>Pending</h4>
-<p id="pendingAmount">0</p>
+<h4>Pending Amount</h4>
+<p id="pendingAmount">₹0</p>
 </div>
 
 <div class="box">
-<h4>Not Verified</h4>
-<p id="notVerifiedAmount">0</p>
+<h4>Not Verified Amount</h4>
+<p id="notVerifiedAmount">₹0</p>
 </div>
 
 </div>
 
 <div class="chartBox">
-
 <canvas id="pieChart"></canvas>
-
 </div>
 
 </div>
@@ -82,14 +73,16 @@
 
 <div id="paymentTable"></div>
 
-<button id="savePayments" class="saveBtn">Save Payment Changes</button>
+<button class="saveBtn" onclick="savePayments()">Save Payment Changes</button>
+<div class="loader" id="paymentLoader"></div>
 
 
 <h3>Complaints</h3>
 
 <div id="complaintTable"></div>
 
-<button id="saveComplaints" class="saveBtn">Save Complaint Changes</button>
+<button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
+<div class="loader" id="complaintLoader"></div>
 
 </div>
 
