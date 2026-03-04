@@ -1,57 +1,12 @@
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="YOUR_WEB_APP_URL";
 
-const user=sessionStorage.getItem("adminUser");
-const role=sessionStorage.getItem("adminRole");
-
-if(!user){
-location="admin-login.html";
-}
-
-/* SESSION TIMER */
-
-let sessionMinutes=30;
-let loginTime=sessionStorage.getItem("loginTime");
-
-if(!loginTime){
-loginTime=Date.now();
-sessionStorage.setItem("loginTime",loginTime);
-}
-
-fetch(scriptURL+"?action=getSettings")
-.then(r=>r.json())
-.then(s=>{
-sessionMinutes=parseInt(s.SessionTimeoutMinutes||30);
-startTimer();
-});
-
-function startTimer(){
-
-setInterval(()=>{
-
-const now=Date.now();
-
-let remaining=sessionMinutes*60000-(now-loginTime);
-
-if(remaining<=0){
-logout();
-}
-
-let m=Math.floor(remaining/60000);
-let s=Math.floor((remaining%60000)/1000);
-
-document.getElementById("timer").innerText=
-"Session "+m+":"+s.toString().padStart(2,"0");
-
-},1000);
-
-}
+let paymentUpdates=[];
+let complaintUpdates=[];
 
 function logout(){
 sessionStorage.clear();
 location="admin-login.html";
 }
-
-
 
 /* PAYMENT SUMMARY */
 
@@ -78,10 +33,7 @@ backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 });
 
 
-
 /* PAYMENTS TABLE */
-
-let paymentUpdates=[];
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -106,6 +58,11 @@ html+="</tr>";
 
 data.forEach((r,i)=>{
 
+let statusClass="statusPending";
+
+if(r[9]=="Verified") statusClass="statusVerified";
+if(r[9]=="Not Verified") statusClass="statusNotVerified";
+
 html+=`
 
 <tr>
@@ -118,18 +75,22 @@ html+=`
 <td>${r[6]}</td>
 <td>${r[7]}</td>
 <td>${r[8]}</td>
-<td>${r[9]}</td>
+
+<td class="${statusClass}" id="payStatus${i}">
+${r[9]}
+</td>
 
 <td>
 
-<button onclick="setStatus(${i+2},'Verified')">✓</button>
+<button class="btnVerify"
+onclick="setPaymentStatus(${i},'Verified')">✓</button>
 
-<button onclick="setStatus(${i+2},'Not Verified')">✗</button>
+<button class="btnReject"
+onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
 
 </td>
 
 </tr>
-
 `;
 
 });
@@ -140,19 +101,23 @@ document.getElementById("paymentTable").innerHTML=html;
 
 });
 
-function setStatus(row,status){
+function setPaymentStatus(i,status){
 
-paymentUpdates.push({row,status});
+document.getElementById("payStatus"+i).innerText=status;
+
+paymentUpdates.push({
+row:i+2,
+status
+});
 
 }
 
 
-
 /* SAVE PAYMENT CHANGES */
 
-document.getElementById("savePayments").onclick=function(){
+function savePayments(){
 
-if(paymentUpdates.length===0) return;
+document.getElementById("paymentLoader").style.display="inline-block";
 
 const data=new URLSearchParams();
 
@@ -163,21 +128,13 @@ fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>{
+.then(()=>location.reload());
 
-alert("Payments updated");
-
-location.reload();
-
-});
-
-};
+}
 
 
 
 /* COMPLAINT TABLE */
-
-let complaintUpdates=[];
 
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
@@ -187,11 +144,14 @@ let html="<table>";
 
 html+="<tr>";
 
+html+="<th>Date</th>";
 html+="<th>Name</th>";
 html+="<th>Phone</th>";
 html+="<th>Complaint</th>";
 html+="<th>Status</th>";
 html+="<th>Reply</th>";
+html+="<th>WhatsApp</th>";
+html+="<th>Action</th>";
 
 html+="</tr>";
 
@@ -201,32 +161,33 @@ html+=`
 
 <tr>
 
+<td>${r[0]}</td>
+
 <td>${r[2]}</td>
 
 <td>${r[4]}</td>
 
 <td>${r[6]}</td>
 
+<td id="compStatus${i}">${r[7]}</td>
+
 <td>
-
-<select onchange="updateComplaint(${i+2},this.value,null)">
-
-<option ${r[7]=="Pending"?"selected":""}>Pending</option>
-
-<option ${r[7]=="Resolved"?"selected":""}>Resolved</option>
-
-</select>
-
+<textarea id="reply${i}">${r[8]||""}</textarea>
 </td>
 
+<td>${r[10]||"Pending"}</td>
+
 <td>
 
-<textarea onchange="updateComplaint(${i+2},null,this.value)">${r[8]||""}</textarea>
+<button class="btnVerify"
+onclick="setComplaintStatus(${i},'Resolved')">✓</button>
+
+<button class="btnReject"
+onclick="setComplaintStatus(${i},'Pending')">✗</button>
 
 </td>
 
 </tr>
-
 `;
 
 });
@@ -237,19 +198,26 @@ document.getElementById("complaintTable").innerHTML=html;
 
 });
 
-function updateComplaint(row,status,reply){
+function setComplaintStatus(i,status){
 
-complaintUpdates.push({row,status,reply});
+document.getElementById("compStatus"+i).innerText=status;
+
+const reply=document.getElementById("reply"+i).value;
+
+complaintUpdates.push({
+row:i+2,
+status,
+reply
+});
 
 }
 
 
+/* SAVE COMPLAINTS */
 
-/* SAVE COMPLAINT CHANGES */
+function saveComplaints(){
 
-document.getElementById("saveComplaints").onclick=function(){
-
-if(complaintUpdates.length===0) return;
+document.getElementById("complaintLoader").style.display="inline-block";
 
 const data=new URLSearchParams();
 
@@ -260,12 +228,6 @@ fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>{
+.then(()=>location.reload());
 
-alert("Complaints updated");
-
-location.reload();
-
-});
-
-};
+}
