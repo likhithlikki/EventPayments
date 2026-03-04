@@ -3,111 +3,97 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Event Payment</title>
+<title>Event Contribution</title>
 
 <style>
 
 body{
 font-family:Arial;
+background:#eef2f8;
 margin:0;
-background:#f4f6fb;
 }
+
+/* NAVBAR */
 
 .navbar{
 background:#0b1c3d;
-color:white;
-padding:14px;
+padding:16px;
 display:flex;
-justify-content:space-between;
-}
-
-.navbar a{
+justify-content:center;
+align-items:center;
 color:white;
-margin-right:20px;
-text-decoration:none;
+font-size:20px;
 font-weight:bold;
 }
 
+/* CONTAINER */
+
 .container{
-max-width:500px;
+width:360px;
 margin:40px auto;
 background:white;
-padding:30px;
+padding:25px;
 border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-h2{
-text-align:center;
-margin-bottom:20px;
-}
+/* INPUT */
 
 input{
 width:100%;
-padding:10px;
+padding:11px;
 margin-top:10px;
-border-radius:6px;
+margin-bottom:12px;
 border:1px solid #ccc;
+border-radius:5px;
 font-size:14px;
 }
 
-.error{
-border:2px solid red;
-}
+/* BUTTON */
 
 button{
-margin-top:15px;
-padding:12px;
 width:100%;
+padding:12px;
 background:#0b1c3d;
 color:white;
 border:none;
 border-radius:6px;
-font-size:16px;
+font-size:15px;
 cursor:pointer;
 }
 
-button:disabled{
-background:#aaa;
+button:hover{
+background:#152a63;
 }
 
-.qr{
+/* QR */
+
+#qrBox{
 text-align:center;
 margin-top:20px;
+}
+
+/* LOADER */
+
+.loader{
 display:none;
-}
-
-.qr img{
-width:200px;
-}
-
-.loadingBar{
-width:100%;
-height:4px;
-background:#ddd;
-margin-top:10px;
-overflow:hidden;
-display:none;
-}
-
-.loadingProgress{
-height:100%;
-width:0%;
-background:#007bff;
-}
-
-.refBox{
-margin-top:20px;
-padding:15px;
-background:#f4f6fb;
-border-radius:6px;
+margin-top:15px;
 text-align:center;
-display:none;
 }
 
-.downloadBtn{
-margin-top:10px;
-background:#28a745;
+.spinner{
+border:4px solid #f3f3f3;
+border-top:4px solid #0b1c3d;
+border-radius:50%;
+width:25px;
+height:25px;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
 }
 
 </style>
@@ -117,175 +103,185 @@ background:#28a745;
 <body>
 
 <div class="navbar">
-
-<div>
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="admin.html">Admin Panel</a>
-<a href="complaint.html">Complaint</a>
-</div>
-
+Event Contribution
 </div>
 
 <div class="container">
-
-<h2>Event Contribution</h2>
 
 <input id="name" placeholder="Name">
 
 <input id="village" placeholder="Village">
 
-<input id="phone" placeholder="Phone Number">
+<input id="phone" placeholder="Phone">
 
-<input id="amount" placeholder="Amount (Minimum ₹50)">
+<input id="amount" placeholder="Amount">
 
-<button id="proceedBtn" disabled onclick="showQR()">Proceed to Payment</button>
+<button onclick="generateQR()">Generate QR</button>
 
-<div class="qr" id="qrBox">
+<div id="qrBox"></div>
 
-<p>Scan & Pay</p>
-
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay">
-
-<input id="utr" placeholder="Enter UTR Number">
+<input id="utr" placeholder="Enter UTR after payment">
 
 <button onclick="submitPayment()">Submit Payment</button>
 
-</div>
-
-<div class="loadingBar" id="loadingBar">
-<div class="loadingProgress" id="progress"></div>
-</div>
-
-<div class="refBox" id="refBox">
-
-<p>Note down reference number for future purpose</p>
-
-<h3 id="refNumber"></h3>
-
-<button class="downloadBtn" onclick="downloadReceipt()">Download Receipt</button>
-
+<div class="loader" id="loader">
+<div class="spinner"></div>
+<p>Submitting...</p>
 </div>
 
 </div>
 
 <script>
 
-const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+/***********************
+CONFIG
+***********************/
 
-let refID="";
+const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-const nameInput=document.getElementById("name");
-const villageInput=document.getElementById("village");
-const phoneInput=document.getElementById("phone");
-const amountInput=document.getElementById("amount");
+let settings={};
 
-[nameInput,villageInput,phoneInput,amountInput].forEach(el=>{
-el.addEventListener("input",validate);
+/***********************
+LOAD SETTINGS
+***********************/
+
+function loadSettings(){
+
+fetch(API+"?action=settings")
+
+.then(r=>r.json())
+
+.then(data=>{
+
+settings=data;
+
+})
+
+.catch(()=>{
+
+alert("Server not responding");
+
 });
 
-phoneInput.addEventListener("keypress",e=>{
-if(!/[0-9]/.test(e.key)) e.preventDefault();
-});
-
-function validate(){
-
-let valid=true;
-
-nameInput.classList.remove("error");
-phoneInput.classList.remove("error");
-amountInput.classList.remove("error");
-
-if(!/^[A-Za-z ]+$/.test(nameInput.value)){
-nameInput.classList.add("error");
-valid=false;
 }
 
-if(!/^[6-9][0-9]{9}$/.test(phoneInput.value)){
-phoneInput.classList.add("error");
-valid=false;
-}
+loadSettings();
 
-if(Number(amountInput.value)<50){
-amountInput.classList.add("error");
-valid=false;
-}
+/***********************
+GENERATE QR
+***********************/
 
-document.getElementById("proceedBtn").disabled=!valid;
+function generateQR(){
+
+const amount=document.getElementById("amount").value;
+
+if(!amount){
+
+alert("Enter amount");
+
+return;
 
 }
 
-function showQR(){
+const upi=settings["UPI ID"];
 
-document.getElementById("qrBox").style.display="block";
+if(!upi){
+
+alert("UPI not configured");
+
+return;
+
+}
+
+const ref="REF"+Date.now();
+
+const upiLink=
+`upi://pay?pa=${upi}&pn=EventContribution&am=${amount}&cu=INR&tn=${ref}`;
+
+const qr=
+"https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="
++encodeURIComponent(upiLink);
+
+document.getElementById("qrBox").innerHTML=
+`<img src="${qr}">`;
 
 }
 
-function startLoading(){
-
-document.getElementById("loadingBar").style.display="block";
-
-let p=document.getElementById("progress");
-
-let width=0;
-
-let interval=setInterval(()=>{
-
-width+=5;
-
-if(width<=80){
-p.style.width=width+"%";
-}
-
-},150);
-
-setTimeout(()=>{p.style.width="90%"},3000);
-setTimeout(()=>{p.style.width="100%"},5000);
-
-}
+/***********************
+SUBMIT PAYMENT
+***********************/
 
 function submitPayment(){
 
+const name=document.getElementById("name").value;
+const village=document.getElementById("village").value;
+const phone=document.getElementById("phone").value;
+const amount=document.getElementById("amount").value;
 const utr=document.getElementById("utr").value;
 
-if(utr.length<6){
-alert("Enter valid UTR");
+if(!name||!village||!phone||!amount||!utr){
+
+alert("Fill all fields");
+
 return;
+
 }
 
-startLoading();
+document.getElementById("loader").style.display="block";
 
-const data={
-action:"submitPayment",
-name:nameInput.value,
-village:villageInput.value,
-phone:phoneInput.value,
-amount:amountInput.value,
-utr:utr
-};
+/* SERVER TIMEOUT */
 
-fetch(API_URL,{
+const controller=new AbortController();
+
+setTimeout(()=>{
+
+controller.abort();
+
+},10000);
+
+fetch(API,{
 method:"POST",
-body:JSON.stringify(data)
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+action:"submitPayment",
+name:name,
+village:village,
+phone:phone,
+amount:amount,
+utr:utr
+}),
+signal:controller.signal
 })
+
 .then(r=>r.json())
+
 .then(res=>{
 
-refID=res.ref;
+document.getElementById("loader").style.display="none";
 
-document.getElementById("loadingBar").style.display="none";
+if(res.status==="success"){
 
-document.getElementById("refBox").style.display="block";
+alert("Payment submitted\nReference ID: "+res.ref);
 
-document.getElementById("refNumber").innerText=refID;
+window.location="status.html?ref="+res.ref;
 
-});
+}else{
+
+alert("Payment failed");
 
 }
 
-function downloadReceipt(){
+})
 
-window.open(API_URL+"?action=receipt&ref="+refID);
+.catch(()=>{
+
+document.getElementById("loader").style.display="none";
+
+alert("Server not responding");
+
+});
 
 }
 
