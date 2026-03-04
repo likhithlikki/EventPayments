@@ -18,7 +18,6 @@
 </div>
 
 <div class="container">
-
 <h2>Register Complaint</h2>
 
 <input type="text" id="name" placeholder="Name (letters only)">
@@ -68,7 +67,6 @@ if(complaintInput.value.trim().length<10){
 }else complaintInput.classList.remove("invalid");
 
 submitBtn.disabled=!valid;
-
 }
 
 nameInput.addEventListener("input",validate);
@@ -81,25 +79,20 @@ phoneInput.addEventListener("input",function(){
 complaintInput.addEventListener("input",validate);
 
 function startProgressBar(){
+  const msg=document.getElementById("message");
 
-const msg=document.getElementById("message");
+  msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
 
-msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
+  const bar=document.getElementById("progressFill");
 
-const bar=document.getElementById("progressFill");
-
-setTimeout(()=>{bar.style.width="80%";},100);
-setTimeout(()=>{bar.style.width="90%";},3000);
-setTimeout(()=>{bar.style.width="99%";},5000);
-
+  setTimeout(()=>{bar.style.width="80%";},100);
+  setTimeout(()=>{bar.style.width="90%";},3000);
+  setTimeout(()=>{bar.style.width="99%";},5000);
 }
 
 function completeProgress(){
-
-const bar=document.getElementById("progressFill");
-
-if(bar) bar.style.width="100%";
-
+  const bar=document.getElementById("progressFill");
+  if(bar) bar.style.width="100%";
 }
 
 async function submitComplaint(){
@@ -118,7 +111,6 @@ let fileName="";
 if(fileInput.files.length>0){
 
   const file=fileInput.files[0];
-
   const maxSize=5*1024*1024;
 
   if(file.size > maxSize){
@@ -153,7 +145,6 @@ fetch(scriptURL,{method:"POST",body:data})
 .then(res=>res.text())
 
 .then(res=>{
-
 completeProgress();
 
 if(res==="Inserted"){
@@ -174,11 +165,8 @@ msg.innerHTML="<span class='error'>Server error</span>";
 }
 
 })
-
 .catch(()=>{
-
 msg.innerHTML="<span class='error'>Server connection error</span>";
-
 });
 
 }
