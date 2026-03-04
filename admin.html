@@ -1,128 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Admin Dashboard</title>
+
+<link rel="stylesheet" href="admin.css">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-}
-
-.navbar{
-background:#065f46;
-padding:15px;
-text-align:center;
-}
-
-.navbar a{
-color:white;
-margin:0 10px;
-text-decoration:none;
-font-weight:bold;
-}
-
-.container{
-max-width:1100px;
-margin:30px auto;
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-}
-
-.topBar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-}
-
-button{
-padding:8px 12px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-.logoutBtn{
-background:#ef4444;
-color:white;
-}
-
-.pdfBtn{
-background:#2563eb;
-color:white;
-}
-
-.saveBtn{
-background:#10b981;
-color:white;
-margin-top:10px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-th,td{
-border:1px solid #334155;
-padding:8px;
-text-align:center;
-}
-
-.pending{color:#3b82f6;font-weight:bold;}
-.verified{color:#22c55e;font-weight:bold;}
-.notverified{color:#ef4444;font-weight:bold;}
-
-.modifiedRow{
-background:#111827;
-}
-
-.progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin:10px 0;
-}
-
-.progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
-}
-
-.chartBox{
-max-width:400px;
-margin:auto;
-}
-
-@media print{
-.navbar,.logoutBtn,.pdfBtn,.saveBtn{display:none;}
-}
-
-</style>
 </head>
 
 <body>
 
 <div class="navbar">
-
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
 <a href="complaint.html">Complaint</a>
 <a href="admin.html">Admin</a>
-
 </div>
 
 <div class="container">
@@ -132,13 +28,9 @@ margin:auto;
 <h2>Admin Dashboard</h2>
 
 <div>
-
 <span id="timer"></span>
-
-<button class="pdfBtn" onclick="exportPDF()">Export PDF</button>
-
+<button class="pdfBtn" onclick="window.print()">Export PDF</button>
 <button class="logoutBtn" onclick="logout()">Logout</button>
-
 </div>
 
 </div>
@@ -147,21 +39,17 @@ margin:auto;
 <canvas id="pieChart"></canvas>
 </div>
 
-<div id="summary"></div>
+<h3>Payments</h3>
+<div id="paymentTable"></div>
 
-<div id="tableArea"></div>
-
-<button class="saveBtn" id="saveBtn" onclick="saveChanges()" style="display:none">
-Save Changes
-</button>
+<h3>Complaints</h3>
+<div id="complaintTable"></div>
 
 </div>
 
 <script>
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
-
-/* ---------- SESSION CHECK ---------- */
 
 const user=sessionStorage.getItem("adminUser");
 const role=sessionStorage.getItem("adminRole");
@@ -170,7 +58,7 @@ if(!user){
 window.location="admin-login.html";
 }
 
-/* ---------- SESSION TIMER FIX ---------- */
+/* SESSION TIMER */
 
 let sessionMinutes=30;
 let loginTime=sessionStorage.getItem("loginTime");
@@ -180,235 +68,151 @@ loginTime=Date.now();
 sessionStorage.setItem("loginTime",loginTime);
 }
 
-/* load session time from Settings sheet */
-
 fetch(scriptURL+"?action=getSettings")
-
-.then(res=>res.json())
-
-.then(settings=>{
-
-if(settings.SessionTimeoutMinutes){
-sessionMinutes=parseInt(settings.SessionTimeoutMinutes);
-}
-
+.then(r=>r.json())
+.then(s=>{
+sessionMinutes=parseInt(s.SessionTimeoutMinutes||30);
 startTimer();
-
 });
 
-
 function startTimer(){
-
-const timer=document.getElementById("timer");
 
 setInterval(()=>{
 
 const now=Date.now();
 
-let remaining=sessionMinutes*60*1000-(now-loginTime);
+let remaining=sessionMinutes*60000-(now-loginTime);
 
 if(remaining<=0){
-
-alert("Session expired");
-
 logout();
-
 }
 
-let min=Math.floor(remaining/60000);
-let sec=Math.floor((remaining%60000)/1000);
+let m=Math.floor(remaining/60000);
+let s=Math.floor((remaining%60000)/1000);
 
-timer.innerText="Session: "+min+":"+sec.toString().padStart(2,"0");
+document.getElementById("timer").innerText=
+"Session "+m+":"+s.toString().padStart(2,"0");
 
 },1000);
 
 }
 
-/* ---------- LOGOUT ---------- */
-
 function logout(){
-
 sessionStorage.clear();
-
-window.location="admin-login.html";
-
+location="admin-login.html";
 }
 
-/* ---------- EXPORT PDF ---------- */
-
-function exportPDF(){
-window.print();
-}
-
-let allData=[];
-let modifiedRows=[];
-
-/* ---------- PROGRESS BAR ---------- */
-
-function startProgress(){
-
-document.getElementById("tableArea").innerHTML=
-'<div class="progressBar"><div class="progressFill" id="bar"></div></div>';
-
-const bar=document.getElementById("bar");
-
-setTimeout(()=>bar.style.width="80%",100);
-setTimeout(()=>bar.style.width="95%",3000);
-
-}
-
-function finishProgress(){
-
-const bar=document.getElementById("bar");
-
-if(bar) bar.style.width="100%";
-
-}
-
-/* ---------- LOAD PAYMENTS ---------- */
-
-startProgress();
+/* LOAD PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
-
-.then(res=>res.json())
-
+.then(r=>r.json())
 .then(data=>{
 
-finishProgress();
+let verified=0,pending=0,notv=0;
 
-allData=data;
+let html="<table><tr><th>Name</th><th>Amount</th><th>Status</th></tr>";
 
-renderTable(data);
+data.forEach(r=>{
 
-createChart(data);
-
-});
-
-/* ---------- TABLE ---------- */
-
-function renderTable(data){
-
-let html="<table><tr><th>Date</th><th>Time</th><th>RefID</th><th>Name</th><th>Amount</th><th>Status</th>";
-
-if(role==="SuperAdmin"){
-html+="<th>Action</th>";
-}
-
-html+="</tr>";
-
-data.forEach(row=>{
-
-if(row[0]!=="Payment") return;
-
-let cls="pending";
-
-if(row[9]==="Verified") cls="verified";
-if(row[9]==="Not Verified") cls="notverified";
+if(r[9]=="Verified") verified++;
+if(r[9]=="Pending") pending++;
+if(r[9]=="Not Verified") notv++;
 
 html+=`
 <tr>
-<td>${row[1]}</td>
-<td>${row[2]}</td>
-<td>${row[3]}</td>
-<td>${row[4]}</td>
-<td>${row[7]}</td>
-<td class="${cls}">${row[9]}</td>
+<td>${r[4]}</td>
+<td>${r[7]}</td>
+<td>${r[9]}</td>
+</tr>
 `;
-
-if(role==="SuperAdmin"){
-
-html+=`
-<td>
-<button onclick="changeStatus('${row[3]}','Verified')">✓</button>
-<button onclick="changeStatus('${row[3]}','Not Verified')">✗</button>
-</td>
-`;
-
-}
-
-html+="</tr>";
 
 });
 
 html+="</table>";
 
-document.getElementById("tableArea").innerHTML=html;
+document.getElementById("paymentTable").innerHTML=html;
 
+new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:["Verified","Pending","Not Verified"],
+datasets:[{
+data:[verified,pending,notv],
+backgroundColor:["#22c55e","#3b82f6","#ef4444"]
+}]
 }
+});
 
-/* ---------- CHANGE STATUS ---------- */
+});
 
-function changeStatus(refid,status){
+/* LOAD COMPLAINTS */
 
-modifiedRows.push({refid,status});
+fetch(scriptURL+"?action=getAllComplaints")
+.then(r=>r.json())
+.then(data=>{
 
-document.getElementById("saveBtn").style.display="inline-block";
+let html="<table><tr><th>Name</th><th>Complaint</th><th>Status</th><th>Reply</th><th>Action</th></tr>";
 
-}
+data.forEach((r,i)=>{
 
-/* ---------- SAVE CHANGES ---------- */
+html+=`
+<tr>
 
-function saveChanges(){
+<td>${r[2]}</td>
+
+<td>${r[6]}</td>
+
+<td>
+<select id="status${i}">
+<option ${r[7]=="Pending"?"selected":""}>Pending</option>
+<option ${r[7]=="Resolved"?"selected":""}>Resolved</option>
+</select>
+</td>
+
+<td>
+<textarea id="reply${i}">${r[8]||""}</textarea>
+</td>
+
+<td>
+<button onclick="updateComplaint(${i})">Update</button>
+</td>
+
+</tr>
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("complaintTable").innerHTML=html;
+
+});
+
+/* UPDATE COMPLAINT */
+
+function updateComplaint(i){
+
+let reply=document.getElementById("reply"+i).value;
+
+let status=document.getElementById("status"+i).value;
 
 const data=new URLSearchParams();
 
-data.append("action","bulkUpdate");
-data.append("data",JSON.stringify(modifiedRows));
-data.append("admin",user);
-data.append("role",role);
+data.append("action","updateComplaint");
+data.append("row",i+2);
+data.append("reply",reply);
+data.append("status",status);
 
-fetch(scriptURL,{method:"POST",body:data})
-
+fetch(scriptURL,{
+method:"POST",
+body:data
+})
+.then(r=>r.text())
 .then(()=>{
 
-alert("Updated successfully");
+alert("Complaint Updated");
 
 location.reload();
-
-});
-
-}
-
-/* ---------- ANALYTICS PIE CHART ---------- */
-
-function createChart(data){
-
-let verified=0;
-let pending=0;
-let notverified=0;
-
-data.forEach(r=>{
-
-if(r[0]!=="Payment") return;
-
-if(r[9]==="Verified") verified++;
-if(r[9]==="Pending") pending++;
-if(r[9]==="Not Verified") notverified++;
-
-});
-
-new Chart(document.getElementById("pieChart"),{
-
-type:"pie",
-
-data:{
-
-labels:["Verified","Pending","Not Verified"],
-
-datasets:[{
-data:[verified,pending,notverified],
-backgroundColor:["#22c55e","#3b82f6","#ef4444"]
-}]
-
-},
-
-options:{
-animation:{
-animateRotate:true,
-duration:1500
-}
-}
 
 });
 
