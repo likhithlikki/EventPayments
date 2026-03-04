@@ -116,6 +116,47 @@ margin:auto;
 
 <body>
 
+<div class="navbar">
+
+<a href="index.html">Home</a>
+<a href="status.html">Verify Status</a>
+<a href="complaint.html">Complaint</a>
+<a href="admin.html">Admin</a>
+
+</div>
+
+<div class="container">
+
+<div class="topBar">
+
+<h2>Admin Dashboard</h2>
+
+<div>
+
+<span id="timer"></span>
+
+<button class="pdfBtn" onclick="exportPDF()">Export PDF</button>
+
+<button class="logoutBtn" onclick="logout()">Logout</button>
+
+</div>
+
+</div>
+
+<div class="chartBox">
+<canvas id="pieChart"></canvas>
+</div>
+
+<div id="summary"></div>
+
+<div id="tableArea"></div>
+
+<button class="saveBtn" id="saveBtn" onclick="saveChanges()" style="display:none">
+Save Changes
+</button>
+
+</div>
+
 <script>
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
@@ -124,15 +165,37 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 const user=sessionStorage.getItem("adminUser");
 const role=sessionStorage.getItem("adminRole");
-const loginTime=sessionStorage.getItem("loginTime");
 
 if(!user){
 window.location="admin-login.html";
 }
 
-/* ---------- SESSION TIMER ---------- */
+/* ---------- SESSION TIMER FIX ---------- */
 
-let sessionMinutes=10;
+let sessionMinutes=30;
+let loginTime=sessionStorage.getItem("loginTime");
+
+if(!loginTime){
+loginTime=Date.now();
+sessionStorage.setItem("loginTime",loginTime);
+}
+
+/* load session time from Settings sheet */
+
+fetch(scriptURL+"?action=getSettings")
+
+.then(res=>res.json())
+
+.then(settings=>{
+
+if(settings.SessionTimeoutMinutes){
+sessionMinutes=parseInt(settings.SessionTimeoutMinutes);
+}
+
+startTimer();
+
+});
+
 
 function startTimer(){
 
@@ -147,6 +210,7 @@ let remaining=sessionMinutes*60*1000-(now-loginTime);
 if(remaining<=0){
 
 alert("Session expired");
+
 logout();
 
 }
@@ -164,14 +228,6 @@ timer.innerText="Session: "+min+":"+sec.toString().padStart(2,"0");
 
 function logout(){
 
-const data=new URLSearchParams();
-
-data.append("action","logoutAdmin");
-data.append("admin",user);
-data.append("role",role);
-
-fetch(scriptURL,{method:"POST",body:data});
-
 sessionStorage.clear();
 
 window.location="admin-login.html";
@@ -183,45 +239,6 @@ window.location="admin-login.html";
 function exportPDF(){
 window.print();
 }
-
-</script>
-
-<div class="navbar">
-
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="complaint.html">Complaint</a>
-<a href="admin.html">Admin</a>
-
-</div>
-
-<div class="container">
-
-<div class="topBar">
-
-<h2>Admin Dashboard</h2>
-
-<div>
-<span id="timer"></span>
-<button class="pdfBtn" onclick="exportPDF()">Export PDF</button>
-<button class="logoutBtn" onclick="logout()">Logout</button>
-</div>
-
-</div>
-
-<div class="chartBox">
-<canvas id="pieChart"></canvas>
-</div>
-
-<div id="summary"></div>
-
-<div id="tableArea"></div>
-
-<button class="saveBtn" id="saveBtn" onclick="saveChanges()" style="display:none">Save Changes</button>
-
-</div>
-
-<script>
 
 let allData=[];
 let modifiedRows=[];
@@ -248,7 +265,7 @@ if(bar) bar.style.width="100%";
 
 }
 
-/* ---------- LOAD DATA ---------- */
+/* ---------- LOAD PAYMENTS ---------- */
 
 startProgress();
 
@@ -397,10 +414,7 @@ duration:1500
 
 }
 
-startTimer();
-
 </script>
 
 </body>
 </html>
-
