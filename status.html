@@ -3,113 +3,88 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Verify Payment Status</title>
+<title>Payment Status</title>
 
 <style>
 
 body{
 font-family:Arial;
+background:#eef2f8;
 margin:0;
-background:#f4f6fb;
 }
+
+/* NAVBAR */
 
 .navbar{
 background:#0b1c3d;
-color:white;
-padding:14px;
+padding:16px;
 display:flex;
-justify-content:space-between;
-}
-
-.navbar a{
+justify-content:center;
+align-items:center;
 color:white;
-margin-right:20px;
-text-decoration:none;
+font-size:20px;
 font-weight:bold;
 }
 
+/* CONTAINER */
+
 .container{
-max-width:500px;
+width:360px;
 margin:40px auto;
 background:white;
-padding:30px;
+padding:25px;
 border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-h2{
-text-align:center;
-margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:10px;
-border-radius:6px;
-border:1px solid #ccc;
-font-size:14px;
-}
-
-button{
-margin-top:15px;
-padding:12px;
-width:100%;
-background:#0b1c3d;
-color:white;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
-}
+/* RESULT BOX */
 
 .result{
 margin-top:20px;
 padding:15px;
-background:#f4f6fb;
 border-radius:6px;
-display:none;
+background:#f4f6fb;
 }
 
-.statusVerified{
-color:green;
-font-weight:bold;
+.row{
+margin-bottom:8px;
+font-size:14px;
 }
 
-.statusPending{
-color:#1a73e8;
-font-weight:bold;
-}
+/* BUTTON */
 
-.statusRejected{
-color:red;
-font-weight:bold;
-}
-
-.loadingBar{
+button{
 width:100%;
-height:4px;
-background:#ddd;
+padding:12px;
 margin-top:10px;
-overflow:hidden;
+background:#0b1c3d;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* LOADER */
+
+.loader{
 display:none;
-}
-
-.loadingProgress{
-height:100%;
-width:0%;
-background:#007bff;
-}
-
-.error{
-color:red;
-margin-top:10px;
 text-align:center;
-}
-
-.thanks{
 margin-top:20px;
-text-align:center;
-color:#444;
+}
+
+.spinner{
+border:4px solid #f3f3f3;
+border-top:4px solid #0b1c3d;
+border-radius:50%;
+width:25px;
+height:25px;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
 }
 
 </style>
@@ -119,126 +94,120 @@ color:#444;
 <body>
 
 <div class="navbar">
-
-<div>
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="admin.html">Admin Panel</a>
-<a href="complaint.html">Complaint</a>
-</div>
-
+Payment Status
 </div>
 
 <div class="container">
 
-<h2>Check Payment Status</h2>
+<input id="refInput" placeholder="Enter Reference ID">
 
-<input id="refInput" placeholder="Enter last 5 digits of Reference ID">
+<button onclick="checkStatus()">Check Status</button>
 
-<button onclick="checkStatus()">Verify Status</button>
-
-<div class="loadingBar" id="loadingBar">
-<div class="loadingProgress" id="progress"></div>
+<div class="loader" id="loader">
+<div class="spinner"></div>
+<p>Checking status...</p>
 </div>
 
-<div class="error" id="errorMsg"></div>
-
-<div class="result" id="resultBox">
-
-<p><b>Name:</b> <span id="name"></span></p>
-<p><b>Village:</b> <span id="village"></span></p>
-<p><b>Phone:</b> <span id="phone"></span></p>
-<p><b>Amount:</b> ₹<span id="amount"></span></p>
-<p><b>Date:</b> <span id="date"></span></p>
-<p><b>Time:</b> <span id="time"></span></p>
-<p><b>Status:</b> <span id="status"></span></p>
-
-</div>
-
-<div class="thanks">
-Thank you for visiting
-</div>
+<div id="result"></div>
 
 </div>
 
 <script>
 
-const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+/***********************
+CONFIG
+***********************/
 
-function startLoading(){
+const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-document.getElementById("loadingBar").style.display="block";
+/***********************
+GET REF FROM URL
+***********************/
 
-let p=document.getElementById("progress");
+const params = new URLSearchParams(window.location.search);
 
-let width=0;
+const refFromURL = params.get("ref");
 
-let interval=setInterval(()=>{
+if(refFromURL){
 
-width+=5;
+document.getElementById("refInput").value = refFromURL;
 
-if(width<=80){
-p.style.width=width+"%";
-}
-
-},150);
-
-setTimeout(()=>{p.style.width="90%"},3000);
-setTimeout(()=>{p.style.width="100%"},5000);
+checkStatus();
 
 }
+
+/***********************
+CHECK STATUS
+***********************/
 
 function checkStatus(){
 
-let ref=document.getElementById("refInput").value.trim();
+const ref = document.getElementById("refInput").value;
 
-document.getElementById("errorMsg").innerText="";
-document.getElementById("resultBox").style.display="none";
+if(!ref){
 
-if(ref.length!==5){
-
-document.getElementById("errorMsg").innerText="Enter last 5 digits of reference";
+alert("Enter reference ID");
 
 return;
 
 }
 
-startLoading();
+document.getElementById("loader").style.display="block";
 
-fetch(API_URL+"?action=getStatus&ref="+ref)
+const controller = new AbortController();
+
+setTimeout(()=>{
+
+controller.abort();
+
+},10000);
+
+fetch(API+"?action=status&ref="+ref,{
+signal:controller.signal
+})
+
 .then(r=>r.json())
+
 .then(data=>{
 
-document.getElementById("loadingBar").style.display="none";
+document.getElementById("loader").style.display="none";
 
 if(data.error){
 
-document.getElementById("errorMsg").innerText="Reference not found";
+document.getElementById("result").innerHTML=
+"<p>Reference not found</p>";
 
 return;
 
 }
 
-document.getElementById("resultBox").style.display="block";
+document.getElementById("result").innerHTML=
 
-document.getElementById("name").innerText=data.name;
-document.getElementById("village").innerText=data.village;
-document.getElementById("phone").innerText=data.phone;
-document.getElementById("amount").innerText=data.amount;
-document.getElementById("date").innerText=data.date;
-document.getElementById("time").innerText=data.time;
+`<div class="result">
 
-let statusEl=document.getElementById("status");
+<div class="row"><b>Name:</b> ${data.name}</div>
 
-statusEl.innerText=data.status;
+<div class="row"><b>Village:</b> ${data.village}</div>
 
-statusEl.className="";
+<div class="row"><b>Amount:</b> ₹${data.amount}</div>
 
-if(data.status=="Verified") statusEl.className="statusVerified";
-if(data.status=="Pending") statusEl.className="statusPending";
-if(data.status=="Not Verified") statusEl.className="statusRejected";
+<div class="row"><b>Date:</b> ${data.date}</div>
+
+<div class="row"><b>Time:</b> ${data.time}</div>
+
+<div class="row"><b>Status:</b> ${data.status}</div>
+
+</div>`;
 
 })
+
+.catch(()=>{
+
+document.getElementById("loader").style.display="none";
+
+alert("Server not responding");
+
+});
 
 }
 
