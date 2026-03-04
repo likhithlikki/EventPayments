@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Admin Login</title>
 
 <style>
@@ -17,16 +19,12 @@ align-items:center;
 height:100vh;
 }
 
-.loginBox{
+.box{
 background:#1e293b;
 padding:30px;
 border-radius:10px;
 width:320px;
 text-align:center;
-}
-
-h2{
-margin-bottom:20px;
 }
 
 input{
@@ -35,6 +33,18 @@ padding:10px;
 margin:8px 0;
 border:none;
 border-radius:6px;
+}
+
+.passwordBox{
+position:relative;
+}
+
+.eye{
+position:absolute;
+right:10px;
+top:12px;
+cursor:pointer;
+color:black;
 }
 
 button{
@@ -48,48 +58,34 @@ font-weight:bold;
 cursor:pointer;
 }
 
-button:disabled{
-background:gray;
-cursor:not-allowed;
-}
-
 .error{
-color:#ef4444;
+color:red;
 margin-top:10px;
-}
-
-.progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin-top:10px;
-}
-
-.progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="loginBox">
+<div class="box">
 
 <h2>Admin Login</h2>
 
-<input type="text" id="username" placeholder="Username">
+<input id="username" placeholder="Username">
+
+<div class="passwordBox">
 
 <input type="password" id="password" placeholder="Password">
 
+<span class="eye" onclick="togglePass()">👁</span>
+
+</div>
+
 <button onclick="login()">Login</button>
 
-<div id="message"></div>
+<div id="msg"></div>
 
 </div>
 
@@ -97,44 +93,21 @@ transition:width 0.3s linear;
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-function startProgressBar(){
+function togglePass(){
 
-const msg=document.getElementById("message");
+const p=document.getElementById("password");
 
-msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-
-const bar=document.getElementById("progressFill");
-
-setTimeout(()=>{bar.style.width="70%";},200);
-setTimeout(()=>{bar.style.width="90%";},2000);
-
-}
-
-function completeProgress(){
-
-const bar=document.getElementById("progressFill");
-
-if(bar) bar.style.width="100%";
+p.type=p.type==="password"?"text":"password";
 
 }
 
 function login(){
 
-const username=document.getElementById("username").value.trim();
+const username=document.getElementById("username").value;
 
-const password=document.getElementById("password").value.trim();
+const password=document.getElementById("password").value;
 
-const msg=document.getElementById("message");
-
-if(!username || !password){
-
-msg.innerHTML="<p class='error'>Enter username and password</p>";
-
-return;
-
-}
-
-startProgressBar();
+const msg=document.getElementById("msg");
 
 const data=new URLSearchParams();
 
@@ -151,14 +124,10 @@ body:data
 
 .then(res=>{
 
-completeProgress();
-
 if(res.success){
 
 sessionStorage.setItem("adminUser",username);
 sessionStorage.setItem("adminRole",res.role);
-sessionStorage.setItem("adminToken",res.token);
-sessionStorage.setItem("loginTime",Date.now());
 
 window.location="admin.html";
 
@@ -170,12 +139,6 @@ msg.innerHTML="<p class='error'>Invalid username or password</p>";
 }
 
 })
-
-.catch(()=>{
-
-msg.innerHTML="<p class='error'>Server connection error</p>";
-
-});
 
 }
 
