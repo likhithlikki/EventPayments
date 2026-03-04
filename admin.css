@@ -7,16 +7,17 @@ display:flex;
 justify-content:center;
 }
 
-.container{
-width:1200px;
-margin-top:30px;
-}
+/* NAVBAR FIXED TOP */
 
 .navbar{
+position:fixed;
+top:0;
+left:0;
+width:100%;
 background:#065f46;
-padding:15px;
+padding:14px;
 text-align:center;
-margin-bottom:20px;
+z-index:1000;
 }
 
 .navbar a{
@@ -26,12 +27,52 @@ text-decoration:none;
 font-weight:bold;
 }
 
+/* MAIN CONTAINER CENTER */
+
+.container{
+width:1300px;
+margin-top:90px;
+text-align:center;
+}
+
+/* DASHBOARD TITLE */
+
+h2{
+font-size:34px;
+margin-bottom:10px;
+}
+
+/* TOP ACTIONS */
+
 .topActions{
 display:flex;
 justify-content:flex-end;
-gap:10px;
+gap:12px;
 margin-bottom:20px;
+align-items:center;
 }
+
+/* TIMER */
+
+#timer{
+font-weight:bold;
+font-size:16px;
+}
+
+/* BLINK WHEN LOW TIME */
+
+.blink{
+animation:blink 1s infinite;
+color:#ef4444;
+}
+
+@keyframes blink{
+0%{opacity:1}
+50%{opacity:0}
+100%{opacity:1}
+}
+
+/* BUTTONS */
 
 button{
 padding:8px 14px;
@@ -44,12 +85,17 @@ font-weight:bold;
 .logoutBtn{background:#ef4444;color:white;}
 .pdfBtn{background:#2563eb;color:white;}
 
+/* DASHBOARD LAYOUT */
+
 .dashboard{
 display:flex;
+justify-content:center;
 gap:40px;
 align-items:center;
 margin-bottom:40px;
 }
+
+/* SUMMARY BOXES */
 
 .summaryBoxes{
 display:grid;
@@ -61,7 +107,8 @@ gap:15px;
 background:#1e293b;
 padding:20px;
 border-radius:10px;
-width:220px;
+width:230px;
+text-align:left;
 }
 
 .box h4{
@@ -75,9 +122,35 @@ font-size:22px;
 margin-top:8px;
 }
 
+/* PIE CHART */
+
 .chartBox{
-width:260px;
+width:250px;
+position:relative;
 }
+
+/* PIE LEGEND */
+
+.chartLegend{
+margin-top:10px;
+text-align:left;
+font-size:14px;
+}
+
+.legendItem{
+display:flex;
+align-items:center;
+gap:6px;
+margin-bottom:4px;
+}
+
+.legendColor{
+width:14px;
+height:14px;
+border-radius:3px;
+}
+
+/* TABLE */
 
 table{
 width:100%;
@@ -92,19 +165,32 @@ padding:8px;
 text-align:center;
 }
 
+/* STATUS COLORS */
+
 .statusPending{color:#3b82f6;font-weight:bold;}
 .statusVerified{color:#22c55e;font-weight:bold;}
 .statusNotVerified{color:#ef4444;font-weight:bold;}
 
-.btnVerify{
-background:#22c55e;
-color:white;
+/* SYMBOL BUTTONS */
+
+.symbolBtn{
+width:28px;
+height:28px;
+font-size:16px;
+border-radius:5px;
 }
 
-.btnReject{
+.verify{
+background:#22c55e;
+color:black;
+}
+
+.reject{
 background:#ef4444;
 color:white;
 }
+
+/* TEXTAREA */
 
 textarea{
 width:100%;
@@ -115,10 +201,14 @@ border-radius:4px;
 padding:6px;
 }
 
+/* SAVE BUTTON */
+
 .saveBtn{
 background:#10b981;
 margin-top:15px;
 }
+
+/* LOADER */
 
 .loader{
 display:none;
