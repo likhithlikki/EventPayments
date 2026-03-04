@@ -9,121 +9,81 @@
 
 body{
 font-family:Arial;
+background:#eef2f8;
 margin:0;
-background:#f4f6fb;
 }
+
+/* NAVBAR */
 
 .navbar{
 background:#0b1c3d;
-padding:14px;
 color:white;
-display:flex;
-justify-content:space-between;
-}
-
-.navbar a{
-color:white;
-margin-right:20px;
-text-decoration:none;
+padding:16px;
+text-align:center;
+font-size:20px;
 font-weight:bold;
 }
 
+/* CONTAINER */
+
 .container{
-max-width:600px;
+width:360px;
 margin:40px auto;
 background:white;
-padding:30px;
+padding:25px;
 border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-h2{
-text-align:center;
-margin-bottom:20px;
-}
+/* INPUT */
 
 input,textarea{
 width:100%;
 padding:10px;
 margin-top:10px;
-border-radius:6px;
+margin-bottom:12px;
 border:1px solid #ccc;
+border-radius:5px;
 font-size:14px;
 }
 
-textarea{
-height:120px;
-resize:none;
-}
+/* BUTTON */
 
 button{
-margin-top:15px;
-padding:12px;
 width:100%;
+padding:12px;
 background:#0b1c3d;
 color:white;
 border:none;
 border-radius:6px;
-font-size:16px;
 cursor:pointer;
 }
 
-button:disabled{
-background:#aaa;
+button:hover{
+background:#152a63;
 }
 
-.error{
-border:1px solid red;
-}
+/* LOADER */
 
-.loadingBar{
-width:100%;
-height:4px;
-background:#ddd;
-margin-top:10px;
-overflow:hidden;
+.loader{
 display:none;
-}
-
-.loadingProgress{
-height:100%;
-width:0%;
-background:#007bff;
-animation:load 5s linear forwards;
-}
-
-@keyframes load{
-
-0%{width:0%}
-
-60%{width:80%}
-
-90%{width:95%}
-
-100%{width:100%}
-
-}
-
-.note{
-margin-top:20px;
-font-size:14px;
-color:#444;
-}
-
-.contact{
-margin-top:10px;
-display:flex;
-gap:20px;
-}
-
-.contact img{
-width:28px;
-}
-
-.success{
 text-align:center;
-color:green;
 margin-top:15px;
+}
+
+.spinner{
+border:4px solid #f3f3f3;
+border-top:4px solid #0b1c3d;
+border-radius:50%;
+width:24px;
+height:24px;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
 }
 
 </style>
@@ -133,55 +93,28 @@ margin-top:15px;
 <body>
 
 <div class="navbar">
-
-<div>
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="admin.html">Admin Panel</a>
-<a href="complaint.html">Complaint</a>
-</div>
-
+Complaint Form
 </div>
 
 <div class="container">
-
-<h2>Register Complaint</h2>
 
 <input id="name" placeholder="Name">
 
 <input id="village" placeholder="Village">
 
-<input id="phone" placeholder="Phone Number">
+<input id="phone" placeholder="Phone">
 
 <input id="email" placeholder="Email (optional)">
 
 <textarea id="complaint" placeholder="Write your complaint"></textarea>
 
-<input type="file" id="file">
+<button onclick="submitComplaint()">Submit Complaint</button>
 
-<button id="submitBtn" onclick="submitComplaint()">Submit Complaint</button>
+<div class="loader" id="loader">
 
-<div class="loadingBar" id="loadingBar">
-<div class="loadingProgress"></div>
-</div>
+<div class="spinner"></div>
 
-<div class="success" id="successMsg"></div>
-
-<div class="note">
-
-If not resolved within 24 hours contact:
-
-<div class="contact">
-
-<a href="mailto:likithmuddada@gmail.com">
-<img src="https://cdn-icons-png.flaticon.com/512/732/732200.png">
-</a>
-
-<a href="https://wa.me/919014844036">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
-</a>
-
-</div>
+<p>Submitting...</p>
 
 </div>
 
@@ -189,89 +122,89 @@ If not resolved within 24 hours contact:
 
 <script>
 
-const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+/***********************
+CONFIG
+***********************/
 
-function validate(){
+const API="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-let valid=true;
-
-const name=document.getElementById("name");
-const village=document.getElementById("village");
-const phone=document.getElementById("phone");
-const complaint=document.getElementById("complaint");
-
-[name,village,phone,complaint].forEach(i=>i.classList.remove("error"));
-
-if(!/^[A-Za-z ]+$/.test(name.value)){
-name.classList.add("error");
-valid=false;
-}
-
-if(village.value.length<2){
-village.classList.add("error");
-valid=false;
-}
-
-if(!/^[6-9][0-9]{9}$/.test(phone.value)){
-phone.classList.add("error");
-valid=false;
-}
-
-if(complaint.value.length<5){
-complaint.classList.add("error");
-valid=false;
-}
-
-const file=document.getElementById("file").files[0];
-
-if(file){
-
-if(file.size>5*1024*1024){
-
-alert("File size must be below 5MB");
-
-valid=false;
-
-}
-
-}
-
-return valid;
-
-}
+/***********************
+SUBMIT COMPLAINT
+***********************/
 
 function submitComplaint(){
 
-if(!validate()) return;
+const name=document.getElementById("name").value;
+const village=document.getElementById("village").value;
+const phone=document.getElementById("phone").value;
+const email=document.getElementById("email").value;
+const complaint=document.getElementById("complaint").value;
 
-document.getElementById("loadingBar").style.display="block";
+if(!name||!village||!phone||!complaint){
 
-const data={
-action:"registerComplaint",
-name:document.getElementById("name").value,
-village:document.getElementById("village").value,
-phone:document.getElementById("phone").value,
-email:document.getElementById("email").value,
-complaint:document.getElementById("complaint").value
-};
+alert("Please fill all required fields");
 
-fetch(API_URL,{
+return;
+
+}
+
+document.getElementById("loader").style.display="block";
+
+const controller=new AbortController();
+
+setTimeout(()=>{
+
+controller.abort();
+
+},10000);
+
+fetch(API,{
 method:"POST",
-body:JSON.stringify(data)
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+
+action:"complaint",
+name:name,
+village:village,
+phone:phone,
+email:email,
+complaint:complaint
+
+}),
+signal:controller.signal
 })
+
 .then(r=>r.json())
+
 .then(res=>{
 
-document.getElementById("loadingBar").style.display="none";
+document.getElementById("loader").style.display="none";
 
-document.getElementById("successMsg").innerText="Complaint registered successfully";
+if(res.status==="submitted"){
+
+alert("Complaint submitted successfully");
 
 document.getElementById("name").value="";
 document.getElementById("village").value="";
 document.getElementById("phone").value="";
 document.getElementById("email").value="";
 document.getElementById("complaint").value="";
-document.getElementById("file").value="";
+
+}else{
+
+alert("Submission failed");
+
+}
+
+})
+
+.catch(()=>{
+
+document.getElementById("loader").style.display="none";
+
+alert("Server not responding");
 
 });
 
