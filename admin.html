@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,10 +16,12 @@
 <body>
 
 <div class="navbar">
+
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
 <a href="complaint.html">Complaint</a>
 <a href="admin.html">Admin</a>
+
 </div>
 
 <div class="container">
@@ -28,197 +31,70 @@
 <h2>Admin Dashboard</h2>
 
 <div>
+
 <span id="timer"></span>
+
 <button class="pdfBtn" onclick="window.print()">Export PDF</button>
+
 <button class="logoutBtn" onclick="logout()">Logout</button>
+
+</div>
+
+</div>
+
+
+<div class="summaryChart">
+
+<div class="summaryBoxes">
+
+<div class="box">
+<h4>Total Amount</h4>
+<p id="totalAmount">0</p>
+</div>
+
+<div class="box">
+<h4>Verified</h4>
+<p id="verifiedAmount">0</p>
+</div>
+
+<div class="box">
+<h4>Pending</h4>
+<p id="pendingAmount">0</p>
+</div>
+
+<div class="box">
+<h4>Not Verified</h4>
+<p id="notVerifiedAmount">0</p>
 </div>
 
 </div>
 
 <div class="chartBox">
+
 <canvas id="pieChart"></canvas>
+
 </div>
 
-<h3>Payments</h3>
+</div>
+
+
+<h3>Event Payments</h3>
+
 <div id="paymentTable"></div>
 
+<button id="savePayments" class="saveBtn">Save Payment Changes</button>
+
+
 <h3>Complaints</h3>
+
 <div id="complaintTable"></div>
+
+<button id="saveComplaints" class="saveBtn">Save Complaint Changes</button>
 
 </div>
 
-<script>
-
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
-
-const user=sessionStorage.getItem("adminUser");
-const role=sessionStorage.getItem("adminRole");
-
-if(!user){
-window.location="admin-login.html";
-}
-
-/* SESSION TIMER */
-
-let sessionMinutes=30;
-let loginTime=sessionStorage.getItem("loginTime");
-
-if(!loginTime){
-loginTime=Date.now();
-sessionStorage.setItem("loginTime",loginTime);
-}
-
-fetch(scriptURL+"?action=getSettings")
-.then(r=>r.json())
-.then(s=>{
-sessionMinutes=parseInt(s.SessionTimeoutMinutes||30);
-startTimer();
-});
-
-function startTimer(){
-
-setInterval(()=>{
-
-const now=Date.now();
-
-let remaining=sessionMinutes*60000-(now-loginTime);
-
-if(remaining<=0){
-logout();
-}
-
-let m=Math.floor(remaining/60000);
-let s=Math.floor((remaining%60000)/1000);
-
-document.getElementById("timer").innerText=
-"Session "+m+":"+s.toString().padStart(2,"0");
-
-},1000);
-
-}
-
-function logout(){
-sessionStorage.clear();
-location="admin-login.html";
-}
-
-/* LOAD PAYMENTS */
-
-fetch(scriptURL+"?action=getAllPayments")
-.then(r=>r.json())
-.then(data=>{
-
-let verified=0,pending=0,notv=0;
-
-let html="<table><tr><th>Name</th><th>Amount</th><th>Status</th></tr>";
-
-data.forEach(r=>{
-
-if(r[9]=="Verified") verified++;
-if(r[9]=="Pending") pending++;
-if(r[9]=="Not Verified") notv++;
-
-html+=`
-<tr>
-<td>${r[4]}</td>
-<td>${r[7]}</td>
-<td>${r[9]}</td>
-</tr>
-`;
-
-});
-
-html+="</table>";
-
-document.getElementById("paymentTable").innerHTML=html;
-
-new Chart(document.getElementById("pieChart"),{
-type:"pie",
-data:{
-labels:["Verified","Pending","Not Verified"],
-datasets:[{
-data:[verified,pending,notv],
-backgroundColor:["#22c55e","#3b82f6","#ef4444"]
-}]
-}
-});
-
-});
-
-/* LOAD COMPLAINTS */
-
-fetch(scriptURL+"?action=getAllComplaints")
-.then(r=>r.json())
-.then(data=>{
-
-let html="<table><tr><th>Name</th><th>Complaint</th><th>Status</th><th>Reply</th><th>Action</th></tr>";
-
-data.forEach((r,i)=>{
-
-html+=`
-<tr>
-
-<td>${r[2]}</td>
-
-<td>${r[6]}</td>
-
-<td>
-<select id="status${i}">
-<option ${r[7]=="Pending"?"selected":""}>Pending</option>
-<option ${r[7]=="Resolved"?"selected":""}>Resolved</option>
-</select>
-</td>
-
-<td>
-<textarea id="reply${i}">${r[8]||""}</textarea>
-</td>
-
-<td>
-<button onclick="updateComplaint(${i})">Update</button>
-</td>
-
-</tr>
-`;
-
-});
-
-html+="</table>";
-
-document.getElementById("complaintTable").innerHTML=html;
-
-});
-
-/* UPDATE COMPLAINT */
-
-function updateComplaint(i){
-
-let reply=document.getElementById("reply"+i).value;
-
-let status=document.getElementById("status"+i).value;
-
-const data=new URLSearchParams();
-
-data.append("action","updateComplaint");
-data.append("row",i+2);
-data.append("reply",reply);
-data.append("status",status);
-
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
-.then(r=>r.text())
-.then(()=>{
-
-alert("Complaint Updated");
-
-location.reload();
-
-});
-
-}
-
-</script>
+<script src="admin.js"></script>
 
 </body>
+
 </html>
