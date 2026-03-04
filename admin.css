@@ -1,227 +1,271 @@
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-display:flex;
-justify-content:center;
+const scriptURL="YOUR_WEB_APP_URL";
+
+let paymentUpdates=[];
+let complaintUpdates=[];
+
+/* LOGOUT */
+
+function logout(){
+sessionStorage.clear();
+location="admin-login.html";
 }
 
-/* NAVBAR FIXED TOP */
+/* SESSION TIMER */
 
-.navbar{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-background:#065f46;
-padding:14px;
-text-align:center;
-z-index:1000;
+let sessionMinutes=30;
+let loginTime=sessionStorage.getItem("loginTime");
+
+if(!loginTime){
+loginTime=Date.now();
+sessionStorage.setItem("loginTime",loginTime);
 }
 
-.navbar a{
-color:white;
-margin:0 15px;
-text-decoration:none;
-font-weight:bold;
+setInterval(()=>{
+
+const now=Date.now();
+let remaining=sessionMinutes*60000-(now-loginTime);
+
+if(remaining<=0) logout();
+
+let m=Math.floor(remaining/60000);
+let s=Math.floor((remaining%60000)/1000);
+
+let timer=document.getElementById("timer");
+
+timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
+
+if(m<5){
+timer.classList.add("blink");
 }
 
-/* MAIN CONTAINER CENTER */
+},1000);
 
-.container{
-width:1300px;
-margin-top:90px;
-text-align:center;
+
+
+/* SUMMARY */
+
+fetch(scriptURL+"?action=getPaymentSummary")
+.then(r=>r.json())
+.then(d=>{
+
+document.getElementById("totalAmount").innerText="₹"+d.total;
+document.getElementById("verifiedAmount").innerText="₹"+d.verified;
+document.getElementById("pendingAmount").innerText="₹"+d.pending;
+document.getElementById("notVerifiedAmount").innerText="₹"+d.notverified;
+
+new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:["Verified","Pending","Not Verified"],
+datasets:[{
+data:[d.verified,d.pending,d.notverified],
+backgroundColor:["#22c55e","#3b82f6","#ef4444"]
+}]
+},
+options:{
+plugins:{legend:{display:false}}
+}
+});
+
+});
+
+
+
+/* PAYMENTS */
+
+fetch(scriptURL+"?action=getAllPayments")
+.then(r=>r.json())
+.then(data=>{
+
+let html="<table>";
+
+html+="<tr>";
+html+="<th>Date</th>";
+html+="<th>Time</th>";
+html+="<th>RefID</th>";
+html+="<th>Name</th>";
+html+="<th>Village</th>";
+html+="<th>Phone</th>";
+html+="<th>Amount</th>";
+html+="<th>UTR</th>";
+html+="<th>Status</th>";
+html+="<th>Action</th>";
+html+="</tr>";
+
+data.forEach((r,i)=>{
+
+let statusClass="statusPending";
+
+if(r[9]=="Verified") statusClass="statusVerified";
+if(r[9]=="Not Verified") statusClass="statusNotVerified";
+
+html+=`
+<tr>
+
+<td>${r[1]}</td>
+<td>${r[2]}</td>
+<td>${r[3]}</td>
+<td>${r[4]}</td>
+<td>${r[5]}</td>
+<td>${r[6]}</td>
+<td>${r[7]}</td>
+<td>${r[8]}</td>
+
+<td id="payStatus${i}" class="${statusClass}">
+${r[9]}
+</td>
+
+<td>
+
+<button class="symbolBtn verify"
+onclick="changePaymentStatus(${i},'Verified')">✓</button>
+
+<button class="symbolBtn reject"
+onclick="changePaymentStatus(${i},'Not Verified')">✗</button>
+
+</td>
+
+</tr>
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("paymentTable").innerHTML=html;
+
+});
+
+function changePaymentStatus(i,status){
+
+let cell=document.getElementById("payStatus"+i);
+
+cell.innerText=status;
+
+cell.className=
+status=="Verified"
+?"statusVerified"
+:"statusNotVerified";
+
+paymentUpdates.push({
+row:i+2,
+status
+});
+
 }
 
-/* DASHBOARD TITLE */
 
-h2{
-font-size:34px;
-margin-bottom:10px;
+
+/* SAVE PAYMENTS */
+
+function savePayments(){
+
+document.getElementById("paymentLoader").style.display="inline-block";
+
+const data=new URLSearchParams();
+
+data.append("action","updatePayments");
+data.append("data",JSON.stringify(paymentUpdates));
+
+fetch(scriptURL,{method:"POST",body:data})
+.then(()=>location.reload());
+
 }
 
-/* TOP ACTIONS */
 
-.topActions{
-display:flex;
-justify-content:flex-end;
-gap:12px;
-margin-bottom:20px;
-align-items:center;
+
+/* COMPLAINTS */
+
+fetch(scriptURL+"?action=getAllComplaints")
+.then(r=>r.json())
+.then(data=>{
+
+let html="<table>";
+
+html+="<tr>";
+html+="<th>Date</th>";
+html+="<th>Name</th>";
+html+="<th>Phone</th>";
+html+="<th>Complaint</th>";
+html+="<th>Status</th>";
+html+="<th>Reply</th>";
+html+="<th>WhatsApp</th>";
+html+="<th>Action</th>";
+html+="</tr>";
+
+data.forEach((r,i)=>{
+
+html+=`
+
+<tr>
+
+<td>${r[0]}</td>
+
+<td>${r[2]}</td>
+
+<td>${r[4]}</td>
+
+<td>${r[6]}</td>
+
+<td id="compStatus${i}">${r[7]}</td>
+
+<td>
+<textarea id="reply${i}">${r[8]||""}</textarea>
+</td>
+
+<td>${r[10]||"Pending"}</td>
+
+<td>
+
+<button class="symbolBtn verify"
+onclick="changeComplaintStatus(${i},'Resolved')">✓</button>
+
+<button class="symbolBtn reject"
+onclick="changeComplaintStatus(${i},'Pending')">✗</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("complaintTable").innerHTML=html;
+
+});
+
+
+function changeComplaintStatus(i,status){
+
+document.getElementById("compStatus"+i).innerText=status;
+
+let reply=document.getElementById("reply"+i).value;
+
+complaintUpdates.push({
+row:i+2,
+status,
+reply
+});
+
 }
 
-/* TIMER */
 
-#timer{
-font-weight:bold;
-font-size:16px;
-}
 
-/* BLINK WHEN LOW TIME */
+/* SAVE COMPLAINTS */
 
-.blink{
-animation:blink 1s infinite;
-color:#ef4444;
-}
+function saveComplaints(){
 
-@keyframes blink{
-0%{opacity:1}
-50%{opacity:0}
-100%{opacity:1}
-}
+document.getElementById("complaintLoader").style.display="inline-block";
 
-/* BUTTONS */
+const data=new URLSearchParams();
 
-button{
-padding:8px 14px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-weight:bold;
-}
+data.append("action","updateComplaints");
+data.append("data",JSON.stringify(complaintUpdates));
 
-.logoutBtn{background:#ef4444;color:white;}
-.pdfBtn{background:#2563eb;color:white;}
+fetch(scriptURL,{method:"POST",body:data})
+.then(()=>location.reload());
 
-/* DASHBOARD LAYOUT */
-
-.dashboard{
-display:flex;
-justify-content:center;
-gap:40px;
-align-items:center;
-margin-bottom:40px;
-}
-
-/* SUMMARY BOXES */
-
-.summaryBoxes{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-}
-
-.box{
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-width:230px;
-text-align:left;
-}
-
-.box h4{
-margin:0;
-font-size:14px;
-color:#94a3b8;
-}
-
-.box p{
-font-size:22px;
-margin-top:8px;
-}
-
-/* PIE CHART */
-
-.chartBox{
-width:250px;
-position:relative;
-}
-
-/* PIE LEGEND */
-
-.chartLegend{
-margin-top:10px;
-text-align:left;
-font-size:14px;
-}
-
-.legendItem{
-display:flex;
-align-items:center;
-gap:6px;
-margin-bottom:4px;
-}
-
-.legendColor{
-width:14px;
-height:14px;
-border-radius:3px;
-}
-
-/* TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-background:#1e293b;
-}
-
-th,td{
-border:1px solid #334155;
-padding:8px;
-text-align:center;
-}
-
-/* STATUS COLORS */
-
-.statusPending{color:#3b82f6;font-weight:bold;}
-.statusVerified{color:#22c55e;font-weight:bold;}
-.statusNotVerified{color:#ef4444;font-weight:bold;}
-
-/* SYMBOL BUTTONS */
-
-.symbolBtn{
-width:28px;
-height:28px;
-font-size:16px;
-border-radius:5px;
-}
-
-.verify{
-background:#22c55e;
-color:black;
-}
-
-.reject{
-background:#ef4444;
-color:white;
-}
-
-/* TEXTAREA */
-
-textarea{
-width:100%;
-background:#111827;
-color:white;
-border:none;
-border-radius:4px;
-padding:6px;
-}
-
-/* SAVE BUTTON */
-
-.saveBtn{
-background:#10b981;
-margin-top:15px;
-}
-
-/* LOADER */
-
-.loader{
-display:none;
-border:4px solid #334155;
-border-top:4px solid #22c55e;
-border-radius:50%;
-width:25px;
-height:25px;
-animation:spin 1s linear infinite;
-margin-left:10px;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg)}
-100%{transform:rotate(360deg)}
 }
