@@ -1,292 +1,292 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event Contribution</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta charset="UTF-8">
+<title>Event Payment</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white;}
-.navbar{background:#1e40af;padding:15px;text-align:center;}
-.navbar a{color:white;margin:0 15px;text-decoration:none;font-weight:bold;}
-.container{max-width:420px;margin:40px auto;background:#1e293b;padding:20px;border-radius:10px;}
-input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
-.invalid{border:2px solid red;}
-button{width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
-button:disabled{background:gray;}
-#paymentSection{display:none;}
-.progressBar{width:100%;background:#334155;height:6px;border-radius:4px;overflow:hidden;margin:10px 0;}
-.progressFill{height:100%;width:0%;background:#22c55e;transition:width 0.3s linear;}
-.success{color:lightgreen;}
-.error{color:#ef4444;}
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f6fb;
+}
+
+.navbar{
+background:#0b1c3d;
+color:white;
+padding:14px;
+display:flex;
+justify-content:space-between;
+}
+
+.navbar a{
+color:white;
+margin-right:20px;
+text-decoration:none;
+font-weight:bold;
+}
+
+.container{
+max-width:500px;
+margin:40px auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+}
+
+.error{
+border:2px solid red;
+}
+
+button{
+margin-top:15px;
+padding:12px;
+width:100%;
+background:#0b1c3d;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:disabled{
+background:#aaa;
+}
+
+.qr{
+text-align:center;
+margin-top:20px;
+display:none;
+}
+
+.qr img{
+width:200px;
+}
+
+.loadingBar{
+width:100%;
+height:4px;
+background:#ddd;
+margin-top:10px;
+overflow:hidden;
+display:none;
+}
+
+.loadingProgress{
+height:100%;
+width:0%;
+background:#007bff;
+}
+
+.refBox{
+margin-top:20px;
+padding:15px;
+background:#f4f6fb;
+border-radius:6px;
+text-align:center;
+display:none;
+}
+
+.downloadBtn{
+margin-top:10px;
+background:#28a745;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="navbar">
+
+<div>
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
+<a href="admin.html">Admin Panel</a>
 <a href="complaint.html">Complaint</a>
-<a href="admin.html">Admin</a>
+</div>
+
 </div>
 
 <div class="container">
 
 <h2>Event Contribution</h2>
 
-<div id="formSection">
-<input type="text" id="name" placeholder="Name (letters only)">
-<input type="text" id="village" placeholder="Village">
-<input type="text" id="phone" placeholder="Phone (10 digits)">
-<input type="number" id="amount" placeholder="Amount (Min ₹50)">
-<button id="proceedBtn" disabled>Proceed</button>
+<input id="name" placeholder="Name">
+
+<input id="village" placeholder="Village">
+
+<input id="phone" placeholder="Phone Number">
+
+<input id="amount" placeholder="Amount (Minimum ₹50)">
+
+<button id="proceedBtn" disabled onclick="showQR()">Proceed to Payment</button>
+
+<div class="qr" id="qrBox">
+
+<p>Scan & Pay</p>
+
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay">
+
+<input id="utr" placeholder="Enter UTR Number">
+
+<button onclick="submitPayment()">Submit Payment</button>
+
 </div>
 
-<div id="paymentSection">
-<h3>Scan & Pay</h3>
-<div id="qrcode"></div>
-<button onclick="openUPI()">Open UPI App</button>
-<input type="text" id="utr" placeholder="Enter UTR Number">
-<button onclick="finishPayment()">Finish Payment</button>
+<div class="loadingBar" id="loadingBar">
+<div class="loadingProgress" id="progress"></div>
 </div>
 
-<div id="message"></div>
+<div class="refBox" id="refBox">
+
+<p>Note down reference number for future purpose</p>
+
+<h3 id="refNumber"></h3>
+
+<button class="downloadBtn" onclick="downloadReceipt()">Download Receipt</button>
+
+</div>
 
 </div>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-let userData={}, upiLink="";
+let refID="";
 
 const nameInput=document.getElementById("name");
 const villageInput=document.getElementById("village");
 const phoneInput=document.getElementById("phone");
 const amountInput=document.getElementById("amount");
-const proceedBtn=document.getElementById("proceedBtn");
 
-/* -------- VALIDATION -------- */
-function validateForm(){
+[nameInput,villageInput,phoneInput,amountInput].forEach(el=>{
+el.addEventListener("input",validate);
+});
+
+phoneInput.addEventListener("keypress",e=>{
+if(!/[0-9]/.test(e.key)) e.preventDefault();
+});
+
+function validate(){
+
 let valid=true;
 
-if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
-nameInput.classList.add("invalid"); valid=false;
-}else nameInput.classList.remove("invalid");
+nameInput.classList.remove("error");
+phoneInput.classList.remove("error");
+amountInput.classList.remove("error");
 
-if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
-phoneInput.classList.add("invalid"); valid=false;
-}else phoneInput.classList.remove("invalid");
+if(!/^[A-Za-z ]+$/.test(nameInput.value)){
+nameInput.classList.add("error");
+valid=false;
+}
+
+if(!/^[6-9][0-9]{9}$/.test(phoneInput.value)){
+phoneInput.classList.add("error");
+valid=false;
+}
 
 if(Number(amountInput.value)<50){
-amountInput.classList.add("invalid"); valid=false;
-}else amountInput.classList.remove("invalid");
-
-proceedBtn.disabled=!valid;
+amountInput.classList.add("error");
+valid=false;
 }
 
-nameInput.addEventListener("input",validateForm);
-phoneInput.addEventListener("input",function(){
-this.value=this.value.replace(/\D/g,"").slice(0,10);
-validateForm();
-});
-amountInput.addEventListener("input",validateForm);
+document.getElementById("proceedBtn").disabled=!valid;
 
-/* -------- PROCEED CLICK -------- */
-proceedBtn.addEventListener("click",goToPayment);
-
-function generateRefID(){
-return "REF"+Date.now();
 }
 
-function goToPayment(){
+function showQR(){
 
-userData={
-refid:generateRefID(),
-name:nameInput.value.trim(),
-village:villageInput.value.trim(),
-phone:phoneInput.value.trim(),
-amount:amountInput.value.trim()
+document.getElementById("qrBox").style.display="block";
+
+}
+
+function startLoading(){
+
+document.getElementById("loadingBar").style.display="block";
+
+let p=document.getElementById("progress");
+
+let width=0;
+
+let interval=setInterval(()=>{
+
+width+=5;
+
+if(width<=80){
+p.style.width=width+"%";
+}
+
+},150);
+
+setTimeout(()=>{p.style.width="90%"},3000);
+setTimeout(()=>{p.style.width="100%"},5000);
+
+}
+
+function submitPayment(){
+
+const utr=document.getElementById("utr").value;
+
+if(utr.length<6){
+alert("Enter valid UTR");
+return;
+}
+
+startLoading();
+
+const data={
+action:"submitPayment",
+name:nameInput.value,
+village:villageInput.value,
+phone:phoneInput.value,
+amount:amountInput.value,
+utr:utr
 };
 
-upiLink=`upi://pay?pa=9014844036@superyes&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
-
-document.getElementById("formSection").style.display="none";
-document.getElementById("paymentSection").style.display="block";
-
-document.getElementById("qrcode").innerHTML="";
-new QRCode(document.getElementById("qrcode"), upiLink);
-}
-
-function openUPI(){window.location.href=upiLink;}
-
-/* -------- PROGRESS -------- */
-function startProgressBar(){
-message.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-const bar=document.getElementById("progressFill");
-setTimeout(()=>bar.style.width="80%",100);
-setTimeout(()=>bar.style.width="90%",3000);
-setTimeout(()=>bar.style.width="99%",5000);
-}
-function completeProgress(){
-const bar=document.getElementById("progressFill");
-if(bar) bar.style.width="100%";
-}
-
-/* -------- SUBMIT -------- */
-function finishPayment(){
-
-const utr=document.getElementById("utr").value.trim();
-if(!utr){alert("Enter UTR Number");return;}
-
-startProgressBar();
-
-const data=new URLSearchParams();
-data.append("action","insertPayment");
-data.append("refid",userData.refid);
-data.append("name",userData.name);
-data.append("village",userData.village);
-data.append("phone",userData.phone);
-data.append("amount",userData.amount);
-data.append("utr",utr);
-
-fetch(scriptURL,{method:"POST",body:data})
-.then(res=>res.text())
-.then(res=>{
-completeProgress();
-if(res==="Duplicate"){message.innerHTML="<span class='error'>Duplicate Submission</span>";return;}
-showReceipt();
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify(data)
 })
-.catch(()=>message.innerHTML="<span class='error'>Server Error</span>");
-}
+.then(r=>r.json())
+.then(res=>{
 
-/* -------- RECEIPT DISPLAY -------- */
-function showReceipt(){
+refID=res.ref;
 
-const now=new Date();
-const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const dateFormatted=`${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-let hours=now.getHours();
-const minutes=now.getMinutes().toString().padStart(2,"0");
-const ampm=hours>=12?"pm":"am";
-hours=hours%12||12;
-const timeFormatted=`${hours}:${minutes} ${ampm}`;
+document.getElementById("loadingBar").style.display="none";
 
-message.innerHTML=`
-<div style="background:#111827;padding:15px;border-radius:8px;margin-top:10px;">
-<h3 style="color:lightgreen;">Payment Submitted Successfully</h3>
-<p><b>Reference ID:</b> ${userData.refid}</p>
-<p><b>Name:</b> ${userData.name}</p>
-<p><b>Village:</b> ${userData.village}</p>
-<p><b>Amount:</b> ₹${userData.amount}</p>
-<p><b>Date:</b> ${dateFormatted}</p>
-<p><b>Time:</b> ${timeFormatted}</p>
-<p style="color:yellow;">⚠ Note down your Reference ID for future verification.</p>
-<button onclick="downloadPDF('${dateFormatted}','${timeFormatted}')">
-Download SBI Receipt (PDF)
-</button>
-</div>
-`;
-}
+document.getElementById("refBox").style.display="block";
 
-/* -------- PROFESSIONAL PDF -------- */
-async function downloadPDF(dateFormatted,timeFormatted){
+document.getElementById("refNumber").innerText=refID;
 
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a5"});
-const pageWidth=doc.internal.pageSize.getWidth();
-
-const logo=await loadImage("sbi_logo.png");
-const sign=await loadImage("sign.jpeg");
-
-doc.addImage(logo,"PNG",10,8,20,20);
-
-doc.setFont("helvetica","bold");
-doc.setFontSize(16);
-doc.text("STATE BANK OF INDIA",pageWidth/2,15,null,null,"center");
-
-doc.setFontSize(11);
-doc.setFont("helvetica","normal");
-doc.text("Transaction Receipt",pageWidth/2,22,null,null,"center");
-doc.line(10,28,pageWidth-10,28);
-
-/* Watermark */
-doc.setTextColor(200,200,200);
-doc.setFontSize(40);
-doc.text("SBI PAID",pageWidth/2,110,null,null,"center",45);
-doc.setTextColor(0,0,0);
-
-doc.setFontSize(11);
-doc.text("Receipt No:",15,40);
-doc.text(userData.refid,50,40);
-
-doc.text("Date:",15,48);
-doc.text(dateFormatted,50,48);
-
-doc.text("Time:",15,56);
-doc.text(timeFormatted,50,56);
-
-doc.line(10,62,pageWidth-10,62);
-
-doc.text("Customer Name:",15,72);
-doc.text(userData.name,60,72);
-
-doc.text("Village:",15,80);
-doc.text(userData.village,60,80);
-
-doc.text("Phone:",15,88);
-doc.text(userData.phone,60,88);
-
-doc.line(10,95,pageWidth-10,95);
-
-doc.setFont("helvetica","bold");
-doc.text("Amount Paid:",15,105);
-doc.text("₹ "+userData.amount,60,105);
-
-doc.setFont("helvetica","normal");
-doc.text("UTR Number:",15,113);
-doc.text(document.getElementById("utr").value.trim(),60,113);
-
-/* QR */
-const qrCanvas=document.querySelector("#qrcode canvas");
-const qrData=qrCanvas.toDataURL("image/png");
-doc.addImage(qrData,"PNG",pageWidth-50,70,35,35);
-
-/* Barcode style */
-doc.setFont("courier","bold");
-doc.setFontSize(18);
-doc.text("*"+userData.refid+"*",pageWidth/2,140,null,null,"center");
-
-/* Signature */
-doc.addImage(sign,"JPEG",pageWidth-60,155,40,25);
-doc.setFontSize(9);
-doc.text("Authorized Signatory",pageWidth-55,185);
-
-doc.setFont("helvetica","italic");
-doc.setFontSize(9);
-doc.text("This is a system generated receipt.",15,185);
-doc.text("Please retain for future reference.",15,192);
-
-doc.save("SBI_Receipt_"+userData.refid+".pdf");
-}
-
-function loadImage(url){
-return new Promise((resolve,reject)=>{
-const img=new Image();
-img.crossOrigin="anonymous";
-img.onload=()=>{
-const canvas=document.createElement("canvas");
-canvas.width=img.width;
-canvas.height=img.height;
-canvas.getContext("2d").drawImage(img,0,0);
-resolve(canvas.toDataURL("image/png"));
-};
-img.onerror=reject;
-img.src=url;
 });
+
+}
+
+function downloadReceipt(){
+
+window.open(API_URL+"?action=receipt&ref="+refID);
+
 }
 
 </script>
