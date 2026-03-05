@@ -2,6 +2,9 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 let paymentUpdates=[];
 let complaintUpdates=[];
+let paymentData=[];
+
+/* SESSION CHECK */
 
 const token=sessionStorage.getItem("adminToken");
 const expiry=sessionStorage.getItem("adminExpiry");
@@ -16,35 +19,16 @@ sessionStorage.clear();
 location="admin-login.html";
 }
 
-/* ---------- ADMIN SESSION SECURITY ---------- */
-
-const token=sessionStorage.getItem("adminToken");
-const expiry=sessionStorage.getItem("adminExpiry");
-
-if(!token){
-location="admin-login.html";
-}
-
-if(new Date()>new Date(expiry)){
-alert("Session expired");
-sessionStorage.clear();
-location="admin-login.html";
-}
-
-
-/* ---------- LOAD SETTINGS FOR SESSION TIME ---------- */
+/* SESSION TIMER */
 
 let sessionMinutes=30;
 let loginTime=Date.now();
 
 fetch(scriptURL+"?action=getSettings")
 .then(r=>r.json())
-.then(s=>{
-sessionMinutes=parseInt(s.SessionTimeoutMinutes)||30;
+.then(settings=>{
+sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
 });
-
-
-/* ---------- SESSION TIMER ---------- */
 
 function startTimer(){
 
@@ -58,10 +42,14 @@ let s=Math.floor((remaining%60000)/1000);
 
 let timer=document.getElementById("timer");
 
+if(timer){
+
 timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
 
 if(m<5){
 timer.classList.add("blink");
+}
+
 }
 
 if(remaining<=0){
@@ -74,38 +62,17 @@ logout();
 
 startTimer();
 
-
 function logout(){
 sessionStorage.clear();
 location="admin-login.html";
 }
 
 
-/* ---------- ANALYTICS SUMMARY ---------- */
-
-let cache=localStorage.getItem("dashboardCache");
-
-if(cache){
-
-let d=JSON.parse(cache);
-renderSummary(d);
-
-}else{
+/* ANALYTICS SUMMARY */
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
 .then(d=>{
-
-localStorage.setItem("dashboardCache",JSON.stringify(d));
-
-renderSummary(d);
-
-});
-
-}
-
-
-function renderSummary(d){
 
 document.getElementById("totalAmount").innerText="₹"+d.total;
 document.getElementById("verifiedAmount").innerText="₹"+d.verified;
@@ -122,14 +89,16 @@ backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 }]
 },
 options:{
-plugins:{legend:{display:false}}
+plugins:{
+legend:{display:false}
+}
 }
 });
 
-}
+});
 
 
-/* ---------- PAYMENTS ---------- */
+/* PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -162,6 +131,7 @@ html+="</tr>";
 data.forEach((r,i)=>{
 
 let statusClass="statusPending";
+
 if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
@@ -207,7 +177,7 @@ paymentUpdates.push({row:i+2,status});
 }
 
 
-/* ---------- SORT PAYMENTS ---------- */
+/* SORTING */
 
 function sortPayments(){
 
@@ -236,7 +206,7 @@ renderPayments(sorted);
 }
 
 
-/* ---------- SAVE PAYMENTS ---------- */
+/* SAVE PAYMENTS */
 
 function savePayments(){
 
@@ -249,8 +219,6 @@ data.append("admin",sessionStorage.getItem("adminUser"));
 fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
 
-localStorage.removeItem("dashboardCache");
-
 location.reload();
 
 });
@@ -258,7 +226,7 @@ location.reload();
 }
 
 
-/* ---------- COMPLAINTS ---------- */
+/* COMPLAINTS */
 
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
@@ -327,7 +295,7 @@ reply
 }
 
 
-/* ---------- SAVE COMPLAINTS ---------- */
+/* SAVE COMPLAINTS */
 
 function saveComplaints(){
 
