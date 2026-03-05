@@ -343,7 +343,7 @@ data.forEach((r,i)=>{
 html+=`
 <tr>
 
-<td>${formatDateTime(r[0])}</td>
+<td>${formatDate(r[0])} ${formatTime(r[1])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
