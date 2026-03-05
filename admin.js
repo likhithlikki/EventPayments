@@ -1,9 +1,19 @@
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
+/* SECURITY CHECK */
+
+if(!sessionStorage.getItem("adminUser")){
+location="admin-login.html";
+}
+
 let paymentUpdates=[];
 let complaintUpdates=[];
+let paymentData=[];
 
+window.onload=function(){
 document.getElementById("pageLoader").style.display="block";
+}
+
 
 /* SESSION TIMER */
 
@@ -42,11 +52,33 @@ sessionStorage.clear();
 location="admin-login.html";
 }
 
-/* SUMMARY */
+
+/* ANALYTICS CACHE */
+
+let cache=localStorage.getItem("dashboardCache");
+
+if(cache){
+
+let d=JSON.parse(cache);
+
+renderSummary(d);
+
+}else{
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
 .then(d=>{
+
+localStorage.setItem("dashboardCache",JSON.stringify(d));
+
+renderSummary(d);
+
+});
+
+}
+
+
+function renderSummary(d){
 
 document.getElementById("totalAmount").innerText="₹"+d.total;
 document.getElementById("verifiedAmount").innerText="₹"+d.verified;
@@ -63,19 +95,27 @@ backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 }]
 },
 options:{
-plugins:{
-legend:{display:false}
-}
+plugins:{legend:{display:false}}
 }
 });
 
-});
+}
+
 
 /* PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
 .then(data=>{
+
+paymentData=data;
+
+renderPayments(data);
+
+});
+
+
+function renderPayments(data){
 
 let html="<table>";
 
@@ -117,15 +157,15 @@ html+=`
 
 </tr>
 `;
+
 });
 
 html+="</table>";
 
 document.getElementById("paymentTable").innerHTML=html;
 
-});
+}
 
-/* JS status change */
 
 function setPaymentStatus(i,status){
 
@@ -136,7 +176,46 @@ cell.innerText=status;
 cell.className=status==="Verified"?"statusVerified":"statusNotVerified";
 
 paymentUpdates.push({row:i+2,status});
+
 }
+
+
+/* SORTING */
+
+function sortPayments(){
+
+let type=document.getElementById("sortSelect").value;
+
+let sorted=[...paymentData];
+
+if(type==="amount"){
+
+sorted.sort((a,b)=>Number(b[7])-Number(a[7]));
+
+}
+
+if(type==="date"){
+
+sorted.sort((a,b)=>new Date(b[1])-new Date(a[1]));
+
+}
+
+if(type==="village"){
+
+sorted.sort((a,b)=>a[5].localeCompare(b[5]));
+
+}
+
+if(type==="name"){
+
+sorted.sort((a,b)=>a[4].localeCompare(b[4]));
+
+}
+
+renderPayments(sorted);
+
+}
+
 
 /* SAVE PAYMENTS */
 
@@ -152,6 +231,7 @@ fetch(scriptURL,{method:"POST",body:data})
 .then(()=>location.reload());
 
 }
+
 
 /* COMPLAINTS */
 
@@ -208,7 +288,6 @@ document.getElementById("pageLoader").style.display="none";
 
 });
 
-/* JS complaint status change */
 
 function setComplaintStatus(i,status){
 
@@ -221,9 +300,9 @@ row:i+2,
 status,
 reply
 });
+
 }
 
-/* SAVE COMPLAINTS */
 
 function saveComplaints(){
 
