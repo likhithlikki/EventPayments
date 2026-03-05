@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Event Contribution</title>
 
-<link rel="stylesheet" href="style.css">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
 
 </head>
 
@@ -16,7 +17,7 @@
 
 <div class="navbar">
 
-<a href="index.html">Event Contribution</a>
+<a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
 <a href="complaint.html">Complaint</a>
 <a href="admin-login.html">Admin</a>
@@ -24,32 +25,27 @@
 </div>
 
 
+<h1 class="eventHeader" id="eventTitle">Wedding of X & Y</h1>
+
+
 <div class="container">
 
-<h2 id="eventTitle">Event Contribution</h2>
+<h2>Event Contribution</h2>
 
-<!-- FORM -->
 
 <div id="formSection">
 
 <input type="text" id="name" placeholder="Name (letters only)">
-
 <input type="text" id="village" placeholder="Village">
-
 <input type="text" id="phone" placeholder="Phone (10 digits)">
-
 <input type="number" id="amount" placeholder="Amount (Min ₹50)">
 
-<button id="proceedBtn" disabled onclick="goToPayment()">
-Proceed
-</button>
+<button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
 
 </div>
 
 
-<!-- PAYMENT SECTION -->
-
-<div id="paymentSection" style="display:none;">
+<div id="paymentSection">
 
 <h3>Scan & Pay</h3>
 
@@ -64,42 +60,34 @@ Proceed
 </div>
 
 
-<!-- RECEIPT -->
+<div id="message"></div>
 
-<div id="receiptSection" style="display:none;">
-
-<h3>Payment Receipt</h3>
 
 <div id="receiptBox">
 
-<p><b>Reference ID:</b> <span id="rRef"></span></p>
-<p><b>Name:</b> <span id="rName"></span></p>
-<p><b>Village:</b> <span id="rVillage"></span></p>
-<p><b>Phone:</b> <span id="rPhone"></span></p>
-<p><b>Amount:</b> ₹<span id="rAmount"></span></p>
-<p><b>UTR:</b> <span id="rUTR"></span></p>
+<div id="receipt">
 
-<br>
+<img src="sbi_logo.png" width="40">
 
-<img src="sbi-logo.png" width="80">
+<h3>SBI Payment Receipt</h3>
 
-<p style="margin-top:10px;font-size:12px;">
-Digitally Verified Payment
-</p>
+<p id="r_name"></p>
+<p id="r_village"></p>
+<p id="r_phone"></p>
+<p id="r_amount"></p>
+<p id="r_utr"></p>
+<p id="r_ref"></p>
 
-<img src="sign.png" width="120">
+<img src="sign.jpeg" class="signImg">
 
-</div>
+<p class="sign">Digitally Verified</p>
 
 </div>
 
-
-<!-- LOADING / MESSAGE -->
-
-<div id="message"></div>
-
 </div>
 
+
+</div>
 
 <script src="index.js"></script>
 
