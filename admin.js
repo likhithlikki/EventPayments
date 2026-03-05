@@ -202,7 +202,7 @@ let statusClass="statusPending";
 if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
-html+=`
+html+=
 <tr>
 <td>${r[1]}</td>
 <td>${r[2]}</td>
