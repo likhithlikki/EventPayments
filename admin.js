@@ -1,24 +1,38 @@
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-/* SECURITY CHECK */
-
-if(!sessionStorage.getItem("adminUser")){
-location="admin-login.html";
-}
-
 let paymentUpdates=[];
 let complaintUpdates=[];
 let paymentData=[];
 
-window.onload=function(){
-document.getElementById("pageLoader").style.display="block";
+/* ---------- ADMIN SESSION SECURITY ---------- */
+
+const token=sessionStorage.getItem("adminToken");
+const expiry=sessionStorage.getItem("adminExpiry");
+
+if(!token){
+location="admin-login.html";
+}
+
+if(new Date()>new Date(expiry)){
+alert("Session expired");
+sessionStorage.clear();
+location="admin-login.html";
 }
 
 
-/* SESSION TIMER */
+/* ---------- LOAD SETTINGS FOR SESSION TIME ---------- */
 
 let sessionMinutes=30;
 let loginTime=Date.now();
+
+fetch(scriptURL+"?action=getSettings")
+.then(r=>r.json())
+.then(s=>{
+sessionMinutes=parseInt(s.SessionTimeoutMinutes)||30;
+});
+
+
+/* ---------- SESSION TIMER ---------- */
 
 function startTimer(){
 
@@ -43,9 +57,11 @@ logout();
 }
 
 },1000);
+
 }
 
 startTimer();
+
 
 function logout(){
 sessionStorage.clear();
@@ -53,14 +69,13 @@ location="admin-login.html";
 }
 
 
-/* ANALYTICS CACHE */
+/* ---------- ANALYTICS SUMMARY ---------- */
 
 let cache=localStorage.getItem("dashboardCache");
 
 if(cache){
 
 let d=JSON.parse(cache);
-
 renderSummary(d);
 
 }else{
@@ -102,7 +117,7 @@ plugins:{legend:{display:false}}
 }
 
 
-/* PAYMENTS */
+/* ---------- PAYMENTS ---------- */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -180,7 +195,7 @@ paymentUpdates.push({row:i+2,status});
 }
 
 
-/* SORTING */
+/* ---------- SORT PAYMENTS ---------- */
 
 function sortPayments(){
 
@@ -189,27 +204,19 @@ let type=document.getElementById("sortSelect").value;
 let sorted=[...paymentData];
 
 if(type==="amount"){
-
 sorted.sort((a,b)=>Number(b[7])-Number(a[7]));
-
 }
 
 if(type==="date"){
-
 sorted.sort((a,b)=>new Date(b[1])-new Date(a[1]));
-
 }
 
 if(type==="village"){
-
 sorted.sort((a,b)=>a[5].localeCompare(b[5]));
-
 }
 
 if(type==="name"){
-
 sorted.sort((a,b)=>a[4].localeCompare(b[4]));
-
 }
 
 renderPayments(sorted);
@@ -217,23 +224,29 @@ renderPayments(sorted);
 }
 
 
-/* SAVE PAYMENTS */
+/* ---------- SAVE PAYMENTS ---------- */
 
 function savePayments(){
 
-document.getElementById("paymentLoader").style.display="block";
-
 const data=new URLSearchParams();
+
 data.append("action","updatePayments");
 data.append("data",JSON.stringify(paymentUpdates));
+data.append("admin",sessionStorage.getItem("adminUser"));
 
 fetch(scriptURL,{method:"POST",body:data})
-.then(()=>location.reload());
+.then(()=>{
+
+localStorage.removeItem("dashboardCache");
+
+location.reload();
+
+});
 
 }
 
 
-/* COMPLAINTS */
+/* ---------- COMPLAINTS ---------- */
 
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
@@ -284,8 +297,6 @@ html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
-document.getElementById("pageLoader").style.display="none";
-
 });
 
 
@@ -304,14 +315,15 @@ reply
 }
 
 
-function saveComplaints(){
+/* ---------- SAVE COMPLAINTS ---------- */
 
-document.getElementById("complaintLoader").style.display="block";
+function saveComplaints(){
 
 const data=new URLSearchParams();
 
 data.append("action","updateComplaints");
 data.append("data",JSON.stringify(complaintUpdates));
+data.append("admin",sessionStorage.getItem("adminUser"));
 
 fetch(scriptURL,{
 method:"POST",
