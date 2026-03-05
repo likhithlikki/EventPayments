@@ -50,12 +50,7 @@ const bar=document.getElementById("progressFill");
 
 if(bar) bar.style.width="100%";
 
-setTimeout(()=>{
-document.getElementById("message").innerHTML="";
-},800);
-
 }
-
 
 /* -------- SESSION TIMER -------- */
 
