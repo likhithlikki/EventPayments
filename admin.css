@@ -1,3 +1,4 @@
+```css
 body{
 margin:0;
 font-family:Arial;
@@ -11,10 +12,6 @@ color:white;
 background:#065f46;
 padding:15px;
 text-align:center;
-position:sticky;
-top:0;
-width:100%;
-z-index:100;
 }
 
 .navbar a{
@@ -27,29 +24,39 @@ font-weight:bold;
 /* CONTAINER */
 
 .container{
-width:1200px;
-max-width:95%;
-margin:0 auto;
 padding:20px;
+max-width:1200px;
+margin:auto;
 }
 
 /* TITLE */
 
 .dashboardTitle{
-text-align:center;
-font-size:32px;
+font-size:26px;
 font-weight:bold;
-margin-top:10px;
+margin-bottom:15px;
 }
 
 /* TOP ACTIONS */
 
 .topActions{
 display:flex;
-justify-content:flex-end;
-gap:10px;
-margin:15px 0;
-flex-wrap:wrap;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+#timer{
+font-weight:bold;
+}
+
+.blink{
+color:#ef4444;
+animation:blink 1s infinite;
+}
+
+@keyframes blink{
+50%{opacity:0;}
 }
 
 /* BUTTONS */
@@ -62,114 +69,113 @@ cursor:pointer;
 font-weight:bold;
 }
 
+.pdfBtn{
+background:#3b82f6;
+color:white;
+}
+
 .logoutBtn{
 background:#ef4444;
 color:white;
 }
 
-.pdfBtn{
-background:#2563eb;
-color:white;
-}
-
 .saveBtn{
-background:#10b981;
-margin-top:15px;
+background:#22c55e;
 color:white;
-}
-
-/* DASHBOARD */
-
-.dashboard{
-display:flex;
-gap:40px;
-align-items:center;
-margin-bottom:40px;
-flex-wrap:wrap;
+margin-top:10px;
 }
 
 /* SUMMARY BOXES */
 
 .summaryBoxes{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
+display:flex;
+gap:10px;
+margin-bottom:20px;
+flex-wrap:wrap;
 }
 
 .box{
 background:#1e293b;
-padding:20px;
-border-radius:10px;
-width:220px;
+padding:15px;
+border-radius:8px;
+flex:1;
+text-align:center;
 }
 
 .box h4{
 margin:0;
-font-size:14px;
-color:#94a3b8;
+font-size:16px;
 }
 
 .box p{
 font-size:22px;
-margin-top:8px;
+margin-top:5px;
 }
 
 /* CHART */
 
 .chartBox{
-width:240px;
+width:300px;
 }
 
 /* LEGEND */
 
 .legendBox{
-margin-left:10px;
+margin-left:20px;
 }
 
 .legendItem{
 display:flex;
 align-items:center;
-margin-bottom:6px;
+margin-bottom:10px;
 }
 
 .legendColor{
-width:12px;
-height:12px;
-margin-right:6px;
+width:15px;
+height:15px;
+margin-right:10px;
 }
 
-.green{background:#22c55e}
-.blue{background:#3b82f6}
-.red{background:#ef4444}
+.green{
+background:#22c55e;
+}
+
+.blue{
+background:#3b82f6;
+}
+
+.red{
+background:#ef4444;
+}
 
 /* TABLE */
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
 background:#1e293b;
+margin-top:10px;
 }
 
 th,td{
-border:1px solid #334155;
 padding:10px;
+border:1px solid #334155;
 text-align:center;
 }
 
 th{
-background:#111827;
+background:#020617;
 }
 
 /* STATUS COLORS */
 
-.statusPending{
-color:#3b82f6;
+.statusVerified{
+color:#22c55e;
 font-weight:bold;
 }
 
-.statusVerified{
-color:#22c55e;
+.statusPending{
+color:#3b82f6;
 font-weight:bold;
 }
 
@@ -183,102 +189,38 @@ font-weight:bold;
 .btnVerify{
 background:#22c55e;
 color:white;
-font-size:16px;
+margin-right:4px;
 }
 
 .btnReject{
 background:#ef4444;
 color:white;
-font-size:16px;
 }
 
 /* TEXTAREA */
 
 textarea{
 width:100%;
-background:#111827;
+height:60px;
+background:#020617;
 color:white;
-border:none;
+border:1px solid #334155;
 border-radius:4px;
-padding:6px;
-resize:vertical;
-min-height:40px;
 }
 
 /* SORT BAR */
 
 .sortBar{
 margin-bottom:10px;
-display:flex;
-justify-content:flex-end;
 }
 
-.sortBar select{
+select{
 padding:6px;
 border-radius:4px;
-border:none;
-background:#1e293b;
-color:white;
 }
 
-/* PROGRESS BAR LOADER (SAME AS INDEX) */
+/* PROGRESS BAR */
 
-.progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin:10px 0;
-}
-
-.progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
-}
-
-/* SESSION TIMER WARNING */
-
-.blink{
-animation:blinkAnim 1s infinite;
-}
-
-@keyframes blinkAnim{
-50%{opacity:0}
-}
-
-/* MOBILE */
-
-@media(max-width:900px){
-
-.dashboard{
-flex-direction:column;
-align-items:flex-start;
-}
-
-.summaryBoxes{
-grid-template-columns:1fr;
-}
-
-.box{
-width:100%;
-}
-
-}
-
-@media(max-width:600px){
-
-table{
-font-size:12px;
-}
-
-.topActions{
-justify-content:center;
-}
-
-}
 .progressBar{
 width:100%;
 background:#334155;
@@ -295,3 +237,4 @@ width:0%;
 background:#22c55e;
 transition:width 0.6s linear;
 }
+```
