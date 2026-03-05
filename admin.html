@@ -4,7 +4,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Admin Dashboard</title>
 
 <link rel="stylesheet" href="admin.css">
@@ -38,7 +37,7 @@ Admin Dashboard
 
 </div>
 
-<!-- LOADER -->
+<!-- INDEX STYLE LOADING BAR -->
 <div id="message"></div>
 
 <div class="dashboard">
@@ -95,19 +94,29 @@ Admin Dashboard
 
 <h3>Event Payments</h3>
 
+<div class="sortBar">
+
+<select id="sortSelect" onchange="sortPayments()">
+
+<option value="">Sort By</option>
+<option value="amount">Amount</option>
+<option value="date">Date</option>
+<option value="village">Village</option>
+<option value="name">Name</option>
+
+</select>
+
+</div>
+
 <div id="paymentTable"></div>
 
-<button class="saveBtn" onclick="savePayments()">
-Save Payment Changes
-</button>
+<button class="saveBtn" onclick="savePayments()">Save Payment Changes</button>
 
 <h3>Complaints</h3>
 
 <div id="complaintTable"></div>
 
-<button class="saveBtn" onclick="saveComplaints()">
-Save Complaint Changes
-</button>
+<button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
 
 </div>
 
