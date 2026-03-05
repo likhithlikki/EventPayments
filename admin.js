@@ -69,6 +69,31 @@ location="admin-login.html";
 
 
 /* ANALYTICS SUMMARY */
+/* SAVE BUTTON LOADER */
+
+function startSaveLoader(containerId){
+
+const container=document.getElementById(containerId);
+
+container.innerHTML=
+'<div class="progressBar"><div class="progressFill" id="'+containerId+'Fill"></div></div>';
+
+const bar=document.getElementById(containerId+"Fill");
+
+setTimeout(()=>{bar.style.width="50%"},1000);
+setTimeout(()=>{bar.style.width="80%"},3000);
+setTimeout(()=>{bar.style.width="90%"},5000);
+
+}
+
+function completeSaveLoader(containerId){
+
+const bar=document.getElementById(containerId+"Fill");
+
+if(bar) bar.style.width="100%";
+
+}
+
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -207,8 +232,9 @@ renderPayments(sorted);
 
 
 /* SAVE PAYMENTS */
+function savePayments(btn){
 
-function savePayments(){
+startSaveLoader("paymentLoader");
 
 const data=new URLSearchParams();
 
@@ -219,12 +245,15 @@ data.append("admin",sessionStorage.getItem("adminUser"));
 fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
 
+completeSaveLoader("paymentLoader");
+
+setTimeout(()=>{
 location.reload();
+},500);
 
 });
 
 }
-
 
 /* COMPLAINTS */
 
@@ -296,8 +325,9 @@ reply
 
 
 /* SAVE COMPLAINTS */
+function saveComplaints(btn){
 
-function saveComplaints(){
+startSaveLoader("complaintLoader");
 
 const data=new URLSearchParams();
 
@@ -309,6 +339,15 @@ fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>location.reload());
+.then(()=>{
+
+completeSaveLoader("complaintLoader");
+
+setTimeout(()=>{
+location.reload();
+},500);
+
+});
 
 }
+
