@@ -27,7 +27,7 @@ let loginTime=Date.now();
 fetch(scriptURL+"?action=getSettings")
 .then(r=>r.json())
 .then(settings=>{
-sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
+sessionMinutes=parseInt(settings.SessionTimeoutMinutes);
 });
 
 function startTimer(){
@@ -69,11 +69,11 @@ location="admin-login.html";
 
 
 /* ANALYTICS SUMMARY */
-
+startProgressBar();
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
 .then(d=>{
-
+completeProgress();
 document.getElementById("totalAmount").innerText="₹"+d.total;
 document.getElementById("verifiedAmount").innerText="₹"+d.verified;
 document.getElementById("pendingAmount").innerText="₹"+d.pending;
@@ -209,7 +209,7 @@ renderPayments(sorted);
 /* SAVE PAYMENTS */
 
 function savePayments(){
-
+startProgressBar()
 const data=new URLSearchParams();
 
 data.append("action","updatePayments");
@@ -218,7 +218,7 @@ data.append("admin",sessionStorage.getItem("adminUser"));
 
 fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
-
+completeProgress();
 location.reload();
 
 });
@@ -227,11 +227,11 @@ location.reload();
 
 
 /* COMPLAINTS */
-
+startProgressBar();
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
 .then(data=>{
-
+completeProgress();
 let html="<table>";
 
 html+="<tr>";
@@ -304,7 +304,7 @@ const data=new URLSearchParams();
 data.append("action","updateComplaints");
 data.append("data",JSON.stringify(complaintUpdates));
 data.append("admin",sessionStorage.getItem("adminUser"));
-
+startProgressBar();
 fetch(scriptURL,{
 method:"POST",
 body:data
@@ -312,7 +312,7 @@ body:data
 .then(()=>location.reload());
 
 }
-
+completeProgress();
 
 function startProgressBar(){
 
