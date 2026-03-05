@@ -77,10 +77,10 @@ cursor:pointer;
 .progressBar{
 width:100%;
 background:#334155;
-height:6px;
-border-radius:4px;
+height:8px;
+border-radius:6px;
 overflow:hidden;
-margin:10px 0;
+margin:15px 0;
 display:none;
 }
 
@@ -88,7 +88,7 @@ display:none;
 height:100%;
 width:0%;
 background:#22c55e;
-transition:width 0.3s linear;
+transition:width 0.6s linear;
 }
 
 .error{
@@ -145,18 +145,16 @@ p.type=p.type==="password"?"text":"password";
 
 function startProgressBar(){
 
+const progressBar=document.getElementById("progressBar");
 const bar=document.getElementById("progressFill");
-document.getElementById("progressBar").style.display="block";
 
-bar.style.width="10%";
+progressBar.style.display="block";
+bar.style.width="0%";
 
-setTimeout(()=>{
-bar.style.width="70%";
-},200);
-
-setTimeout(()=>{
-bar.style.width="90%";
-},1500);
+setTimeout(()=>{ bar.style.width="25%"; },1000);
+setTimeout(()=>{ bar.style.width="60%"; },3000);
+setTimeout(()=>{ bar.style.width="80%"; },5000);
+setTimeout(()=>{ bar.style.width="90%"; },7000);
 
 }
 
@@ -169,9 +167,8 @@ bar.style.width="100%";
 }
 
 setTimeout(()=>{
-document.getElementById("progressBar").style.display="none";
-bar.style.width="0%";
-},800);
+window.location="admin.html";
+},500);
 
 }
 
@@ -199,8 +196,6 @@ body:data
 
 .then(res=>{
 
-completeProgress();
-
 if(res.success){
 
 sessionStorage.setItem("adminUser",username);
@@ -208,7 +203,7 @@ sessionStorage.setItem("adminRole",res.role);
 sessionStorage.setItem("adminToken",res.token);
 sessionStorage.setItem("adminExpiry",res.expiry);
 
-window.location="admin.html";
+completeProgress();
 
 }else{
 
@@ -219,8 +214,6 @@ document.getElementById("msg").innerHTML="<p class='error'>Invalid username or p
 })
 
 .catch(()=>{
-
-completeProgress();
 
 document.getElementById("msg").innerHTML="<p class='error'>Server error</p>";
 
