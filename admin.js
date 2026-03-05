@@ -324,16 +324,29 @@ document.getElementById("complaintTable").innerHTML=html;
 
 });
 
-function setComplaintStatus(i,status){
+function saveComplaints(){
 
-document.getElementById("compStatus"+i).innerText=status;
+startProgressBar();
 
-const reply=document.getElementById("reply"+i).value;
+const data=new URLSearchParams();
 
-complaintUpdates.push({
-row:i+2,
-status,
-reply
+data.append("action","updateComplaints");
+data.append("data",JSON.stringify(complaintUpdates));
+data.append("admin",sessionStorage.getItem("adminUser"));
+
+fetch(scriptURL,{
+method:"POST",
+body:data
+})
+.then(r=>r.json())
+.then(()=>{
+
+completeProgress();
+
+setTimeout(()=>{
+location.reload();
+},1500);
+
 });
 
 }
