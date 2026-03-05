@@ -1,5 +1,3 @@
-document.addEventListener("DOMContentLoaded",function(){
-
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let userData={};
@@ -17,10 +15,11 @@ fetch(scriptURL+"?action=getSettings")
 upiID=data.UPI_ID;
 
 if(data.EventName){
-document.getElementById("weddingTitle").innerText=data.EventName;
+document.getElementById("eventTitle").innerText=data.EventName;
 }
 
 });
+
 
 /* VALIDATION */
 
@@ -61,15 +60,17 @@ validateForm();
 
 amountInput.addEventListener("input",validateForm);
 
-/* GENERATE REFID */
+
+/* REF ID */
 
 function generateRefID(){
 return "REF"+Date.now();
 }
 
-/* PAYMENT PAGE */
 
-window.goToPayment=function(){
+/* PAYMENT */
+
+function goToPayment(){
 
 userData={
 refid:generateRefID(),
@@ -90,49 +91,24 @@ new QRCode(document.getElementById("qrcode"),upiLink);
 
 }
 
+
 /* OPEN UPI */
 
-window.openUPI=function(){
+function openUPI(){
 window.location.href=upiLink;
 }
 
-/* PROGRESS BAR */
-
-function startProgressBar(){
-
-const msg=document.getElementById("message");
-
-msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-
-const bar=document.getElementById("progressFill");
-
-setTimeout(()=>{bar.style.width="80%"},100);
-setTimeout(()=>{bar.style.width="95%"},3000);
-
-}
-
-function completeProgress(){
-
-const bar=document.getElementById("progressFill");
-
-if(bar) bar.style.width="100%";
-
-}
 
 /* FINISH PAYMENT */
 
-window.finishPayment=function(){
+function finishPayment(){
 
 const utr=document.getElementById("utr").value.trim();
-
-const msg=document.getElementById("message");
 
 if(!utr){
 alert("Enter UTR Number");
 return;
 }
-
-startProgressBar();
 
 const data=new URLSearchParams();
 
@@ -150,107 +126,53 @@ fetch(scriptURL,{method:"POST",body:data})
 
 .then(res=>{
 
-completeProgress();
-
-if(res==="DuplicateRef"){
-
-msg.innerHTML="<span class='error'>Duplicate Reference ID</span>";
-
-}
-else if(res==="DuplicatePhone"){
-
-msg.innerHTML="<span class='error'>Phone already used</span>";
-
-}
-else if(res==="Inserted"){
-
-msg.innerHTML="<span class='success'>Payment submitted successfully</span>";
+if(res==="Inserted"){
 
 showReceipt(utr);
 
 }
+
 else{
-
-msg.innerHTML="<span class='error'>Server error</span>";
-
+alert(res);
 }
-
-})
-
-.catch(()=>{
-
-msg.innerHTML="<span class='error'>Server connection error</span>";
 
 });
 
 }
 
-/* SHOW RECEIPT */
+
+/* RECEIPT */
 
 function showReceipt(utr){
 
-document.getElementById("paymentSection").style.display="none";
-document.getElementById("receiptSection").style.display="block";
+document.getElementById("receiptBox").style.display="block";
 
-document.getElementById("receiptContent").innerHTML=`
-<h3>Payment Receipt</h3>
-<p><b>Name:</b> ${userData.name}</p>
-<p><b>Village:</b> ${userData.village}</p>
-<p><b>Phone:</b> ${userData.phone}</p>
-<p><b>Amount:</b> ₹${userData.amount}</p>
-<p><b>Reference ID:</b> ${userData.refid}</p>
-<p><b>UTR:</b> ${utr}</p>
-<p><b>Status:</b> Pending Verification</p>
-`;
+document.getElementById("r_name").innerText="Name: "+userData.name;
+document.getElementById("r_village").innerText="Village: "+userData.village;
+document.getElementById("r_phone").innerText="Phone: "+userData.phone;
+document.getElementById("r_amount").innerText="Amount: ₹"+userData.amount;
+document.getElementById("r_utr").innerText="UTR: "+utr;
+document.getElementById("r_ref").innerText="RefID: "+userData.refid;
+
+downloadReceipt();
 
 }
 
-/* DOWNLOAD RECEIPT */
 
-window.downloadReceipt=function(){
+/* DOWNLOAD */
 
-startProgressBar();
+function downloadReceipt(){
 
-setTimeout(()=>{
+html2canvas(document.getElementById("receipt")).then(canvas=>{
 
-const { jsPDF } = window.jspdf;
+let link=document.createElement("a");
 
-const doc=new jsPDF({unit:"mm",format:[80,120]});
+link.download="receipt.png";
 
-let y=10;
+link.href=canvas.toDataURL();
 
-doc.addImage("sbi-logo.png","PNG",30,3,20,10);
-
-y+=18;
-
-doc.text(document.getElementById("weddingTitle").innerText,40,y,{align:"center"});
-
-y+=8;
-
-doc.text("Payment Receipt",40,y,{align:"center"});
-
-y+=10;
-
-doc.text("Name: "+userData.name,5,y); y+=6;
-doc.text("Village: "+userData.village,5,y); y+=6;
-doc.text("Phone: "+userData.phone,5,y); y+=6;
-doc.text("Amount: ₹"+userData.amount,5,y); y+=6;
-doc.text("RefID: "+userData.refid,5,y); y+=6;
-
-const utr=document.getElementById("utr").value;
-
-doc.text("UTR: "+utr,5,y);
-
-y+=10;
-
-doc.addImage("sign.jpeg","JPEG",45,y,25,10);
-
-doc.save("payment_receipt.pdf");
-
-completeProgress();
-
-},700);
-
-}
+link.click();
 
 });
+
+}
