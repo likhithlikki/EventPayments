@@ -1,20 +1,52 @@
 
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
-let paymentUpdates=[];
-let complaintUpdates=[];
-let paymentData=[];
 
-/* ================= LOADING BAR ================= */
+/* =========================
+TIMER
+========================= */
 
-function startProgressBar(){
+function startTimer(){
 
-const progressBar=document.getElementById("progressBar");
-const bar=document.getElementById("progressFill");
+const timer=document.getElementById("timer");
 
-if(!progressBar || !bar) return;
+setInterval(()=>{
 
-progressBar.style.display="block";
+const now=new Date();
+
+timer.innerHTML=now.toLocaleString();
+
+},1000);
+
+}
+
+startTimer();
+
+
+
+/* =========================
+LOGOUT
+========================= */
+
+function logout(){
+
+sessionStorage.clear();
+window.location="admin-login.html";
+
+}
+
+
+
+/* =========================
+PAYMENT PROGRESS BAR
+========================= */
+
+function startPaymentProgress(){
+
+const box=document.getElementById("paymentProgress");
+const bar=document.getElementById("paymentFill");
+
+box.style.display="block";
 bar.style.width="0%";
 
 setTimeout(()=>{bar.style.width="25%"},1000);
@@ -24,184 +56,152 @@ setTimeout(()=>{bar.style.width="90%"},7000);
 
 }
 
-function completeProgress(){
+function completePaymentProgress(){
 
-const progressBar=document.getElementById("progressBar");
-const bar=document.getElementById("progressFill");
+const bar=document.getElementById("paymentFill");
 
-if(bar) bar.style.width="100%";
+bar.style.width="100%";
 
 setTimeout(()=>{
-if(progressBar) progressBar.style.display="none";
-if(bar) bar.style.width="0%";
-},600);
+
+document.getElementById("paymentProgress").style.display="none";
+bar.style.width="0%";
+
+},800);
 
 }
 
-/* ================= FETCH WITH LOADER ================= */
 
-async function fetchWithLoader(url,options={}){
 
-startProgressBar();
+/* =========================
+COMPLAINT PROGRESS BAR
+========================= */
 
-try{
+function startComplaintProgress(){
 
-const response=await fetch(url,options);
+const box=document.getElementById("complaintProgress");
+const bar=document.getElementById("complaintFill");
 
-completeProgress();
+box.style.display="block";
+bar.style.width="0%";
 
-return response;
-
-}catch(err){
-
-completeProgress();
-throw err;
-
-}
+setTimeout(()=>{bar.style.width="25%"},1000);
+setTimeout(()=>{bar.style.width="60%"},3000);
+setTimeout(()=>{bar.style.width="80%"},5000);
+setTimeout(()=>{bar.style.width="90%"},7000);
 
 }
 
-/* ================= SESSION CHECK ================= */
+function completeComplaintProgress(){
 
-const token=sessionStorage.getItem("adminToken");
-const expiry=sessionStorage.getItem("adminExpiry");
+const bar=document.getElementById("complaintFill");
 
-if(!token){
-location="admin-login.html";
-}
+bar.style.width="100%";
 
-if(expiry && new Date()>new Date(expiry)){
-alert("Session expired");
-sessionStorage.clear();
-location="admin-login.html";
-}
+setTimeout(()=>{
 
-/* ================= SESSION TIMER ================= */
+document.getElementById("complaintProgress").style.display="none";
+bar.style.width="0%";
 
-let sessionMinutes=30;
-let loginTime=Date.now();
-
-fetchWithLoader(scriptURL+"?action=getSettings")
-.then(r=>r.json())
-.then(settings=>{
-sessionMinutes=parseInt(settings.SessionTimeoutMinutes);
-});
-
-function startTimer(){
-
-setInterval(()=>{
-
-let now=Date.now();
-let remaining=sessionMinutes*60000-(now-loginTime);
-
-let m=Math.floor(remaining/60000);
-let s=Math.floor((remaining%60000)/1000);
-
-let timer=document.getElementById("timer");
-
-if(timer){
-
-timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
-
-if(m<5){
-timer.classList.add("blink");
-}
+},800);
 
 }
 
-if(remaining<=0){
-logout();
-}
 
-},1000);
 
-}
+/* =========================
+LOAD DATA
+========================= */
 
-startTimer();
+function loadData(){
 
-function logout(){
-sessionStorage.clear();
-location="admin-login.html";
-}
+const data=new URLSearchParams();
 
-/* ================= PAYMENT SUMMARY ================= */
+data.append("action","getAdminData");
 
-fetchWithLoader(scriptURL+"?action=getPaymentSummary")
-.then(r=>r.json())
-.then(d=>{
+fetch(scriptURL,{
+method:"POST",
+body:data
+})
 
-document.getElementById("totalAmount").innerText="₹"+d.total;
-document.getElementById("verifiedAmount").innerText="₹"+d.verified;
-document.getElementById("pendingAmount").innerText="₹"+d.pending;
-document.getElementById("notVerifiedAmount").innerText="₹"+d.notverified;
+.then(res=>res.json())
 
-new Chart(document.getElementById("pieChart"),{
-type:"pie",
-data:{
-labels:["Verified","Pending","Not Verified"],
-datasets:[{
-data:[d.verified,d.pending,d.notverified],
-backgroundColor:["#22c55e","#3b82f6","#ef4444"]
-}]
-},
-options:{
-plugins:{legend:{display:false}}
-}
-});
+.then(res=>{
+
+renderPayments(res.payments);
+renderComplaints(res.complaints);
+updateSummary(res.payments);
 
 });
 
-/* ================= PAYMENTS ================= */
+}
 
-fetchWithLoader(scriptURL+"?action=getAllPayments")
-.then(r=>r.json())
-.then(data=>{
-paymentData=data;
-renderPayments(data);
+loadData();
+
+
+
+/* =========================
+SUMMARY CALCULATION
+========================= */
+
+function updateSummary(payments){
+
+let total=0;
+let verified=0;
+let pending=0;
+let notVerified=0;
+
+payments.forEach(p=>{
+
+const amt=parseFloat(p.amount)||0;
+
+total+=amt;
+
+if(p.status==="Verified") verified+=amt;
+else if(p.status==="Pending") pending+=amt;
+else notVerified+=amt;
+
 });
 
-function renderPayments(data){
+document.getElementById("totalAmount").innerText="₹"+total;
+document.getElementById("verifiedAmount").innerText="₹"+verified;
+document.getElementById("pendingAmount").innerText="₹"+pending;
+document.getElementById("notVerifiedAmount").innerText="₹"+notVerified;
+
+}
+
+
+
+/* =========================
+RENDER PAYMENT TABLE
+========================= */
+
+function renderPayments(payments){
 
 let html="<table>";
 
-html+=`
-<tr>
-<th>Date</th>
-<th>Time</th>
-<th>RefID</th>
-<th>Name</th>
-<th>Village</th>
-<th>Phone</th>
-<th>Amount</th>
-<th>UTR</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-`;
+html+="<tr><th>Name</th><th>Village</th><th>Amount</th><th>Status</th></tr>";
 
-data.forEach((r,i)=>{
-
-let statusClass="statusPending";
-
-if(r[9]=="Verified") statusClass="statusVerified";
-if(r[9]=="Not Verified") statusClass="statusNotVerified";
+payments.forEach((p,i)=>{
 
 html+=`
 <tr>
-<td>${r[1]}</td>
-<td>${r[2]}</td>
-<td>${r[3]}</td>
-<td>${r[4]}</td>
-<td>${r[5]}</td>
-<td>${r[6]}</td>
-<td>${r[7]}</td>
-<td>${r[8]}</td>
-<td id="payStatus${i}" class="${statusClass}">${r[9]}</td>
+<td>${p.name}</td>
+<td>${p.village}</td>
+<td>${p.amount}</td>
 
 <td>
-<button class="btnVerify" onclick="setPaymentStatus(${i},'Verified')">✓</button>
-<button class="btnReject" onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
+
+<select data-index="${i}" class="paymentStatus">
+
+<option ${p.status==="Verified"?"selected":""}>Verified</option>
+<option ${p.status==="Pending"?"selected":""}>Pending</option>
+<option ${p.status==="Not Verified"?"selected":""}>Not Verified</option>
+
+</select>
+
 </td>
+
 </tr>
 `;
 
@@ -213,106 +213,38 @@ document.getElementById("paymentTable").innerHTML=html;
 
 }
 
-function setPaymentStatus(i,status){
 
-let cell=document.getElementById("payStatus"+i);
 
-cell.innerText=status;
+/* =========================
+RENDER COMPLAINT TABLE
+========================= */
 
-cell.className=status==="Verified"?"statusVerified":"statusNotVerified";
-
-paymentUpdates.push({row:i+2,status});
-
-}
-
-/* ================= SORTING ================= */
-
-function sortPayments(){
-
-let type=document.getElementById("sortSelect").value;
-
-let sorted=[...paymentData];
-
-if(type==="amount"){
-sorted.sort((a,b)=>Number(b[7])-Number(a[7]));
-}
-
-if(type==="date"){
-sorted.sort((a,b)=>new Date(b[1])-new Date(a[1]));
-}
-
-if(type==="village"){
-sorted.sort((a,b)=>a[5].localeCompare(b[5]));
-}
-
-if(type==="name"){
-sorted.sort((a,b)=>a[4].localeCompare(b[4]));
-}
-
-renderPayments(sorted);
-
-}
-
-/* ================= SAVE PAYMENTS ================= */
-
-function savePayments(){
-
-const data=new URLSearchParams();
-
-data.append("action","updatePayments");
-data.append("data",JSON.stringify(paymentUpdates));
-data.append("admin",sessionStorage.getItem("adminUser"));
-
-fetchWithLoader(scriptURL,{
-method:"POST",
-body:data
-})
-.then(()=>location.reload());
-
-}
-
-/* ================= COMPLAINTS ================= */
-
-fetchWithLoader(scriptURL+"?action=getAllComplaints")
-.then(r=>r.json())
-.then(data=>{
+function renderComplaints(complaints){
 
 let html="<table>";
 
-html+=`
-<tr>
-<th>Date</th>
-<th>Name</th>
-<th>Phone</th>
-<th>Complaint</th>
-<th>Status</th>
-<th>Reply</th>
-<th>WhatsApp</th>
-<th>Action</th>
-</tr>
-`;
+html+="<tr><th>Name</th><th>Complaint</th><th>Status</th></tr>";
 
-data.forEach((r,i)=>{
+complaints.forEach((c,i)=>{
 
 html+=`
 <tr>
-<td>${r[0]}</td>
-<td>${r[2]}</td>
-<td>${r[4]}</td>
-<td>${r[6]}</td>
 
-<td id="compStatus${i}">${r[7]}</td>
+<td>${c.name}</td>
+
+<td>${c.text}</td>
 
 <td>
-<textarea id="reply${i}">${r[8]||""}</textarea>
+
+<select data-index="${i}" class="complaintStatus">
+
+<option ${c.status==="Open"?"selected":""}>Open</option>
+<option ${c.status==="Resolved"?"selected":""}>Resolved</option>
+
+</select>
+
 </td>
 
-<td>${r[10]||"Pending"}</td>
-
-<td>
-<button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
-<button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
-</td>
 </tr>
 `;
 
@@ -322,50 +254,110 @@ html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
+}
+
+
+
+/* =========================
+SAVE PAYMENT CHANGES
+========================= */
+
+function savePayments(){
+
+startPaymentProgress();
+
+const statuses=document.querySelectorAll(".paymentStatus");
+
+let updates=[];
+
+statuses.forEach((s,i)=>{
+
+updates.push({
+
+index:i,
+status:s.value
+
 });
 
-function saveComplaints(){
-
-startProgressBar();
+});
 
 const data=new URLSearchParams();
 
-data.append("action","updateComplaints");
-data.append("data",JSON.stringify(complaintUpdates));
-data.append("admin",sessionStorage.getItem("adminUser"));
+data.append("action","savePayments");
+data.append("updates",JSON.stringify(updates));
 
 fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(r=>r.json())
-.then(()=>{
 
-completeProgress();
+.then(res=>res.json())
 
-setTimeout(()=>{
-location.reload();
-},1500);
+.then(res=>{
+
+completePaymentProgress();
+
+document.getElementById("message").innerHTML="Payments updated successfully";
 
 });
 
 }
 
-/* ================= SAVE COMPLAINTS ================= */
+
+
+/* =========================
+SAVE COMPLAINT CHANGES
+========================= */
 
 function saveComplaints(){
 
+startComplaintProgress();
+
+const statuses=document.querySelectorAll(".complaintStatus");
+
+let updates=[];
+
+statuses.forEach((s,i)=>{
+
+updates.push({
+
+index:i,
+status:s.value
+
+});
+
+});
+
 const data=new URLSearchParams();
 
-data.append("action","updateComplaints");
-data.append("data",JSON.stringify(complaintUpdates));
-data.append("admin",sessionStorage.getItem("adminUser"));
+data.append("action","saveComplaints");
+data.append("updates",JSON.stringify(updates));
 
-fetchWithLoader(scriptURL,{
+fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>location.reload());
+
+.then(res=>res.json())
+
+.then(res=>{
+
+completeComplaintProgress();
+
+document.getElementById("message").innerHTML="Complaints updated successfully";
+
+});
 
 }
 
+
+
+/* =========================
+SORT PAYMENTS
+========================= */
+
+function sortPayments(){
+
+loadData();
+
+}
