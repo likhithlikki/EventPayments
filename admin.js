@@ -3,19 +3,17 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 let paymentUpdates=[];
 let complaintUpdates=[];
 
-/* -------- FORMAT DATE -------- */
+/* -------- DATE FORMAT -------- */
 
 function formatDate(dateStr){
 
 const d=new Date(dateStr);
 
-const date=d.toLocaleDateString("en-IN",{
+return d.toLocaleDateString("en-IN",{
 day:"2-digit",
 month:"short",
 year:"numeric"
 });
-
-return date;
 
 }
 
@@ -50,6 +48,10 @@ const bar=document.getElementById("progressFill");
 
 if(bar) bar.style.width="100%";
 
+setTimeout(()=>{
+document.getElementById("message").innerHTML="";
+},500);
+
 }
 
 /* -------- SESSION TIMER -------- */
@@ -82,10 +84,11 @@ location="admin-login.html";
 
 startTimer();
 
-
-/* -------- SUMMARY -------- */
+/* -------- PAGE LOAD -------- */
 
 startLoader();
+
+/* -------- SUMMARY -------- */
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -104,18 +107,10 @@ datasets:[{
 data:[d.verified,d.pending,d.notverified],
 backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 }]
-},
-options:{
-plugins:{
-legend:{display:false}
-}
 }
 });
 
-stopLoader();
-
 });
-
 
 /* -------- PAYMENTS -------- */
 
@@ -144,7 +139,6 @@ let date=formatDate(r[1]);
 let time=formatTime(r[2]);
 
 let statusClass="statusPending";
-
 if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
@@ -175,8 +169,7 @@ document.getElementById("paymentTable").innerHTML=html;
 
 });
 
-
-/* -------- STATUS CHANGE -------- */
+/* -------- PAYMENT STATUS -------- */
 
 function setPaymentStatus(i,status){
 
@@ -190,7 +183,6 @@ paymentUpdates.push({row:i+2,status});
 
 }
 
-
 /* -------- SAVE PAYMENTS -------- */
 
 function savePayments(){
@@ -202,19 +194,13 @@ const data=new URLSearchParams();
 data.append("action","updatePayments");
 data.append("data",JSON.stringify(paymentUpdates));
 
-fetch(scriptURL,{
-method:"POST",
-body:data
-})
+fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
-
 stopLoader();
 location.reload();
-
 });
 
 }
-
 
 /* -------- COMPLAINTS -------- */
 
@@ -241,7 +227,6 @@ let date=formatDate(r[0]);
 
 html+=`
 <tr>
-
 <td>${date}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
@@ -269,8 +254,9 @@ html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
-});
+stopLoader();
 
+});
 
 /* -------- COMPLAINT STATUS -------- */
 
@@ -288,7 +274,6 @@ reply
 
 }
 
-
 /* -------- SAVE COMPLAINTS -------- */
 
 function saveComplaints(){
@@ -305,10 +290,8 @@ method:"POST",
 body:data
 })
 .then(()=>{
-
 stopLoader();
 location.reload();
-
 });
 
 }
