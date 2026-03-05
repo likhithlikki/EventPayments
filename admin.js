@@ -2,7 +2,19 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 let paymentUpdates=[];
 let complaintUpdates=[];
-let paymentData=[];
+
+const token=sessionStorage.getItem("adminToken");
+const expiry=sessionStorage.getItem("adminExpiry");
+
+if(!token){
+location="admin-login.html";
+}
+
+if(expiry && new Date()>new Date(expiry)){
+alert("Session expired");
+sessionStorage.clear();
+location="admin-login.html";
+}
 
 /* ---------- ADMIN SESSION SECURITY ---------- */
 
