@@ -7,133 +7,112 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-
 body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
 }
 
 .navbar{
-background:#1e40af;
-padding:15px;
-text-align:center;
+  background:#1e40af;
+  padding:15px;
+  text-align:center;
 }
 
 .navbar a{
-color:white;
-margin:0 15px;
-text-decoration:none;
-font-weight:bold;
+  color:white;
+  margin:0 15px;
+  text-decoration:none;
+  font-weight:bold;
 }
 
 .container{
-max-width:420px;
-margin:40px auto;
-background:#1e293b;
-padding:20px;
-border-radius:10px;
+  max-width:420px;
+  margin:40px auto;
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
 }
 
 input{
-width:100%;
-padding:10px;
-margin:8px 0;
-border-radius:6px;
-border:none;
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
 }
 
 .invalid{
-border:2px solid red;
+  border:2px solid red;
 }
 
 button{
-width:100%;
-padding:12px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer;
+  width:100%;
+  padding:12px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 button:disabled{
-background:gray;
-cursor:not-allowed;
+  background:gray;
+  cursor:not-allowed;
 }
 
 #paymentSection{display:none;}
 
 .progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin:10px 0;
+  width:100%;
+  background:#334155;
+  height:6px;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
 .progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:width 0.3s linear;
 }
 
 .success{color:lightgreen;}
 .error{color:#ef4444;}
-
 </style>
 </head>
 
 <body>
 
 <div class="navbar">
-
-<a href="index.html">Home</a>
-<a href="status.html">Verify Status</a>
-<a href="complaint.html">Complaint</a>
-<a href="admin-login.html">Admin</a>
-
+  <a href="index.html">Home</a>
+  <a href="status.html">Verify Status</a>
+  <a href="complaint.html">Complaint</a>
+  <a href="admin.html">Admin</a>
 </div>
 
-<div id="eventTitle" style="
-text-align:center;
-font-size:28px;
-font-weight:bold;
-margin-top:15px;
-"></div>
-  
-  
 <div class="container">
 
-<h2 id="eventTitle">Event Contribution</h2>
+<h2>Event Contribution</h2>
 
 <div id="formSection">
-
 <input type="text" id="name" placeholder="Name (letters only)">
 <input type="text" id="village" placeholder="Village">
 <input type="text" id="phone" placeholder="Phone (10 digits)">
 <input type="number" id="amount" placeholder="Amount (Min ₹50)">
-
 <button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
-
 </div>
 
 <div id="paymentSection">
-
 <h3>Scan & Pay</h3>
-
 <div id="qrcode"></div>
-
 <button onclick="openUPI()">Open UPI App</button>
-
 <input type="text" id="utr" placeholder="Enter UTR Number">
-
 <button onclick="finishPayment()">Finish Payment</button>
-
 </div>
 
 <div id="message"></div>
@@ -142,29 +121,10 @@ margin-top:15px;
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="PASTE_YOUR_EXEC_URL_HERE";
 
 let userData={};
 let upiLink="";
-let upiID="";
-
-/* -------- LOAD SETTINGS -------- */
-
-fetch(scriptURL+"?action=getSettings")
-
-.then(res=>res.json())
-
-.then(data=>{
-
-upiID=data.UPI_ID;
-
-if(data.EventName){
-document.getElementById("eventTitle").innerText=data.EventName;
-}
-
-});
-
-/* -------- VALIDATION -------- */
 
 const nameInput=document.getElementById("name");
 const phoneInput=document.getElementById("phone");
@@ -176,97 +136,75 @@ function validateForm(){
 let valid=true;
 
 if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
-nameInput.classList.add("invalid");
-valid=false;
+  nameInput.classList.add("invalid"); valid=false;
 }else nameInput.classList.remove("invalid");
 
 if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
-phoneInput.classList.add("invalid");
-valid=false;
+  phoneInput.classList.add("invalid"); valid=false;
 }else phoneInput.classList.remove("invalid");
 
-if(Number(amountInput.value)<50){
-amountInput.classList.add("invalid");
-valid=false;
+if(Number(amountInput.value) < 50){
+  amountInput.classList.add("invalid"); valid=false;
 }else amountInput.classList.remove("invalid");
 
 proceedBtn.disabled=!valid;
-
 }
 
 nameInput.addEventListener("input",validateForm);
 
 phoneInput.addEventListener("input",function(){
-this.value=this.value.replace(/\D/g,"").slice(0,10);
-validateForm();
+  this.value=this.value.replace(/\D/g,"").slice(0,10);
+  validateForm();
 });
 
 amountInput.addEventListener("input",validateForm);
 
-/* -------- GENERATE REFID -------- */
-
 function generateRefID(){
-return "REF"+Date.now();
+  return "REF"+Date.now();
 }
-
-/* -------- PAYMENT PAGE -------- */
 
 function goToPayment(){
 
 userData={
-refid:generateRefID(),
-name:nameInput.value.trim(),
-village:document.getElementById("village").value.trim(),
-phone:phoneInput.value.trim(),
-amount:amountInput.value.trim()
+  refid:generateRefID(),
+  name:nameInput.value.trim(),
+  village:document.getElementById("village").value.trim(),
+  phone:phoneInput.value.trim(),
+  amount:amountInput.value.trim()
 };
 
+const upiID="9014844036@superyes";
 upiLink=`upi://pay?pa=${upiID}&pn=Event&am=${userData.amount}&cu=INR&tn=${userData.refid}`;
 
 document.getElementById("formSection").style.display="none";
 document.getElementById("paymentSection").style.display="block";
 
 document.getElementById("qrcode").innerHTML="";
-
-new QRCode(document.getElementById("qrcode"),upiLink);
-
+new QRCode(document.getElementById("qrcode"), upiLink);
 }
-
-/* -------- OPEN UPI -------- */
 
 function openUPI(){
 window.location.href=upiLink;
 }
 
-/* -------- PROGRESS BAR -------- */
-
 function startProgressBar(){
-
 const msg=document.getElementById("message");
-
 msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-
 const bar=document.getElementById("progressFill");
 
-setTimeout(()=>{bar.style.width="80%"},100);
-setTimeout(()=>{bar.style.width="95%"},3000);
-
+setTimeout(()=>{bar.style.width="80%";},100);
+setTimeout(()=>{bar.style.width="90%";},3000);
+setTimeout(()=>{bar.style.width="99%";},5000);
 }
 
 function completeProgress(){
-
 const bar=document.getElementById("progressFill");
-
 if(bar) bar.style.width="100%";
-
 }
-
-/* -------- FINISH PAYMENT -------- */
 
 function finishPayment(){
 
 const utr=document.getElementById("utr").value.trim();
-
 const msg=document.getElementById("message");
 
 if(!utr){
@@ -277,7 +215,6 @@ return;
 startProgressBar();
 
 const data=new URLSearchParams();
-
 data.append("action","insertPayment");
 data.append("refid",userData.refid);
 data.append("name",userData.name);
@@ -287,45 +224,20 @@ data.append("amount",userData.amount);
 data.append("utr",utr);
 
 fetch(scriptURL,{method:"POST",body:data})
-
 .then(res=>res.text())
-
 .then(res=>{
-
 completeProgress();
 
-if(res==="DuplicateRef"){
-
-msg.innerHTML="<span class='error'>Duplicate Reference ID</span>";
-
+if(res==="Duplicate"){
+msg.innerHTML="<span class='error'>Duplicate Submission</span>";
+}else{
+msg.innerHTML="<span class='success'>Payment Submitted Successfully</span>";
 }
-else if(res==="DuplicatePhone"){
-
-msg.innerHTML="<span class='error'>Phone already used</span>";
-
-}
-else if(res==="Inserted"){
-
-msg.innerHTML="<span class='success'>Payment submitted successfully</span>";
-
-}
-else{
-
-msg.innerHTML="<span class='error'>Server error</span>";
-
-}
-
 })
-
-.catch(()=>{
-
-msg.innerHTML="<span class='error'>Server connection error</span>";
-
-});
-
+.catch(()=>msg.innerHTML="<span class='error'>Server Error</span>");
 }
 
 </script>
-<script src="event_title.js"></script>
+
 </body>
 </html>
