@@ -97,6 +97,21 @@ margin:auto;
 color:red;
 margin-top:10px;
 }
+  .progressBar{
+width:100%;
+background:#334155;
+height:6px;
+border-radius:4px;
+overflow:hidden;
+margin:10px 0;
+}
+
+.progressFill{
+height:100%;
+width:0%;
+background:#22c55e;
+transition:width 0.3s linear;
+}
 
 </style>
 
@@ -129,9 +144,8 @@ margin-top:10px;
 
 <button onclick="login()">Login</button>
 
-<div class="loading" id="loading">
-<div class="spinner"></div>
-</div>
+<div id="message"></div>
+
 
 <div id="msg"></div>
 
