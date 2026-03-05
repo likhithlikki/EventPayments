@@ -6,7 +6,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<!-- PDF LIBRARY ADDED -->
+<!-- PDF LIBRARY -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -129,7 +129,7 @@ margin-top:15px;
 <button onclick="finishPayment()">Finish Payment</button>
 </div>
 
-<!-- RECEIPT SECTION ADDED -->
+<!-- RECEIPT SECTION -->
 <div id="receiptSection">
 
 <div class="receiptBox" id="receiptContent"></div>
@@ -142,7 +142,6 @@ margin-top:15px;
 
 </div>
 
-<!-- EVENT TITLE SCRIPT -->
 <script src="event_title.js"></script>
 
 <script>
@@ -267,8 +266,6 @@ showReceipt(utr);
 .catch(()=>msg.innerHTML="<span class='error'>Server Error</span>");
 }
 
-/* SHOW RECEIPT */
-
 function showReceipt(utr){
 
 document.getElementById("paymentSection").style.display="none";
@@ -290,8 +287,6 @@ document.getElementById("receiptContent").innerHTML=receipt;
 
 }
 
-/* PDF RECEIPT DOWNLOAD */
-
 function downloadReceipt(){
 
 const { jsPDF } = window.jspdf;
@@ -304,7 +299,6 @@ format:[80,120]
 
 let y=10;
 
-/* SBI LOGO */
 doc.addImage("sbi-logo.png","PNG",30,3,20,10);
 
 y+=18;
@@ -330,11 +324,11 @@ doc.text("Reference: "+userData.refid,5,y); y+=6;
 const utr=document.getElementById("utr").value;
 
 doc.text("UTR: "+utr,5,y); y+=6;
+
 doc.text("Status: Pending Verification",5,y);
 
 y+=10;
 
-/* DIGITAL SIGNATURE */
 doc.addImage("sign.jpeg","JPEG",45,y,25,10);
 
 y+=10;
