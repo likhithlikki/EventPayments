@@ -48,29 +48,25 @@ function formatDateTime(dateStr){
 
 if(!dateStr) return "";
 
-const datePart = dateStr.split("T")[0];
-const timePart = dateStr.split("T")[1].split(".")[0];
+const date = new Date(dateStr);
 
-const d = datePart.split("-");
 const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const day=d[2];
-const month=months[parseInt(d[1])-1];
-const year=d[0];
+const day = String(date.getDate()).padStart(2,"0");
+const month = months[date.getMonth()];
+const year = date.getFullYear();
 
-let [hours,minutes] = timePart.split(":");
+let hours = date.getHours();
+let minutes = String(date.getMinutes()).padStart(2,"0");
 
-hours=parseInt(hours);
+let ampm = hours>=12 ? "PM":"AM";
 
-let ampm = hours>=12?"PM":"AM";
-
-hours = hours%12;
-hours = hours?hours:12;
+hours = hours % 12;
+hours = hours ? hours : 12;
 
 return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
 
 }
-
 
 
 
