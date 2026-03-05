@@ -21,8 +21,38 @@ location="admin-login.html";
 
 /* SESSION TIMER */
 
-let sessionMinutes=30;
+let sessionMinutes=99;
 let loginTime=Date.now();
+
+function formatDate(dateStr){
+
+const date = new Date(dateStr);
+
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const day = String(date.getDate()).padStart(2,'0');
+const month = months[date.getMonth()];
+const year = date.getFullYear();
+
+return `${day}-${month}-${year}`;
+
+}
+
+function formatTime(timeStr){
+
+const date = new Date(timeStr);
+
+let hours = date.getHours();
+let minutes = String(date.getMinutes()).padStart(2,'0');
+
+let ampm = hours >= 12 ? "PM" : "AM";
+
+hours = hours % 12;
+hours = hours ? hours : 12;
+
+return `${hours}:${minutes} ${ampm}`;
+
+}
 
 fetch(scriptURL+"?action=getSettings")
 .then(r=>r.json())
@@ -162,8 +192,8 @@ if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
 html+=`
 <tr>
-<td>${r[1]}</td>
-<td>${r[2]}</td>
+<td>${formatDate(r[1])}</td>
+<td>${formatTime(r[2])}</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
@@ -279,7 +309,7 @@ data.forEach((r,i)=>{
 html+=`
 <tr>
 
-<td>${r[0]}</td>
+<td>${formatTime(r[0])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
