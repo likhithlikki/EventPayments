@@ -6,6 +6,18 @@
 
 <link rel="stylesheet" href="complaint.css">
 
+<style>
+
+/* EVENT NAME STYLE */
+#eventTitle{
+text-align:center;
+font-size:28px;
+font-weight:bold;
+margin-top:15px;
+}
+
+</style>
+
 </head>
 
 <body>
@@ -16,6 +28,9 @@
   <a href="complaint.html">Complaint</a>
   <a href="admin.html">Admin</a>
 </div>
+
+<!-- EVENT NAME (ADDED) -->
+<div id="eventTitle"></div>
 
 <div class="container">
 <h2>Register Complaint</h2>
@@ -41,12 +56,24 @@ If not resolved within 24 hours contact:<br>
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
+const scriptURL="PASTE_YOUR_EXEC_URL_HERE";
 
 const nameInput=document.getElementById("name");
 const phoneInput=document.getElementById("phone");
 const complaintInput=document.getElementById("complaint");
+const emailInput=document.getElementById("email");
 const submitBtn=document.getElementById("submitBtn");
+
+/* LOAD EVENT NAME FROM SETTINGS */
+fetch(scriptURL+"?action=getSettings")
+.then(res=>res.json())
+.then(data=>{
+if(data.EventName){
+document.getElementById("eventTitle").innerText=data.EventName;
+}
+});
+
+/* VALIDATION */
 
 function validate(){
 
@@ -61,6 +88,19 @@ if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
   phoneInput.classList.add("invalid");
   valid=false;
 }else phoneInput.classList.remove("invalid");
+
+/* EMAIL FORMAT CHECK (ADDED) */
+
+if(emailInput.value.trim()!==""){
+
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())){
+emailInput.classList.add("invalid");
+valid=false;
+}else{
+emailInput.classList.remove("invalid");
+}
+
+}
 
 if(complaintInput.value.trim().length<10){
   complaintInput.classList.add("invalid");
@@ -80,6 +120,12 @@ phoneInput.addEventListener("input",function(){
 
 complaintInput.addEventListener("input",validate);
 
+/* EMAIL VALIDATION EVENT (ADDED) */
+emailInput.addEventListener("input",validate);
+
+
+/* PROGRESS BAR */
+
 function startProgressBar(){
   const msg=document.getElementById("message");
 
@@ -96,6 +142,9 @@ function completeProgress(){
   const bar=document.getElementById("progressFill");
   if(bar) bar.style.width="100%";
 }
+
+
+/* SUBMIT COMPLAINT */
 
 async function submitComplaint(){
 
@@ -138,7 +187,7 @@ data.append("action","insertComplaint");
 data.append("name",nameInput.value.trim());
 data.append("village",document.getElementById("village").value.trim());
 data.append("phone",phoneInput.value.trim());
-data.append("email",document.getElementById("email").value.trim());
+data.append("email",emailInput.value.trim());
 data.append("complaint",complaintInput.value.trim());
 data.append("fileData",fileData);
 data.append("fileName",fileName);
@@ -159,7 +208,7 @@ nameInput.value="";
 phoneInput.value="";
 complaintInput.value="";
 document.getElementById("village").value="";
-document.getElementById("email").value="";
+emailInput.value="";
 fileInput.value="";
 submitBtn.disabled=true;
 
