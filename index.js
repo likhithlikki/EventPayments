@@ -4,7 +4,6 @@ let userData={};
 let upiLink="";
 let upiID="";
 
-/* LOAD SETTINGS */
 
 fetch(scriptURL+"?action=getSettings")
 
@@ -21,12 +20,11 @@ document.getElementById("eventTitle").innerText=data.EventName;
 });
 
 
-/* VALIDATION */
-
 const nameInput=document.getElementById("name");
 const phoneInput=document.getElementById("phone");
 const amountInput=document.getElementById("amount");
 const proceedBtn=document.getElementById("proceedBtn");
+
 
 function validateForm(){
 
@@ -37,10 +35,12 @@ nameInput.classList.add("invalid");
 valid=false;
 }else nameInput.classList.remove("invalid");
 
+
 if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
 phoneInput.classList.add("invalid");
 valid=false;
 }else phoneInput.classList.remove("invalid");
+
 
 if(Number(amountInput.value)<50){
 amountInput.classList.add("invalid");
@@ -50,6 +50,7 @@ valid=false;
 proceedBtn.disabled=!valid;
 
 }
+
 
 nameInput.addEventListener("input",validateForm);
 
@@ -61,14 +62,10 @@ validateForm();
 amountInput.addEventListener("input",validateForm);
 
 
-/* REF ID */
-
 function generateRefID(){
 return "REF"+Date.now();
 }
 
-
-/* PAYMENT */
 
 function goToPayment(){
 
@@ -92,23 +89,46 @@ new QRCode(document.getElementById("qrcode"),upiLink);
 }
 
 
-/* OPEN UPI */
-
 function openUPI(){
 window.location.href=upiLink;
 }
 
 
-/* FINISH PAYMENT */
+function startProgressBar(){
+
+const msg=document.getElementById("message");
+
+msg.innerHTML='<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
+
+const bar=document.getElementById("progressFill");
+
+setTimeout(()=>{bar.style.width="80%"},100);
+setTimeout(()=>{bar.style.width="95%"},3000);
+
+}
+
+
+function completeProgress(){
+
+const bar=document.getElementById("progressFill");
+
+if(bar) bar.style.width="100%";
+
+}
+
 
 function finishPayment(){
 
 const utr=document.getElementById("utr").value.trim();
 
+const msg=document.getElementById("message");
+
 if(!utr){
 alert("Enter UTR Number");
 return;
 }
+
+startProgressBar();
 
 const data=new URLSearchParams();
 
@@ -126,22 +146,38 @@ fetch(scriptURL,{method:"POST",body:data})
 
 .then(res=>{
 
+completeProgress();
+
 if(res==="Inserted"){
+
+msg.innerHTML="<span class='success'>Payment submitted successfully</span>";
 
 showReceipt(utr);
 
 }
 
-else{
-alert(res);
+else if(res==="DuplicatePhone"){
+
+msg.innerHTML="<span class='error'>Phone already used</span>";
+
 }
+
+else{
+
+msg.innerHTML="<span class='error'>Server error</span>";
+
+}
+
+})
+
+.catch(()=>{
+
+msg.innerHTML="<span class='error'>Server connection error</span>";
 
 });
 
 }
 
-
-/* RECEIPT */
 
 function showReceipt(utr){
 
@@ -158,8 +194,6 @@ downloadReceipt();
 
 }
 
-
-/* DOWNLOAD */
 
 function downloadReceipt(){
 
