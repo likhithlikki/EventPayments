@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded",function(){
-  
+
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let userData={};
@@ -9,12 +9,17 @@ let upiID="";
 /* LOAD SETTINGS */
 
 fetch(scriptURL+"?action=getSettings")
+
 .then(res=>res.json())
+
 .then(data=>{
+
 upiID=data.UPI_ID;
+
 if(data.EventName){
-document.getElementById("eventTitle").innerText=data.EventName;
+document.getElementById("weddingTitle").innerText=data.EventName;
 }
+
 });
 
 /* VALIDATION */
@@ -64,7 +69,7 @@ return "REF"+Date.now();
 
 /* PAYMENT PAGE */
 
-function goToPayment(){
+window.goToPayment=function(){
 
 userData={
 refid:generateRefID(),
@@ -80,13 +85,14 @@ document.getElementById("formSection").style.display="none";
 document.getElementById("paymentSection").style.display="block";
 
 document.getElementById("qrcode").innerHTML="";
+
 new QRCode(document.getElementById("qrcode"),upiLink);
 
 }
 
 /* OPEN UPI */
 
-function openUPI(){
+window.openUPI=function(){
 window.location.href=upiLink;
 }
 
@@ -115,7 +121,7 @@ if(bar) bar.style.width="100%";
 
 /* FINISH PAYMENT */
 
-function finishPayment(){
+window.finishPayment=function(){
 
 const utr=document.getElementById("utr").value.trim();
 
@@ -146,18 +152,35 @@ fetch(scriptURL,{method:"POST",body:data})
 
 completeProgress();
 
-if(res==="Inserted"){
+if(res==="DuplicateRef"){
+
+msg.innerHTML="<span class='error'>Duplicate Reference ID</span>";
+
+}
+else if(res==="DuplicatePhone"){
+
+msg.innerHTML="<span class='error'>Phone already used</span>";
+
+}
+else if(res==="Inserted"){
 
 msg.innerHTML="<span class='success'>Payment submitted successfully</span>";
 
 showReceipt(utr);
 
 }
+else{
+
+msg.innerHTML="<span class='error'>Server error</span>";
+
+}
 
 })
 
 .catch(()=>{
+
 msg.innerHTML="<span class='error'>Server connection error</span>";
+
 });
 
 }
@@ -182,9 +205,13 @@ document.getElementById("receiptContent").innerHTML=`
 
 }
 
-/* DOWNLOAD PDF */
+/* DOWNLOAD RECEIPT */
 
-function downloadReceipt(){
+window.downloadReceipt=function(){
+
+startProgressBar();
+
+setTimeout(()=>{
 
 const { jsPDF } = window.jspdf;
 
@@ -212,11 +239,17 @@ doc.text("RefID: "+userData.refid,5,y); y+=6;
 
 const utr=document.getElementById("utr").value;
 
-doc.text("UTR: "+utr,5,y); y+=6;
+doc.text("UTR: "+utr,5,y);
+
+y+=10;
 
 doc.addImage("sign.jpeg","JPEG",45,y,25,10);
 
 doc.save("payment_receipt.pdf");
+
+completeProgress();
+
+},700);
 
 }
 
