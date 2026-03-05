@@ -5,7 +5,7 @@ let paymentUpdates=[];
 let complaintUpdates=[];
 let paymentData=[];
 
-/* ================= LOADING SYSTEM ================= */
+/* ================= LOADING BAR ================= */
 
 function startProgressBar(){
 
@@ -26,8 +26,8 @@ setTimeout(()=>{bar.style.width="90%"},7000);
 
 function completeProgress(){
 
-const bar=document.getElementById("progressFill");
 const progressBar=document.getElementById("progressBar");
+const bar=document.getElementById("progressFill");
 
 if(bar) bar.style.width="100%";
 
@@ -38,7 +38,7 @@ if(bar) bar.style.width="0%";
 
 }
 
-/* SAFE FETCH WITH LOADER */
+/* ================= FETCH WITH LOADER ================= */
 
 async function fetchWithLoader(url,options={}){
 
@@ -124,7 +124,7 @@ sessionStorage.clear();
 location="admin-login.html";
 }
 
-/* ================= ANALYTICS SUMMARY ================= */
+/* ================= PAYMENT SUMMARY ================= */
 
 fetchWithLoader(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -202,7 +202,6 @@ html+=`
 <button class="btnVerify" onclick="setPaymentStatus(${i},'Verified')">✓</button>
 <button class="btnReject" onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
 </td>
-
 </tr>
 `;
 
@@ -314,7 +313,6 @@ html+=`
 <button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
 <button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
 </td>
-
 </tr>
 `;
 
@@ -357,3 +355,4 @@ body:data
 .then(()=>location.reload());
 
 }
+
