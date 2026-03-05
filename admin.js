@@ -1,3 +1,4 @@
+
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let paymentUpdates=[];
@@ -24,31 +25,39 @@ location="admin-login.html";
 let sessionMinutes=99;
 let loginTime=Date.now();
 
+/* DATE FORMAT */
+
 function formatDate(dateStr){
 
-const date = new Date(dateStr);
+if(!dateStr) return "";
 
-const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const date=new Date(dateStr);
 
-const day = String(date.getDate()).padStart(2,'0');
-const month = months[date.getMonth()];
-const year = date.getFullYear();
+const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const day=String(date.getDate()).padStart(2,'0');
+const month=months[date.getMonth()];
+const year=date.getFullYear();
 
 return `${day}-${month}-${year}`;
 
 }
 
+/* TIME FORMAT */
+
 function formatTime(timeStr){
 
-const date = new Date(timeStr);
+if(!timeStr) return "";
 
-let hours = date.getHours();
-let minutes = String(date.getMinutes()).padStart(2,'0');
+const date=new Date(timeStr);
 
-let ampm = hours >= 12 ? "PM" : "AM";
+let hours=date.getHours();
+let minutes=String(date.getMinutes()).padStart(2,'0');
 
-hours = hours % 12;
-hours = hours ? hours : 12;
+let ampm=hours>=12?"PM":"AM";
+
+hours=hours%12;
+hours=hours?hours:12;
 
 return `${hours}:${minutes} ${ampm}`;
 
@@ -97,8 +106,6 @@ sessionStorage.clear();
 location="admin-login.html";
 }
 
-
-/* ANALYTICS SUMMARY */
 /* SAVE BUTTON LOADER */
 
 function startSaveLoader(containerId){
@@ -124,6 +131,7 @@ if(bar) bar.style.width="100%";
 
 }
 
+/* ANALYTICS SUMMARY */
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -152,7 +160,6 @@ legend:{display:false}
 
 });
 
-
 /* PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
@@ -164,7 +171,6 @@ paymentData=data;
 renderPayments(data);
 
 });
-
 
 function renderPayments(data){
 
@@ -218,7 +224,6 @@ document.getElementById("paymentTable").innerHTML=html;
 
 }
 
-
 function setPaymentStatus(i,status){
 
 let cell=document.getElementById("payStatus"+i);
@@ -230,7 +235,6 @@ cell.className=status==="Verified"?"statusVerified":"statusNotVerified";
 paymentUpdates.push({row:i+2,status});
 
 }
-
 
 /* SORTING */
 
@@ -260,8 +264,8 @@ renderPayments(sorted);
 
 }
 
-
 /* SAVE PAYMENTS */
+
 function savePayments(btn){
 
 startSaveLoader("paymentLoader");
@@ -309,7 +313,7 @@ data.forEach((r,i)=>{
 html+=`
 <tr>
 
-<td>${formatTime(r[0])}</td>
+<td>${formatDate(r[0])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
@@ -338,7 +342,6 @@ document.getElementById("complaintTable").innerHTML=html;
 
 });
 
-
 function setComplaintStatus(i,status){
 
 document.getElementById("compStatus"+i).innerText=status;
@@ -353,8 +356,8 @@ reply
 
 }
 
-
 /* SAVE COMPLAINTS */
+
 function saveComplaints(btn){
 
 startSaveLoader("complaintLoader");
@@ -380,4 +383,3 @@ location.reload();
 });
 
 }
-
