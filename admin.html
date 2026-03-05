@@ -38,11 +38,6 @@ Admin Dashboard
 
 </div>
 
-<!-- GREEN PROGRESS BAR -->
-<div class="progressBar" id="progressBar">
-<div class="progressFill" id="progressFill"></div>
-</div>
-
 <div id="message"></div>
 
 <div class="dashboard">
@@ -115,11 +110,21 @@ Admin Dashboard
 
 <div id="paymentTable"></div>
 
+<!-- Payment Loading Bar -->
+<div class="progressBar" id="paymentProgress">
+<div class="progressFill" id="paymentFill"></div>
+</div>
+
 <button class="saveBtn" onclick="savePayments()">Save Payment Changes</button>
 
 <h3>Complaints</h3>
 
 <div id="complaintTable"></div>
+
+<!-- Complaint Loading Bar -->
+<div class="progressBar" id="complaintProgress">
+<div class="progressFill" id="complaintFill"></div>
+</div>
 
 <button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
 
@@ -129,3 +134,4 @@ Admin Dashboard
 
 </body>
 </html>
+
