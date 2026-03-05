@@ -312,3 +312,34 @@ body:data
 .then(()=>location.reload());
 
 }
+
+
+function startProgressBar(){
+
+const progressBar=document.getElementById("progressBar");
+const bar=document.getElementById("progressFill");
+
+progressBar.style.display="block";
+bar.style.width="0%";
+
+setTimeout(()=>{ bar.style.width="25%"; },1000);
+setTimeout(()=>{ bar.style.width="60%"; },3000);
+setTimeout(()=>{ bar.style.width="80%"; },5000);
+setTimeout(()=>{ bar.style.width="90%"; },7000);
+
+}
+
+function completeProgress(){
+
+const bar=document.getElementById("progressFill");
+
+if(bar){
+bar.style.width="100%";
+}
+
+setTimeout(()=>{
+document.getElementById("progressBar").style.display="none";
+bar.style.width="0%";
+},600);
+
+}
