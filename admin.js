@@ -26,38 +26,38 @@ let sessionMinutes=99;
 let loginTime=Date.now();
 
 /* DATE FORMAT */
-
 function formatDate(dateStr){
 
 if(!dateStr) return "";
 
-const date=new Date(dateStr);
+const parts = dateStr.split("T")[0].split("-");
 
 const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const day=String(date.getDate()).padStart(2,'0');
-const month=months[date.getMonth()];
-const year=date.getFullYear();
+const day=parts[2];
+const month=months[parseInt(parts[1])-1];
+const year=parts[0];
 
 return `${day}-${month}-${year}`;
 
 }
 
-/* TIME FORMAT */
+
 
 function formatTime(timeStr){
 
 if(!timeStr) return "";
 
-const date=new Date(timeStr);
+const timePart = timeStr.split("T")[1].split(".")[0];
 
-let hours=date.getHours();
-let minutes=String(date.getMinutes()).padStart(2,'0');
+let [hours,minutes] = timePart.split(":");
 
-let ampm=hours>=12?"PM":"AM";
+hours=parseInt(hours);
 
-hours=hours%12;
-hours=hours?hours:12;
+let ampm = hours>=12 ? "PM":"AM";
+
+hours = hours%12;
+hours = hours?hours:12;
 
 return `${hours}:${minutes} ${ampm}`;
 
@@ -68,6 +68,8 @@ fetch(scriptURL+"?action=getSettings")
 .then(settings=>{
 sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
 });
+
+
 
 function startTimer(){
 
