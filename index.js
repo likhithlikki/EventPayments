@@ -1,3 +1,5 @@
+document.addEventListener("DOMContentLoaded",function(){
+  
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let userData={};
@@ -217,3 +219,5 @@ doc.addImage("sign.jpeg","JPEG",45,y,25,10);
 doc.save("payment_receipt.pdf");
 
 }
+
+});
