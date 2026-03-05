@@ -1,0 +1,199 @@
+/* GLOBAL */
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#081a35;
+color:white;
+}
+
+/* NAVBAR */
+
+.navbar{
+background:#c2410c;
+padding:16px;
+text-align:center;
+}
+
+.navbar a{
+color:white;
+margin:0 20px;
+text-decoration:none;
+font-size:18px;
+font-weight:bold;
+}
+
+.navbar a:hover{
+opacity:0.8;
+}
+
+/* EVENT TITLE */
+
+.eventHeader{
+text-align:center;
+font-size:40px;
+font-weight:bold;
+margin-top:40px;
+margin-bottom:10px;
+}
+
+/* CONTAINER CARD */
+
+.container{
+max-width:450px;
+margin:30px auto;
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* PAGE TITLE */
+
+.container h2{
+text-align:left;
+margin-bottom:20px;
+font-size:28px;
+}
+
+/* INPUTS */
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:6px;
+border:none;
+font-size:16px;
+box-sizing:border-box;
+}
+
+/* INVALID INPUT */
+
+.invalid{
+border:2px solid red;
+}
+
+/* BUTTON */
+
+button{
+width:100%;
+padding:13px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+margin-top:10px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+button:disabled{
+background:gray;
+cursor:not-allowed;
+}
+
+/* QR SECTION */
+
+#qrcode{
+text-align:center;
+margin:20px 0;
+}
+
+/* MESSAGE */
+
+#message{
+margin-top:15px;
+text-align:center;
+font-size:16px;
+}
+
+/* SUCCESS */
+
+.success{
+color:#22c55e;
+font-weight:bold;
+}
+
+/* ERROR */
+
+.error{
+color:#ef4444;
+font-weight:bold;
+}
+
+/* PROGRESS BAR */
+
+.progressBar{
+width:100%;
+background:#334155;
+height:6px;
+border-radius:4px;
+overflow:hidden;
+margin-top:15px;
+}
+
+.progressFill{
+height:100%;
+width:0%;
+background:#22c55e;
+transition:width 0.4s ease;
+}
+
+/* RECEIPT BOX */
+
+#receiptBox{
+margin-top:25px;
+text-align:center;
+}
+
+/* RECEIPT */
+
+#receipt{
+background:white;
+color:black;
+padding:15px;
+border-radius:8px;
+width:260px;
+margin:auto;
+font-size:14px;
+}
+
+#receipt img{
+display:block;
+margin:auto;
+margin-bottom:5px;
+}
+
+#receipt h3{
+margin:5px 0;
+font-size:16px;
+}
+
+/* DIGITAL SIGNATURE */
+
+.sign{
+margin-top:10px;
+font-size:12px;
+color:#16a34a;
+font-weight:bold;
+}
+
+/* MOBILE */
+
+@media (max-width:500px){
+
+.eventHeader{
+font-size:32px;
+}
+
+.container{
+margin:20px;
+}
+
+}
