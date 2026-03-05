@@ -266,6 +266,35 @@ renderPayments(sorted);
 
 }
 
+
+
+function formatDateTime(dateStr){
+
+if(!dateStr) return "";
+
+const datePart = dateStr.split("T")[0];
+const timePart = dateStr.split("T")[1].split(".")[0];
+
+const d = datePart.split("-");
+const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const day=d[2];
+const month=months[parseInt(d[1])-1];
+const year=d[0];
+
+let [hours,minutes] = timePart.split(":");
+
+hours=parseInt(hours);
+
+let ampm = hours>=12?"PM":"AM";
+
+hours = hours%12;
+hours = hours?hours:12;
+
+return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+
+}
+
 /* SAVE PAYMENTS */
 
 function savePayments(btn){
@@ -315,7 +344,7 @@ data.forEach((r,i)=>{
 html+=`
 <tr>
 
-<td>${formatDate(r[0])}</td>
+<td>${formatDateTime(r[0])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
