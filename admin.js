@@ -2,62 +2,33 @@ const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbK
 
 let paymentUpdates=[];
 let complaintUpdates=[];
+let paymentData=[];
 
-/* -------- DATE FORMAT -------- */
+/* SESSION CHECK */
 
-function formatDate(dateStr){
+const token=sessionStorage.getItem("adminToken");
+const expiry=sessionStorage.getItem("adminExpiry");
 
-const d=new Date(dateStr);
-
-return d.toLocaleDateString("en-IN",{
-day:"2-digit",
-month:"short",
-year:"numeric"
-});
-
+if(!token){
+location="admin-login.html";
 }
 
-function formatTime(dateStr){
-
-const d=new Date(dateStr);
-
-return d.toLocaleTimeString("en-IN",{
-hour:"2-digit",
-minute:"2-digit"
-});
-
+if(expiry && new Date()>new Date(expiry)){
+alert("Session expired");
+sessionStorage.clear();
+location="admin-login.html";
 }
 
-/* -------- LOADER -------- */
-
-function startLoader(){
-
-document.getElementById("message").innerHTML=
-'<div class="progressBar"><div class="progressFill" id="progressFill"></div></div>';
-
-const bar=document.getElementById("progressFill");
-
-setTimeout(()=>{bar.style.width="60%"},100);
-setTimeout(()=>{bar.style.width="90%"},2000);
-
-}
-
-function stopLoader(){
-
-const bar=document.getElementById("progressFill");
-
-if(bar) bar.style.width="100%";
-
-setTimeout(()=>{
-document.getElementById("message").innerHTML="";
-},500);
-
-}
-
-/* -------- SESSION TIMER -------- */
+/* SESSION TIMER */
 
 let sessionMinutes=30;
 let loginTime=Date.now();
+
+fetch(scriptURL+"?action=getSettings")
+.then(r=>r.json())
+.then(settings=>{
+sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
+});
 
 function startTimer(){
 
@@ -71,11 +42,18 @@ let s=Math.floor((remaining%60000)/1000);
 
 let timer=document.getElementById("timer");
 
+if(timer){
+
 timer.innerText="Session "+m+":"+s.toString().padStart(2,"0");
 
+if(m<5){
+timer.classList.add("blink");
+}
+
+}
+
 if(remaining<=0){
-alert("Session expired");
-location="admin-login.html";
+logout();
 }
 
 },1000);
@@ -84,11 +62,13 @@ location="admin-login.html";
 
 startTimer();
 
-/* -------- PAGE LOAD -------- */
+function logout(){
+sessionStorage.clear();
+location="admin-login.html";
+}
 
-startLoader();
 
-/* -------- SUMMARY -------- */
+/* ANALYTICS SUMMARY */
 
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
@@ -107,16 +87,31 @@ datasets:[{
 data:[d.verified,d.pending,d.notverified],
 backgroundColor:["#22c55e","#3b82f6","#ef4444"]
 }]
+},
+options:{
+plugins:{
+legend:{display:false}
+}
 }
 });
 
 });
 
-/* -------- PAYMENTS -------- */
+
+/* PAYMENTS */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
 .then(data=>{
+
+paymentData=data;
+
+renderPayments(data);
+
+});
+
+
+function renderPayments(data){
 
 let html="<table>";
 
@@ -135,17 +130,15 @@ html+="</tr>";
 
 data.forEach((r,i)=>{
 
-let date=formatDate(r[1]);
-let time=formatTime(r[2]);
-
 let statusClass="statusPending";
+
 if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
 html+=`
 <tr>
-<td>${date}</td>
-<td>${time}</td>
+<td>${r[1]}</td>
+<td>${r[2]}</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
@@ -158,6 +151,7 @@ html+=`
 <button class="btnVerify" onclick="setPaymentStatus(${i},'Verified')">✓</button>
 <button class="btnReject" onclick="setPaymentStatus(${i},'Not Verified')">✗</button>
 </td>
+
 </tr>
 `;
 
@@ -167,9 +161,8 @@ html+="</table>";
 
 document.getElementById("paymentTable").innerHTML=html;
 
-});
+}
 
-/* -------- PAYMENT STATUS -------- */
 
 function setPaymentStatus(i,status){
 
@@ -183,26 +176,57 @@ paymentUpdates.push({row:i+2,status});
 
 }
 
-/* -------- SAVE PAYMENTS -------- */
+
+/* SORTING */
+
+function sortPayments(){
+
+let type=document.getElementById("sortSelect").value;
+
+let sorted=[...paymentData];
+
+if(type==="amount"){
+sorted.sort((a,b)=>Number(b[7])-Number(a[7]));
+}
+
+if(type==="date"){
+sorted.sort((a,b)=>new Date(b[1])-new Date(a[1]));
+}
+
+if(type==="village"){
+sorted.sort((a,b)=>a[5].localeCompare(b[5]));
+}
+
+if(type==="name"){
+sorted.sort((a,b)=>a[4].localeCompare(b[4]));
+}
+
+renderPayments(sorted);
+
+}
+
+
+/* SAVE PAYMENTS */
 
 function savePayments(){
-
-startLoader();
 
 const data=new URLSearchParams();
 
 data.append("action","updatePayments");
 data.append("data",JSON.stringify(paymentUpdates));
+data.append("admin",sessionStorage.getItem("adminUser"));
 
 fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
-stopLoader();
+
 location.reload();
+
 });
 
 }
 
-/* -------- COMPLAINTS -------- */
+
+/* COMPLAINTS */
 
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
@@ -223,11 +247,10 @@ html+="</tr>";
 
 data.forEach((r,i)=>{
 
-let date=formatDate(r[0]);
-
 html+=`
 <tr>
-<td>${date}</td>
+
+<td>${r[0]}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
@@ -254,11 +277,8 @@ html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
-stopLoader();
-
 });
 
-/* -------- COMPLAINT STATUS -------- */
 
 function setComplaintStatus(i,status){
 
@@ -274,24 +294,21 @@ reply
 
 }
 
-/* -------- SAVE COMPLAINTS -------- */
+
+/* SAVE COMPLAINTS */
 
 function saveComplaints(){
-
-startLoader();
 
 const data=new URLSearchParams();
 
 data.append("action","updateComplaints");
 data.append("data",JSON.stringify(complaintUpdates));
+data.append("admin",sessionStorage.getItem("adminUser"));
 
 fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>{
-stopLoader();
-location.reload();
-});
+.then(()=>location.reload());
 
 }
