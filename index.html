@@ -1,12 +1,13 @@
-<!DOCTYPE html>
-<html>
-
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Contribution</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <title>Admin Dashboard</title>
 
+<link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="admin.css">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,24 +17,38 @@
 <body>
 
 <div class="navbar">
+
 <a href="index.html">Home</a>
 <a href="status.html">Verify Status</a>
 <a href="complaint.html">Complaint</a>
+<a href="admin-login.html">Admin</a>
+
 <a href="admin.html">Admin</a>
 </div>
 
+
+<h1 class="eventHeader" id="eventTitle">Wedding of X & Y</h1>
+
+
 <div class="container">
 
+<h2>Event Contribution</h2>
 <div class="dashboardTitle">
 Admin Dashboard
 </div>
 
 <div class="topActions">
 
+<div id="formSection">
 <span id="timer"></span>
 
+<input type="text" id="name" placeholder="Name (letters only)">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="phone" placeholder="Phone (10 digits)">
+<input type="number" id="amount" placeholder="Amount (Min ₹50)">
 <button class="pdfBtn" onclick="window.print()">Export PDF</button>
 
+<button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
 <button class="logoutBtn" onclick="logout()">Logout</button>
 
 </div>
@@ -43,8 +58,10 @@ Admin Dashboard
 
 <div class="dashboard">
 
+<div id="paymentSection">
 <div class="summaryBoxes">
 
+<h3>Scan & Pay</h3>
 <div class="box">
 <h4>Total Amount</h4>
 <p id="totalAmount">₹0</p>
@@ -55,18 +72,22 @@ Admin Dashboard
 <p id="verifiedAmount">₹0</p>
 </div>
 
+<div id="qrcode"></div>
 <div class="box">
 <h4>Pending Amount</h4>
 <p id="pendingAmount">₹0</p>
 </div>
 
+<button onclick="openUPI()">Open UPI App</button>
 <div class="box">
 <h4>Not Verified Amount</h4>
 <p id="notVerifiedAmount">₹0</p>
 </div>
 
+<input type="text" id="utr" placeholder="Enter UTR Number">
 </div>
 
+<button onclick="finishPayment()">Finish Payment</button>
 <div style="display:flex">
 
 <div class="chartBox">
@@ -75,6 +96,7 @@ Admin Dashboard
 
 <div class="legendBox">
 
+<div id="message"></div>
 <div class="legendItem">
 <div class="legendColor green"></div> Verified
 </div>
@@ -83,26 +105,40 @@ Admin Dashboard
 <div class="legendColor blue"></div> Pending
 </div>
 
+<div id="receiptBox">
 <div class="legendItem">
 <div class="legendColor red"></div> Not Verified
 </div>
 
+<div id="receipt">
 </div>
 
+<img src="sbi_logo.png" width="40">
 </div>
 
+<h3>SBI Payment Receipt</h3>
 </div>
 
+<p id="r_name"></p>
+<p id="r_village"></p>
+<p id="r_phone"></p>
+<p id="r_amount"></p>
+<p id="r_utr"></p>
+<p id="r_ref"></p>
 <h3>Event Payments</h3>
 
+<img src="sign.jpeg" class="signImg">
 <div id="paymentTable"></div>
 
+<p class="sign">Digitally Verified</p>
 <button class="saveBtn" onclick="savePayments()">
 Save Payment Changes
 </button>
 
+</div>
 <h3>Complaints</h3>
 
+</div>
 <div id="complaintTable"></div>
 
 <button class="saveBtn" onclick="saveComplaints()">
@@ -111,6 +147,7 @@ Save Complaint Changes
 
 </div>
 
+<script src="index.js"></script>
 <script src="admin.js"></script>
 
 </body>
