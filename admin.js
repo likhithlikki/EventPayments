@@ -1,3 +1,4 @@
+```javascript
 const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let paymentUpdates=[];
@@ -69,11 +70,13 @@ location="admin-login.html";
 
 
 /* ANALYTICS SUMMARY */
+
 startProgressBar();
+
 fetch(scriptURL+"?action=getPaymentSummary")
 .then(r=>r.json())
 .then(d=>{
-completeProgress();
+
 document.getElementById("totalAmount").innerText="₹"+d.total;
 document.getElementById("verifiedAmount").innerText="₹"+d.verified;
 document.getElementById("pendingAmount").innerText="₹"+d.pending;
@@ -95,10 +98,14 @@ legend:{display:false}
 }
 });
 
+completeProgress();
+
 });
 
 
 /* PAYMENTS */
+
+startProgressBar();
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -107,6 +114,8 @@ fetch(scriptURL+"?action=getAllPayments")
 paymentData=data;
 
 renderPayments(data);
+
+completeProgress();
 
 });
 
@@ -209,7 +218,9 @@ renderPayments(sorted);
 /* SAVE PAYMENTS */
 
 function savePayments(){
-startProgressBar()
+
+startProgressBar();
+
 const data=new URLSearchParams();
 
 data.append("action","updatePayments");
@@ -220,18 +231,19 @@ fetch(scriptURL,{method:"POST",body:data})
 .then(()=>{
 completeProgress();
 location.reload();
-
 });
 
 }
 
 
 /* COMPLAINTS */
+
 startProgressBar();
+
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
 .then(data=>{
-completeProgress();
+
 let html="<table>";
 
 html+="<tr>";
@@ -277,6 +289,8 @@ html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
+completeProgress();
+
 });
 
 
@@ -299,20 +313,27 @@ reply
 
 function saveComplaints(){
 
+startProgressBar();
+
 const data=new URLSearchParams();
 
 data.append("action","updateComplaints");
 data.append("data",JSON.stringify(complaintUpdates));
 data.append("admin",sessionStorage.getItem("adminUser"));
-startProgressBar();
+
 fetch(scriptURL,{
 method:"POST",
 body:data
 })
-.then(()=>location.reload());
+.then(()=>{
+completeProgress();
+location.reload();
+});
 
 }
-completeProgress();
+
+
+/* PROGRESS BAR */
 
 function startProgressBar(){
 
@@ -343,3 +364,4 @@ bar.style.width="0%";
 },600);
 
 }
+```
