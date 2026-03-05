@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 
@@ -38,6 +37,7 @@ Admin Dashboard
 
 </div>
 
+<!-- INDEX STYLE LOADING BAR -->
 <div id="message"></div>
 
 <div class="dashboard">
@@ -95,30 +95,26 @@ Admin Dashboard
 <h3>Event Payments</h3>
 
 <div class="sortBar">
+
 <select id="sortSelect" onchange="sortPayments()">
+
 <option value="">Sort By</option>
 <option value="amount">Amount</option>
 <option value="date">Date</option>
 <option value="village">Village</option>
 <option value="name">Name</option>
+
 </select>
+
 </div>
 
 <div id="paymentTable"></div>
-
-<div id="paymentProgress" class="progressBar">
-<div class="progressFill"></div>
-</div>
 
 <button class="saveBtn" onclick="savePayments()">Save Payment Changes</button>
 
 <h3>Complaints</h3>
 
 <div id="complaintTable"></div>
-
-<div id="complaintProgress" class="progressBar">
-<div class="progressFill"></div>
-</div>
 
 <button class="saveBtn" onclick="saveComplaints()">Save Complaint Changes</button>
 
@@ -128,4 +124,3 @@ Admin Dashboard
 
 </body>
 </html>
-
