@@ -1,108 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Event Contribution</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<style>
+<link rel="stylesheet" href="style.css">
 
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-}
-
-.navbar{
-background:#1e40af;
-padding:15px;
-text-align:center;
-}
-
-.navbar a{
-color:white;
-margin:0 15px;
-text-decoration:none;
-font-weight:bold;
-}
-
-/* Wedding Title */
-#weddingTitle{
-text-align:center;
-font-size:30px;
-font-weight:bold;
-margin-top:15px;
-}
-
-.container{
-max-width:420px;
-margin:40px auto;
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:8px 0;
-border-radius:6px;
-border:none;
-}
-
-.invalid{
-border:2px solid red;
-}
-
-button{
-width:100%;
-padding:12px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:6px;
-font-weight:bold;
-cursor:pointer;
-}
-
-button:disabled{
-background:gray;
-cursor:not-allowed;
-}
-
-#paymentSection{display:none;}
-#receiptSection{display:none;}
-
-.progressBar{
-width:100%;
-background:#334155;
-height:6px;
-border-radius:4px;
-overflow:hidden;
-margin:10px 0;
-}
-
-.progressFill{
-height:100%;
-width:0%;
-background:#22c55e;
-transition:width 0.3s linear;
-}
-
-.success{color:lightgreen;}
-.error{color:#ef4444;}
-
-.receiptBox{
-background:#111827;
-padding:15px;
-border-radius:8px;
-margin-top:15px;
-}
-
-</style>
 </head>
 
 <body>
@@ -116,12 +23,11 @@ margin-top:15px;
 
 </div>
 
-<!-- Wedding Name -->
-<div id="weddingTitle"></div>
+<h1 class="eventHeader" id="eventTitle">Wedding of X & Y</h1>
 
 <div class="container">
 
-<h2 id="eventTitle">Event Contribution</h2>
+<h2>Event Contribution</h2>
 
 <div id="formSection">
 
@@ -133,6 +39,7 @@ margin-top:15px;
 <button id="proceedBtn" disabled onclick="goToPayment()">Proceed</button>
 
 </div>
+
 
 <div id="paymentSection">
 
@@ -148,15 +55,30 @@ margin-top:15px;
 
 </div>
 
-<div id="receiptSection">
 
-<div class="receiptBox" id="receiptContent"></div>
+<div id="message"></div>
 
-<button onclick="downloadReceipt()">Download Receipt</button>
+
+<div id="receiptBox" style="display:none">
+
+<div id="receipt">
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/State_Bank_of_India_logo.svg/512px-State_Bank_of_India_logo.svg.png" width="40">
+
+<h3>SBI Payment Receipt</h3>
+
+<p id="r_name"></p>
+<p id="r_village"></p>
+<p id="r_phone"></p>
+<p id="r_amount"></p>
+<p id="r_utr"></p>
+<p id="r_ref"></p>
+
+<p class="sign">Digitally Verified</p>
 
 </div>
 
-<div id="message"></div>
+</div>
 
 </div>
 
