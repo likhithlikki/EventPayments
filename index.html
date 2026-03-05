@@ -6,6 +6,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<!-- PDF LIBRARY ADDED -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{
   margin:0;
@@ -64,6 +67,7 @@ button:disabled{
 }
 
 #paymentSection{display:none;}
+#receiptSection{display:none;}
 
 .progressBar{
   width:100%;
@@ -83,6 +87,13 @@ button:disabled{
 
 .success{color:lightgreen;}
 .error{color:#ef4444;}
+
+.receiptBox{
+background:#111827;
+padding:15px;
+border-radius:8px;
+margin-top:15px;
+}
 </style>
 </head>
 
@@ -94,6 +105,9 @@ button:disabled{
   <a href="complaint.html">Complaint</a>
   <a href="admin.html">Admin</a>
 </div>
+
+<!-- EVENT TITLE -->
+<div id="eventTitle" style="text-align:center;font-size:26px;margin-top:10px;"></div>
 
 <div class="container">
 
@@ -115,13 +129,25 @@ button:disabled{
 <button onclick="finishPayment()">Finish Payment</button>
 </div>
 
+<!-- RECEIPT SECTION ADDED -->
+<div id="receiptSection">
+
+<div class="receiptBox" id="receiptContent"></div>
+
+<button onclick="downloadReceipt()">Download Receipt</button>
+
+</div>
+
 <div id="message"></div>
 
 </div>
 
+<!-- EVENT TITLE SCRIPT -->
+<script src="event_title.js"></script>
+
 <script>
 
-const scriptURL="PASTE_YOUR_EXEC_URL_HERE";
+const scriptURL="https://script.google.com/macros/s/AKfycbwJyAXoVHvwcjV9DPQpMxbKvqMW38-gHE3i-VsG-7qpRy7B9nV4YAQw4xOwMbHgl17n/exec";
 
 let userData={};
 let upiLink="";
@@ -231,10 +257,93 @@ completeProgress();
 if(res==="Duplicate"){
 msg.innerHTML="<span class='error'>Duplicate Submission</span>";
 }else{
+
 msg.innerHTML="<span class='success'>Payment Submitted Successfully</span>";
+
+showReceipt(utr);
+
 }
 })
 .catch(()=>msg.innerHTML="<span class='error'>Server Error</span>");
+}
+
+/* SHOW RECEIPT */
+
+function showReceipt(utr){
+
+document.getElementById("paymentSection").style.display="none";
+
+document.getElementById("receiptSection").style.display="block";
+
+const receipt=`
+<h3>Payment Receipt</h3>
+<p><b>Name:</b> ${userData.name}</p>
+<p><b>Village:</b> ${userData.village}</p>
+<p><b>Phone:</b> ${userData.phone}</p>
+<p><b>Amount:</b> ₹${userData.amount}</p>
+<p><b>Reference ID:</b> ${userData.refid}</p>
+<p><b>UTR:</b> ${utr}</p>
+<p><b>Status:</b> Pending Verification</p>
+`;
+
+document.getElementById("receiptContent").innerHTML=receipt;
+
+}
+
+/* PDF RECEIPT DOWNLOAD */
+
+function downloadReceipt(){
+
+const { jsPDF } = window.jspdf;
+
+const doc=new jsPDF({
+orientation:"portrait",
+unit:"mm",
+format:[80,120]
+});
+
+let y=10;
+
+/* SBI LOGO */
+doc.addImage("sbi-logo.png","PNG",30,3,20,10);
+
+y+=18;
+
+const eventName=document.getElementById("eventTitle").innerText;
+
+doc.setFontSize(12);
+doc.text(eventName,40,y,{align:"center"});
+
+y+=8;
+
+doc.setFontSize(10);
+doc.text("Payment Receipt",40,y,{align:"center"});
+
+y+=10;
+
+doc.text("Name: "+userData.name,5,y); y+=6;
+doc.text("Village: "+userData.village,5,y); y+=6;
+doc.text("Phone: "+userData.phone,5,y); y+=6;
+doc.text("Amount: ₹"+userData.amount,5,y); y+=6;
+doc.text("Reference: "+userData.refid,5,y); y+=6;
+
+const utr=document.getElementById("utr").value;
+
+doc.text("UTR: "+utr,5,y); y+=6;
+doc.text("Status: Pending Verification",5,y);
+
+y+=10;
+
+/* DIGITAL SIGNATURE */
+doc.addImage("sign.jpeg","JPEG",45,y,25,10);
+
+y+=10;
+
+doc.setFontSize(8);
+doc.text("Authorized Signature",55,y);
+
+doc.save("payment_receipt.pdf");
+
 }
 
 </script>
