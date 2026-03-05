@@ -1,4 +1,17 @@
 /* GLOBAL */
+/* Hide payment section initially */
+
+#paymentSection{
+display:none;
+text-align:center;
+}
+
+/* signature image */
+
+.signImg{
+width:120px;
+margin-top:10px;
+}
 
 body{
 margin:0;
