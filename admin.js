@@ -258,10 +258,10 @@ location.reload();
 
 /* COMPLAINTS */
 
+
 fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
 .then(data=>{
-
 
 let html="<table>";
 
@@ -311,21 +311,15 @@ ${r[11] ? `<a href="${r[11]}" target="_blank">View</a>` : "No File"}
 
 });
 
-
-<button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
-<button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
-</td>
-
-</tr>
-`;
-
-});
-
 html+="</table>";
 
 document.getElementById("complaintTable").innerHTML=html;
 
 });
+
+
+
+
 
 function setComplaintStatus(i,status){
 
