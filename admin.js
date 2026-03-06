@@ -337,7 +337,10 @@ html += `
 </td>
 
 <td>
-${r[10]=="Sent" ? "✅ Sent" : r[10]=="Failed" ? "❌ Failed" : "⏳ Pending"}
+${r[10]=="Sent" ? '<span style="color:#22c55e">Sent</span>' :
+r[10]=="NotSent" ? '<span style="color:red">NotSent</span>' :
+r[10]=="NotEnabled" ? '<span style="color:orange">NotEnabled</span>' :
+"Pending"}
 </td>
 
 <td>
