@@ -309,15 +309,23 @@ html += "</tr>";
 
 data.forEach((r,i)=>{
 
+// convert ISO date/time
+const dt = formatDateTime(r[0], r[1]);
+
 html += `
 <tr>
-<td>${formatDateTime(r[0], r[1])}</td>
+
+<td>
+${dt.date}<br>
+<span style="font-size:12px;color:#94a3b8">${dt.time}</span>
+</td>
+
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
 <td>${r[6]}</td>
 
-<td><a href="${r[11]}" target="_blank">View</a></td>
+<td>${r[11] ? `<a href="${r[11]}" target="_blank">View</a>` : "No File"}</td>
 
 <td id="compStatus${i}">${r[7]}</td>
 
