@@ -155,7 +155,7 @@ legend:{display:false}
 
 });
 
-/* PAYMENTS */
+/* PAYMENTS-------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 fetch(scriptURL+"?action=getAllPayments")
 .then(r=>r.json())
@@ -172,8 +172,7 @@ function renderPayments(data){
 let html="<table>";
 
 html+="<tr>";
-html+="<th>Date</th>";
-html+="<th>Time</th>";
+html+="<th>Date & Time</th>";
 html+="<th>RefID</th>";
 html+="<th>Name</th>";
 html+="<th>Village</th>";
@@ -191,10 +190,14 @@ let statusClass="statusPending";
 if(r[9]=="Verified") statusClass="statusVerified";
 if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
+const dt = formatDateTime(r[1], r[2]);
+  
 html+=`
 <tr>
-<td>${r[1]}</td>
-<td>${r[2]}</td>
+<td class="dateCell">
+<div class="dateText">${dt.date}</div>
+<div class="timeText">${dt.time}</div>
+</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
@@ -295,7 +298,7 @@ fetch(scriptURL+"?action=getAllComplaints")
 let html = "<table>";
 
 html += "<tr>";
-html += "<th>Date</th>";
+html += "<th>Date & Time</th>";
 html += "<th>Name</th>";
 html += "<th>Phone</th>";
 html += "<th>Email</th>";
