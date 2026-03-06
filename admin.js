@@ -54,9 +54,13 @@ const ampm = hours >= 12 ? "PM" : "AM";
 hours = hours % 12;
 hours = hours ? hours : 12;
 
-return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+return {
+date: `${day}-${month}-${year}`,
+time: `${hours}:${minutes} ${ampm}`
+};
 
 }
+
 
 
 
