@@ -25,69 +25,6 @@ location="admin-login.html";
 let sessionMinutes=99;
 let loginTime=Date.now();
 
-/* DATE FORMAT */
-function formatDate(dateStr){
-
-if(!dateStr) return "";
-
-const parts = dateStr.split("T")[0].split("-");
-
-const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-const day=parts[2];
-const month=months[parseInt(parts[1])-1];
-const year=parts[0];
-
-return `${day}-${month}-${year}`;
-
-}
-
-
-
-function formatDateTime(dateStr){
-
-if(!dateStr) return "";
-
-const date = new Date(dateStr);
-
-const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-const day = String(date.getDate()).padStart(2,"0");
-const month = months[date.getMonth()];
-const year = date.getFullYear();
-
-let hours = date.getHours();
-let minutes = String(date.getMinutes()).padStart(2,"0");
-
-let ampm = hours>=12 ? "PM":"AM";
-
-hours = hours % 12;
-hours = hours ? hours : 12;
-
-return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
-
-}
-
-
-
-function formatTime(timeStr){
-
-if(!timeStr) return "";
-
-const timePart = timeStr.split("T")[1].split(".")[0];
-
-let [hours,minutes] = timePart.split(":");
-
-hours=parseInt(hours);
-
-let ampm = hours>=12 ? "PM":"AM";
-
-hours = hours%12;
-hours = hours?hours:12;
-
-return `${hours}:${minutes} ${ampm}`;
-
-}
 
 fetch(scriptURL+"?action=getSettings")
 .then(r=>r.json())
@@ -226,8 +163,8 @@ if(r[9]=="Not Verified") statusClass="statusNotVerified";
 
 html+=`
 <tr>
-<td>${formatDate(r[1])}</td>
-<td>${formatTime(r[2])}</td>
+<td>${r[1]}</td>
+<td>${r[2]}</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
@@ -343,7 +280,7 @@ data.forEach((r,i)=>{
 html+=`
 <tr>
 
-<td>${formatDate(r[0])} ${formatTime(r[1])}</td>
+<td>${r[0]} ${r[1]}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[6]}</td>
