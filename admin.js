@@ -129,8 +129,20 @@ logout();
 startTimer();
 
 function logout(){
+
+const data=new URLSearchParams();
+
+data.append("action","adminLogout");
+data.append("admin",sessionStorage.getItem("adminUser"));
+
+fetch(scriptURL,{
+method:"POST",
+body:data
+});
+
 sessionStorage.clear();
 location="admin-login.html";
+
 }
 
 /* SAVE BUTTON LOADER */
