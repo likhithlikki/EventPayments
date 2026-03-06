@@ -315,9 +315,9 @@ const dt = formatDateTime(r[0], r[1]);
 html += `
 <tr>
 
-<td>
-${dt.date}<br>
-<span style="font-size:12px;color:#94a3b8">${dt.time}</span>
+<td class="dateCell">
+<div class="dateText">${dt.date}</div>
+<div class="timeText">${dt.time}</div>
 </td>
 
 <td>${r[2]}</td>
