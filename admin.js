@@ -35,37 +35,28 @@ sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
 
 
 
-function formatDateISO(dateStr){
+function formatDateTime(dateISO, timeISO){
 
-const d = new Date(dateStr);
+const dateObj = new Date(dateISO);
+const timeObj = new Date(timeISO);
 
 const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const day = String(d.getDate()).padStart(2,"0");
-const month = months[d.getMonth()];
-const year = d.getFullYear();
+const day = String(dateObj.getDate()).padStart(2,'0');
+const month = months[dateObj.getMonth()];
+const year = dateObj.getFullYear();
 
-return `${day}-${month}-${year}`;
+let hours = timeObj.getHours();
+let minutes = String(timeObj.getMinutes()).padStart(2,'0');
 
-}
-
-function formatTimeISO(timeStr){
-
-const d = new Date(timeStr);
-
-let hours = d.getHours();
-let minutes = String(d.getMinutes()).padStart(2,"0");
-
-let ampm = hours >= 12 ? "PM" : "AM";
+const ampm = hours >= 12 ? "PM" : "AM";
 
 hours = hours % 12;
 hours = hours ? hours : 12;
 
-return `${hours}:${minutes} ${ampm}`;
+return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
 
 }
-
-
 
 
 
@@ -316,8 +307,7 @@ data.forEach((r,i)=>{
 
 html += `
 <tr>
-
-<td>${formatDateISO(r[0])} ${formatTimeISO(r[1])}</td>
+<td>${formatDateTime(r[0], r[1])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
