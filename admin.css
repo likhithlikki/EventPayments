@@ -295,4 +295,16 @@ background:#22c55e;
 transition:width 0.4s linear;
 }
 
+.dateCell{
+text-align:center;
+line-height:1.4;
+}
 
+.dateText{
+font-weight:bold;
+}
+
+.timeText{
+font-size:12px;
+color:#94a3b8;
+}
