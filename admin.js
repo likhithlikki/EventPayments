@@ -34,6 +34,41 @@ sessionMinutes=parseInt(settings.SessionTimeoutMinutes)||30;
 
 
 
+
+function formatDateISO(dateStr){
+
+const d = new Date(dateStr);
+
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const day = String(d.getDate()).padStart(2,"0");
+const month = months[d.getMonth()];
+const year = d.getFullYear();
+
+return `${day}-${month}-${year}`;
+
+}
+
+function formatTimeISO(timeStr){
+
+const d = new Date(timeStr);
+
+let hours = d.getHours();
+let minutes = String(d.getMinutes()).padStart(2,"0");
+
+let ampm = hours >= 12 ? "PM" : "AM";
+
+hours = hours % 12;
+hours = hours ? hours : 12;
+
+return `${hours}:${minutes} ${ampm}`;
+
+}
+
+
+
+
+
 function startTimer(){
 
 setInterval(()=>{
@@ -282,7 +317,7 @@ data.forEach((r,i)=>{
 html += `
 <tr>
 
-<td>${r[0]} ${r[1]}</td>
+<td>${formatDateISO(r[0])} ${formatTimeISO(r[1])}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
