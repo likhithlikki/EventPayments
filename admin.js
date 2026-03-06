@@ -453,3 +453,24 @@ location.reload();
 });
 
 }
+
+
+
+fetch(scriptURL+"?action=getAdminLogs")
+.then(r=>r.json())
+.then(data=>{
+
+let html="<ul>";
+
+data.forEach(r=>{
+html+=`<li>
+<b>${r[1]}</b> → ${r[4]} (${r[3]}) 
+<span style="color:#888">${r[0]}</span>
+</li>`;
+});
+
+html+="</ul>";
+
+document.getElementById("adminActivity").innerHTML=html;
+
+});
