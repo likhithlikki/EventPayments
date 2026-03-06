@@ -63,6 +63,38 @@ time: `${hours}:${minutes} ${ampm}`
 
 
 
+function sendComplaintWhatsApp(i,phone,name,complaint){
+
+const reply=document.getElementById("reply"+i).value;
+
+const data=new URLSearchParams();
+
+data.append("action","sendComplaintWhatsApp");
+data.append("phone",phone);
+data.append("name",name);
+data.append("complaint",complaint);
+data.append("reply",reply);
+
+fetch(scriptURL,{
+method:"POST",
+body:data
+})
+.then(r=>r.text())
+.then(res=>{
+
+document.getElementById("waStatus"+i).innerHTML=res;
+
+})
+.catch(()=>{
+
+document.getElementById("waStatus"+i).innerHTML="<span style='color:red'>Failed</span>";
+
+});
+
+}
+
+
+
 
 function startTimer(){
 
@@ -336,12 +368,19 @@ html += `
 <textarea id="reply${i}">${r[8] || ""}</textarea>
 </td>
 
+
+
 <td>
-${r[10]=="Sent" ? '<span style="color:#22c55e">Sent</span>' :
-r[10]=="NotSent" ? '<span style="color:red">NotSent</span>' :
-r[10]=="NotEnabled" ? '<span style="color:orange">NotEnabled</span>' :
-"Pending"}
+<button onclick="sendComplaintWhatsApp(${i},'${r[4]}','${r[2]}','${r[6]}')" class="btnVerify">
+Send WhatsApp
+</button>
+
+<div id="waStatus${i}">
+${r[10] || "Pending"}
+</div>
 </td>
+
+
 
 <td>
 <button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
