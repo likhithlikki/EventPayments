@@ -262,13 +262,16 @@ fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
 .then(data=>{
 
+
 let html="<table>";
 
 html+="<tr>";
 html+="<th>Date</th>";
 html+="<th>Name</th>";
 html+="<th>Phone</th>";
+html+="<th>Email</th>";
 html+="<th>Complaint</th>";
+html+="<th>File</th>";
 html+="<th>Status</th>";
 html+="<th>Reply</th>";
 html+="<th>WhatsApp</th>";
@@ -283,7 +286,12 @@ html+=`
 <td>${r[0]} ${r[1]}</td>
 <td>${r[2]}</td>
 <td>${r[4]}</td>
+<td>${r[5]}</td>
 <td>${r[6]}</td>
+
+<td>
+${r[11] ? `<a href="${r[11]}" target="_blank">View</a>` : "No File"}
+</td>
 
 <td id="compStatus${i}">${r[7]}</td>
 
@@ -294,6 +302,16 @@ html+=`
 <td>${r[10]||"Pending"}</td>
 
 <td>
+<button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
+<button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
+</td>
+
+</tr>
+`;
+
+});
+
+
 <button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
 <button class="btnReject" onclick="setComplaintStatus(${i},'Pending')">✗</button>
 </td>
