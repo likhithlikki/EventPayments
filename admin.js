@@ -336,7 +336,9 @@ html += `
 <textarea id="reply${i}">${r[8] || ""}</textarea>
 </td>
 
-<td>${r[10] || "Pending"}</td>
+<td>
+${r[10]=="Sent" ? "✅ Sent" : r[10]=="Failed" ? "❌ Failed" : "⏳ Pending"}
+</td>
 
 <td>
 <button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
