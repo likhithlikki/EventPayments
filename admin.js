@@ -456,7 +456,30 @@ location.reload();
 
 
 
-fetch(scriptURL+"?action=getAdminLogs")
+fetch(scriptURL+"?action=getAdminActivity")
+.then(r=>r.json())
+.then(data=>{
+
+let html="<ul>";
+
+data.reverse().forEach(r=>{
+
+html+=`
+<li>
+Admin changed Complaint of Ref ID <b>${r.refId}</b>
+from <b>${r.oldStatus}</b>
+to <b>${r.newStatus}</b>
+at <span style="color:#888">${r.time}</span>
+</li>
+`;
+
+});
+
+html+="</ul>";
+
+document.getElementById("adminActivity").innerHTML=html;
+
+});
 .then(r=>r.json())
 .then(data=>{
 
