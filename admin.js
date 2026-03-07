@@ -339,37 +339,40 @@ fetch(scriptURL+"?action=getAllComplaints")
 .then(r=>r.json())
 .then(data=>{
 
-let html = "<table>";
+let html="<table>";
 
-html += "<tr>";
+html+=`
+<tr>
+<th>Date & Time</th>
+<th>Complaint ID</th>
+<th>Name</th>
+<th>Phone</th>
+<th>Email</th>
+<th>Complaint</th>
+<th>File</th>
+<th>Status</th>
+<th>Reply</th>
+<th>WhatsApp</th>
+<th>Action</th>
+</tr>
+`;
 
-html += "<th>Date & Time</th>";
-html += "<th>Complaint ID</th>";
-html += "<th>Name</th>";
-html += "<th>Phone</th>";
-html += "<th>Email</th>";
-html += "<th>Complaint</th>";
-html += "<th>File</th>";
-html += "<th>Status</th>";
-html += "<th>Reply</th>";
-html += "<th>WhatsApp</th>";
-html += "<th>Action</th>";
-html += "</tr>";
+data.forEach((r,i)=>{
 
-const d = new Date(r[0]);
+const d=new Date(r[0]);
 
-const date = d.toLocaleDateString("en-IN",{
+const date=d.toLocaleDateString("en-IN",{
 day:"2-digit",
 month:"short",
 year:"numeric"
 });
 
-const time = d.toLocaleTimeString("en-IN",{
+const time=d.toLocaleTimeString("en-IN",{
 hour:"2-digit",
 minute:"2-digit"
 });
 
-html += `
+html+=`
 <tr>
 
 <td class="dateCell">
@@ -416,14 +419,16 @@ ${r[10] || "Pending"}
 
 </tr>
 `;
-  
-});
-
-html += "</table>";
-
-document.getElementById("complaintTable").innerHTML = html;
 
 });
+
+html+="</table>";
+
+document.getElementById("complaintTable").innerHTML=html;
+
+});
+
+
 
 
 
