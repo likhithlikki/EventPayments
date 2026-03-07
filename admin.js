@@ -367,12 +367,12 @@ html += `
 <div class="timeText">${dt.time}</div>
 </td>
 
-<td>${r[2]}</td>
+<td>${r[1]}</td>
+<td>${r[3]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
-<td>${r[6]}</td>
 
-<td>${r[11] ? `<a href="${r[11]}" target="_blank">View</a>` : "No File"}</td>
+<td>${r[10] ? `<a href="${r[10]}" target="_blank">View</a>` : "No File"}</td>
 
 <td id="compStatus${i}">${r[7]}</td>
 
