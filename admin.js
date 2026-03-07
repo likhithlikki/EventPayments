@@ -479,10 +479,14 @@ html+="</ul>";
 
 document.getElementById("adminActivity").innerHTML=html;
 
+})
+.catch(err=>{
+console.log("Activity load error:",err);
 });
-.then(r=>r.json())
-.then(data=>{
 
+
+
+  
 let html="<ul>";
 
 data.forEach(r=>{
