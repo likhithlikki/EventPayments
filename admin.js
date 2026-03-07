@@ -456,9 +456,18 @@ location.reload();
 
 
 
-fetch(scriptURL+"?action=getAdminActivity")
+
+/* ADMIN ACTIVITY */
+
+fetch(scriptURL + "?action=getAdminActivity")
 .then(r => r.json())
 .then(data => {
+
+if(!data || data.length === 0){
+document.getElementById("adminActivity").innerHTML =
+"<p style='color:#888'>No admin activity yet</p>";
+return;
+}
 
 let html = "<ul>";
 
@@ -481,5 +490,11 @@ document.getElementById("adminActivity").innerHTML = html;
 
 })
 .catch(err => {
-console.log("Activity load error:", err);
+
+console.error("Activity load error:", err);
+
+document.getElementById("adminActivity").innerHTML =
+"<span style='color:red'>Failed to load activity</span>";
+
 });
+
