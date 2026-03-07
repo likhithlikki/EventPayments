@@ -457,14 +457,14 @@ location.reload();
 
 
 fetch(scriptURL+"?action=getAdminActivity")
-.then(r=>r.json())
-.then(data=>{
+.then(r => r.json())
+.then(data => {
 
-let html="<ul>";
+let html = "<ul>";
 
-data.reverse().forEach(r=>{
+data.reverse().forEach(r => {
 
-html+=`
+html += `
 <li>
 Admin changed Complaint of Ref ID <b>${r.refId}</b>
 from <b>${r.oldStatus}</b>
@@ -475,29 +475,11 @@ at <span style="color:#888">${r.time}</span>
 
 });
 
-html+="</ul>";
+html += "</ul>";
 
-document.getElementById("adminActivity").innerHTML=html;
+document.getElementById("adminActivity").innerHTML = html;
 
 })
-.catch(err=>{
-console.log("Activity load error:",err);
-});
-
-
-
-  
-let html="<ul>";
-
-data.forEach(r=>{
-html+=`<li>
-<b>${r[1]}</b> → ${r[4]} (${r[3]}) 
-<span style="color:#888">${r[0]}</span>
-</li>`;
-});
-
-html+="</ul>";
-
-document.getElementById("adminActivity").innerHTML=html;
-
+.catch(err => {
+console.log("Activity load error:", err);
 });
