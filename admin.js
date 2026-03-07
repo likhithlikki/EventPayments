@@ -359,7 +359,9 @@ html += "</tr>";
 data.forEach((r,i)=>{
 
 // convert ISO date/time
-const dt = formatDateTime(r[0], r[1]);
+const dt = new Date(r[0]);
+const date = dt.toLocaleDateString("en-IN");
+const time = dt.toLocaleTimeString("en-IN",{hour:'2-digit',minute:'2-digit'});
 
 html += `
 <tr>
@@ -369,13 +371,20 @@ html += `
 <div class="timeText">${dt.time}</div>
 </td>
 
-<td>${r[0]}</td>
+<td class="dateCell">
+<div class="dateText">${date}</div>
+<div class="timeText">${time}</div>
+</td>
+
 <td>${r[1]}</td>
-<td>${r[3]}</td>
+<td>${r[2]}</td>
 <td>${r[4]}</td>
 <td>${r[5]}</td>
+<td>${r[6]}</td>
 
-<td>${r[10] ? `<a href="${r[10]}" target="_blank">View</a>` : "No File"}</td>
+${r[11] && r[11].startsWith("http") 
+? `<a href="${r[11]}" target="_blank">View</a>` 
+: "No File"}
 
 <td id="compStatus${i}">${r[7]}</td>
 
@@ -391,7 +400,7 @@ Send WhatsApp
 </button>
 
 <div id="waStatus${i}">
-${r[10] || "Pending"}
+${r[10] ? r[10] : "Pending"}
 </div>
 </td>
 
