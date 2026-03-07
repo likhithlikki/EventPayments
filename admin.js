@@ -342,8 +342,9 @@ fetch(scriptURL+"?action=getAllComplaints")
 let html = "<table>";
 
 html += "<tr>";
-html += "<th>Complaint ID</th>";
+
 html += "<th>Date & Time</th>";
+html += "<th>Complaint ID</th>";
 html += "<th>Name</th>";
 html += "<th>Phone</th>";
 html += "<th>Email</th>";
