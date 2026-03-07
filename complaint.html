@@ -189,8 +189,9 @@ data.append("village",document.getElementById("village").value.trim());
 data.append("phone",phoneInput.value.trim());
 data.append("email",emailInput.value.trim());
 data.append("complaint",complaintInput.value.trim());
-data.append("fileData",fileData);
-data.append("fileName",fileName);
+data.append("filedata",fileData);
+data.append("filename",fileName);
+data.append("filetype",fileInput.files[0].type);
 
 fetch(scriptURL,{method:"POST",body:data})
 
@@ -226,32 +227,6 @@ msg.innerHTML="<span class='error'>Server connection error</span>";
 }
 
 
-const fileInput=document.getElementById("file");
-
-if(fileInput.files.length>0){
-
-const reader=new FileReader();
-
-reader.onload=function(){
-
-const base64=reader.result.split(",")[1];
-
-data.append("filedata",base64);
-data.append("filename",fileInput.files[0].name);
-data.append("filetype",fileInput.files[0].type);
-
-sendComplaint(data);
-
-}
-
-reader.readAsDataURL(fileInput.files[0]);
-
-}else{
-
-sendComplaint(data);
-
-}
-  
 </script>
 
 </body>
