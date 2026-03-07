@@ -463,38 +463,28 @@ fetch(scriptURL + "?action=getAdminActivity")
 .then(r => r.json())
 .then(data => {
 
-if(!data || data.length === 0){
-document.getElementById("adminActivity").innerHTML =
-"<p style='color:#888'>No admin activity yet</p>";
-return;
-}
+let html="";
 
-let html = "<ul>";
+if(!data || data.length===0){
+html="<div class='activityItem'>No admin activity yet</div>";
+}
 
 data.reverse().forEach(r => {
 
 html += `
-<li>
-Admin changed Complaint of Ref ID <b>${r.refId}</b>
-from <b>${r.oldStatus}</b>
-to <b>${r.newStatus}</b>
-at <span style="color:#888">${r.time}</span>
-</li>
+<div class="activityItem">
+Admin changed Complaint of <b>${r.refId}</b>
+from <b>${r.oldStatus}</b> to <b>${r.newStatus}</b>
+<span class="activityTime">${r.time}</span>
+</div>
 `;
 
 });
 
-html += "</ul>";
-
 document.getElementById("adminActivity").innerHTML = html;
 
 })
-.catch(err => {
-
-console.error("Activity load error:", err);
-
-document.getElementById("adminActivity").innerHTML =
-"<span style='color:red'>Failed to load activity</span>";
-
+.catch(err=>{
+console.error(err);
 });
 
