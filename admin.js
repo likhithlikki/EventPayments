@@ -505,8 +505,12 @@ minute:"2-digit"
 html += `
 <div class="activityItem">
 <span class="activitySerial">#${index+1}</span>
-Admin changed Complaint of <b>${r.refId}</b>
-from <b>${r.oldStatus}</b> to <b>${r.newStatus}</b>
+
+${r.refId==="LOGIN"
+? `<b>${r.admin}</b> logged into admin panel`
+: `<b>${r.admin}</b> updated <b>${r.refId}</b> from <b>${r.oldStatus}</b> to <b>${r.newStatus}</b>`
+}
+
 <span class="activityTime">${formattedTime}</span>
 </div>
 `;
