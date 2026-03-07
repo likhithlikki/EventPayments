@@ -459,6 +459,8 @@ location.reload();
 
 /* ADMIN ACTIVITY */
 
+
+
 fetch(scriptURL + "?action=getAdminActivity")
 .then(r => r.json())
 .then(data => {
@@ -469,13 +471,23 @@ if(!data || data.length===0){
 html="<div class='activityItem'>No admin activity yet</div>";
 }
 
-data.reverse().forEach(r => {
+data.reverse().forEach((r,index) => {
+
+let d = new Date(r.time);
+let formattedTime = d.toLocaleString("en-IN",{
+day:"2-digit",
+month:"short",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+});
 
 html += `
 <div class="activityItem">
+<span class="activitySerial">#${index+1}</span>
 Admin changed Complaint of <b>${r.refId}</b>
 from <b>${r.oldStatus}</b> to <b>${r.newStatus}</b>
-<span class="activityTime">${r.time}</span>
+<span class="activityTime">${formattedTime}</span>
 </div>
 `;
 
@@ -485,6 +497,16 @@ document.getElementById("adminActivity").innerHTML = html;
 
 })
 .catch(err=>{
-console.error(err);
+console.log("Activity load error:",err);
 });
+
+
+
+
+
+
+
+
+
+
 
