@@ -356,20 +356,21 @@ html += "<th>WhatsApp</th>";
 html += "<th>Action</th>";
 html += "</tr>";
 
-data.forEach((r,i)=>{
+const d = new Date(r[0]);
 
-// convert ISO date/time
-const dt = new Date(r[0]);
-const date = dt.toLocaleDateString("en-IN");
-const time = dt.toLocaleTimeString("en-IN",{hour:'2-digit',minute:'2-digit'});
+const date = d.toLocaleDateString("en-IN",{
+day:"2-digit",
+month:"short",
+year:"numeric"
+});
+
+const time = d.toLocaleTimeString("en-IN",{
+hour:"2-digit",
+minute:"2-digit"
+});
 
 html += `
 <tr>
-
-<td class="dateCell">
-<div class="dateText">${dt.date}</div>
-<div class="timeText">${dt.time}</div>
-</td>
 
 <td class="dateCell">
 <div class="dateText">${date}</div>
@@ -377,14 +378,20 @@ html += `
 </td>
 
 <td>${r[1]}</td>
+
 <td>${r[2]}</td>
+
 <td>${r[4]}</td>
+
 <td>${r[5]}</td>
+
 <td>${r[6]}</td>
 
-${r[11] && r[11].startsWith("http") 
-? `<a href="${r[11]}" target="_blank">View</a>` 
+<td>
+${r[11] && r[11].startsWith("http")
+? `<a href="${r[11]}" target="_blank">View</a>`
 : "No File"}
+</td>
 
 <td id="compStatus${i}">${r[7]}</td>
 
@@ -392,19 +399,15 @@ ${r[11] && r[11].startsWith("http")
 <textarea id="reply${i}">${r[8] || ""}</textarea>
 </td>
 
-
-
 <td>
 <button onclick="sendComplaintWhatsApp(${i},'${r[4]}','${r[2]}','${r[6]}')" class="btnVerify">
 Send WhatsApp
 </button>
 
 <div id="waStatus${i}">
-${r[10] ? r[10] : "Pending"}
+${r[10] || "Pending"}
 </div>
 </td>
-
-
 
 <td>
 <button class="btnVerify" onclick="setComplaintStatus(${i},'Resolved')">✓</button>
@@ -413,7 +416,7 @@ ${r[10] ? r[10] : "Pending"}
 
 </tr>
 `;
-
+  
 });
 
 html += "</table>";
