@@ -41,7 +41,6 @@ margin-top:15px;
 <input type="email" id="email" placeholder="Email">
 <textarea id="complaint" placeholder="Write complaint (min 10 characters)"></textarea>
 <input type="file" id="attachment" accept="image/*,.pdf">
-
 <button id="submitBtn" disabled onclick="submitComplaint()">Submit Complaint</button>
 
 <div id="message"></div>
@@ -63,6 +62,7 @@ const phoneInput=document.getElementById("phone");
 const complaintInput=document.getElementById("complaint");
 const emailInput=document.getElementById("email");
 const submitBtn=document.getElementById("submitBtn");
+const attachmentInput = document.getElementById("attachment");
 
 /* LOAD EVENT NAME FROM SETTINGS */
 fetch(scriptURL+"?action=getSettings")
@@ -74,43 +74,54 @@ document.getElementById("eventTitle").innerText=data.EventName;
 });
 
 /* VALIDATION */
-
 function validate(){
 
 let valid=true;
 
+/* Name */
 if(!/^[A-Za-z ]+$/.test(nameInput.value.trim())){
-  nameInput.classList.add("invalid");
-  valid=false;
+nameInput.classList.add("invalid");
+valid=false;
 }else nameInput.classList.remove("invalid");
 
+/* Phone */
 if(!/^[6-9]\d{9}$/.test(phoneInput.value.trim())){
-  phoneInput.classList.add("invalid");
-  valid=false;
+phoneInput.classList.add("invalid");
+valid=false;
 }else phoneInput.classList.remove("invalid");
 
-/* EMAIL FORMAT CHECK (ADDED) */
-
+/* Email */
 if(emailInput.value.trim()!==""){
-
 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())){
 emailInput.classList.add("invalid");
 valid=false;
 }else{
 emailInput.classList.remove("invalid");
 }
-
 }
 
+/* Complaint */
 if(complaintInput.value.trim().length<10){
-  complaintInput.classList.add("invalid");
-  valid=false;
+complaintInput.classList.add("invalid");
+valid=false;
 }else complaintInput.classList.remove("invalid");
+
+/* File mandatory */
+if(attachmentInput.files.length===0){
+attachmentInput.classList.add("invalid");
+valid=false;
+}else{
+attachmentInput.classList.remove("invalid");
+}
 
 submitBtn.disabled=!valid;
 
 }
 
+
+
+
+  
 nameInput.addEventListener("input",validate);
 
 phoneInput.addEventListener("input",function(){
@@ -123,7 +134,10 @@ complaintInput.addEventListener("input",validate);
 /* EMAIL VALIDATION EVENT (ADDED) */
 emailInput.addEventListener("input",validate);
 
+attachmentInput.addEventListener("change",validate);
 
+
+  
 /* PROGRESS BAR */
 
 function startProgressBar(){
@@ -191,7 +205,7 @@ data.append("email",emailInput.value.trim());
 data.append("complaint",complaintInput.value.trim());
 data.append("filedata",fileData);
 data.append("filename",fileName);
-data.append("filetype",fileInput.files[0].type);
+data.append("filetype",fileInput.files.length ? fileInput.files[0].type : "");
 
 fetch(scriptURL,{method:"POST",body:data})
 
